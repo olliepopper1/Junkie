@@ -105,13 +105,15 @@ class IdentityAgent:
                 return identity
                 
         except Exception as e:
-            logger.error(f"Error generating identity with RapidAPI: {str(e)}")
+            logger.error(f"Error generating identity with API: {str(e)}")
             logger.warning("Using alternative random user generation API...")
             
             # Try alternative API if primary one fails
             try:
+                fallback_url = "https://randomuser.me/api/"
+                logger.info(f"Trying fallback API: {fallback_url}")
                 async with aiohttp.ClientSession() as session:
-                    async with session.get("https://randomuser.me/api/") as response:
+                    async with session.get(fallback_url) as response:
                         if response.status == 200:
                             data = await response.json()
                             if "results" in data and data["results"]:
