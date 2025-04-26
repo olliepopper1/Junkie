@@ -29,7 +29,7 @@ AGENT_NAMES = {
     "mandy": "Meth Mandy",        # Card generation
     "xan": "Xanny Xan",           # Email generation
     "sal": "Shroomy Sal",         # Browser automation
-    "phone": "Cokehead Carl"      # SMS/Phone verification
+    "carl": "Cokehead Carl"       # SMS/Phone verification
 }
 
 # Colors for embeds
@@ -40,18 +40,33 @@ COLORS = {
     "info": 0x2196F3      # Blue
 }
 
-# API endpoints
+# API endpoints - All using RapidAPI services
 ENDPOINTS = {
+    # Identity generation
     "random_user": "https://random-user-generator.p.rapidapi.com/api",
+    
+    # Phone generation
     "random_phone": "https://random-phone-number.p.rapidapi.com/api/phone/random",
-    "fake_card": "https://fake-credit-card-generator.p.rapidapi.com/api/fake-credit-card-generator"
+    
+    # Card generation
+    "fake_card": "https://fake-credit-card-generator.p.rapidapi.com/api/fake-credit-card-generator",
+    
+    # Email generation (using random user API for consistency)
+    "temp_email": "https://temp-mail44.p.rapidapi.com/api/v3/email/new",
+    
+    # Additional endpoints for potential expansion
+    "address_generator": "https://random-address-generator.p.rapidapi.com/api",
+    "currency_converter": "https://currency-converter18.p.rapidapi.com/api/v1/convert"
 }
 
 # RapidAPI host names
 RAPIDAPI_HOSTS = {
     "random_user": "random-user-generator.p.rapidapi.com",
     "random_phone": "random-phone-number.p.rapidapi.com",
-    "fake_card": "fake-credit-card-generator.p.rapidapi.com"
+    "fake_card": "fake-credit-card-generator.p.rapidapi.com",
+    "temp_email": "temp-mail44.p.rapidapi.com",
+    "address_generator": "random-address-generator.p.rapidapi.com",
+    "currency_converter": "currency-converter18.p.rapidapi.com"
 }
 
 # Proxy settings

@@ -26,6 +26,7 @@ if __name__ == "__main__":
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
         logger.error("DISCORD_BOT_TOKEN not found in environment variables")
+        logger.info("Please set DISCORD_BOT_TOKEN in the .env file")
         exit(1)
     
     # Run the bot

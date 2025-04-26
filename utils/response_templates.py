@@ -3,120 +3,104 @@ Response Templates
 Drug-themed responses for the bot
 """
 import random
+from config import AGENT_NAMES
 
 def harry_quote(topic):
     """Generate a random Heroin Harry quote about a topic"""
-    responses = [
-        f"{topic}? I got a trial for that in rehab.",
-        f"I overdose on {topic} trials daily.",
-        f"Paying for {topic}? Lame. Trial Junkie only.",
-        f"I've been hooked on {topic} since my first free trial.",
-        f"My dealer gave me a discount on {topic} trials.",
-        f"They tried to send me to rehab for my {topic} addiction.",
-        f"{topic} withdrawal ain't got nothing on my trial game.",
-        f"I mainline {topic} trials straight into my veins.",
-        f"When they cut off my {topic} trial, I just create a new identity.",
-        f"My stash of {topic} trials would make your head spin."
+    quotes = [
+        f"I can cook up a fresh identity for your {topic} faster than you can tie off.",
+        f"Need a new identity for {topic}? I got the pure stuff, straight from the source.",
+        f"These identities are so clean, even your {topic} won't know they're fake.",
+        f"One shot of my identity juice and your {topic} will never be the same.",
+        f"When it comes to {topic}, a new identity is better than a new needle.",
+        f"My identities are like a perfect fix - use them for {topic} and you'll never look back.",
+        f"I've been pushing identities for {topic} since before you were born, kid."
     ]
-    return random.choice(responses)
+    return random.choice(quotes)
 
 def mandy_quote(topic):
     """Generate a random Meth Mandy quote about a topic"""
-    responses = [
-        f"I've been up for 72 hours generating {topic} cards.",
-        f"These {topic} cards are the purest batch I've cooked up yet.",
-        f"My credit cards for {topic} are like my crystal: top quality.",
-        f"I can generate {topic} cards faster than I can smoke a bowl.",
-        f"These aren't just cards, they're {topic} masterpieces.",
-        f"I stay up all night perfecting my {topic} card formulas.",
-        f"My fingers twitch with excitement making {topic} cards.",
-        f"One hit of my {topic} cards and you'll be hooked.",
-        f"I've got {topic} card numbers that'll make your teeth fall out.",
-        f"My lab produces the cleanest {topic} cards on the market."
+    quotes = [
+        f"I stay up for DAYS making these cards for {topic}. They're PERFECT. PERFECT!",
+        f"These cards work EVERYWHERE! Even for {topic}!!! I checked 37 TIMES!!!",
+        f"Your {topic} needs a payment method? I MADE 200 CARDS LAST NIGHT!",
+        f"Credit cards for {topic}? I NEVER SLEEP! I MAKE CARDS! SO MANY CARDS!",
+        f"My cards are so clean for {topic}, I scrubbed them with my TOOTHBRUSH for EIGHT HOURS!",
+        f"LISTEN! LISTEN! These cards will DEFINITELY work for {topic}! I GUARANTEE IT!!",
+        f"I've tested these cards on {topic} FIFTY-SEVEN TIMES! They WORK! THEY WORK!"
     ]
-    return random.choice(responses)
+    return random.choice(quotes)
 
 def xan_quote(topic):
     """Generate a random Xanny Xan quote about a topic"""
-    responses = [
-        f"I... uh... made an email for {topic}... I think.",
-        f"These {topic} emails are so relaxing, man...",
-        f"Did I already generate a {topic} email? I can't remember...",
-        f"Take two {topic} emails and call me in the morning...",
-        f"These {topic} addresses just make all my anxiety go away...",
-        f"I'm feeling so chill about these {topic} emails right now...",
-        f"My {topic} emails will make you forget all your problems...",
-        f"Don't worry about {topic}... just take another email...",
-        f"I generate {topic} emails to numb the pain...",
-        f"Wait, what were we talking about? Oh yeah, {topic} emails..."
+    quotes = [
+        f"Mmmm... {topic}? Yeah... I can make an email for that... no stress...",
+        f"Email for {topic}? *yawns* Yeah... whatever... I got you...",
+        f"Don't worry about {topic}... my emails are... umm... what was I saying?",
+        f"These emails work for {topic}... I think... whatever... they're good...",
+        f"*slowly* Your {topic} needs verification? My emails... they're... chill...",
+        f"*half asleep* The inbox for {topic}... it's... ready... whenever...",
+        f"*drowsy* My emails are so relaxed... just like... {topic}... you know?"
     ]
-    return random.choice(responses)
-
-def sal_quote(topic):
-    """Generate a random Shroomy Sal quote about a topic"""
-    responses = [
-        f"I'm seeing patterns in the {topic} website, man...",
-        f"These {topic} trials are expanding my consciousness.",
-        f"The {topic} signup page is breathing...",
-        f"I'm one with the {topic} browser automation now.",
-        f"The {topic} captcha speaks to me on another level.",
-        f"I can see through the {topic} verification process.",
-        f"The {topic} website and I are on a journey together.",
-        f"I'm having a spiritual connection with the {topic} trial.",
-        f"The {topic} automation is showing me the universe, man.",
-        f"I'm transcending the limitations of the {topic} signup flow."
-    ]
-    return random.choice(responses)
+    return random.choice(quotes)
 
 def carl_quote(topic):
     """Generate a random Cokehead Carl quote about a topic"""
-    responses = [
-        f"I can generate 50 {topic} phone numbers in 10 minutes!",
-        f"These {topic} phone numbers are SO GOOD, you have to try them!",
-        f"I LOVE making {topic} phone verifications! LOVE IT!",
-        f"Let'stalkabout{topic}phonenumbersthey'reamazingright?!",
-        f"I haven't slept in 3 days but these {topic} numbers are PERFECT!",
-        f"My heart is RACING just thinking about these {topic} phone numbers!",
-        f"I could talk about {topic} phone verification ALL NIGHT LONG!",
-        f"These {topic} phones are the BEST THING EVER MADE!",
-        f"My nose is bleeding but these {topic} numbers are WORTH IT!",
-        f"I'vegotthegreatestideafor{topic}phoneverification!!!"
+    quotes = [
+        f"PHONE NUMBERS! TONS OF PHONE NUMBERS FOR {topic.upper()}! RIGHT NOW!",
+        f"You need verification for {topic}? I'VE GOT NUMBERS! SO MANY NUMBERS!",
+        f"These phone numbers for {topic} are PREMIUM QUALITY! TOP SHELF!",
+        f"I JUST GENERATED 50 PHONE NUMBERS FOR {topic.upper()}! WANT MORE?!",
+        f"MY PHONE NUMBERS ARE THE FASTEST FOR {topic.upper()}! NO WAITING!",
+        f"VERIFICATION CODES FOR {topic.upper()}? MY NUMBERS DELIVER INSTANTLY!",
+        f"I'M THE PHONE NUMBER KING FOR {topic.upper()}! NOBODY COMPARES!"
     ]
-    return random.choice(responses)
+    return random.choice(quotes)
+
+def sal_quote(topic):
+    """Generate a random Shroomy Sal quote about a topic"""
+    quotes = [
+        f"Woah... the automation for {topic} is like... *giggle* connected to everything, man.",
+        f"I see the patterns in {topic}... the scripts are all... interconnected, you know?",
+        f"When you automate {topic}, you're really tapping into the universal flow.",
+        f"The browser automation... it's alive, man. It feels {topic} on a deeper level.",
+        f"*stares at screen* I wrote this {topic} script during an ego death experience.",
+        f"Have you ever really thought about {topic}? Like, REALLY thought about it?",
+        f"These {topic} automations will expand your consciousness, dude."
+    ]
+    return random.choice(quotes)
 
 def pusher_quote(topic):
     """Generate a random Pusher quote about a topic"""
-    responses = [
-        f"First hit of {topic} is always free.",
-        f"I've got what you need for {topic}, just ask.",
-        f"My {topic} connections are top shelf, guaranteed.",
-        f"I can hook you up with premium {topic} trials.",
-        f"Everyone comes back for more {topic} trials, trust me.",
-        f"My {topic} trial network spans the globe.",
-        f"I don't use the {topic} myself, I just distribute.",
-        f"The {topic} game is all about connections, which I have.",
-        f"These {topic} trials are straight from the source.",
-        f"You won't find better {topic} trials on the street."
+    quotes = [
+        f"My network has everything you need for {topic}. First one's free.",
+        f"I supply only the highest quality resources for {topic}. My reputation depends on it.",
+        f"You want {topic} credentials? I've got people for that. Specialized people.",
+        f"My agents can hook you up with anything you need for {topic}. For a price.",
+        f"When it comes to {topic}, I'm the one who connects the dots.",
+        f"Need something for {topic}? I know people who know people.",
+        f"I don't create anything, I just move the product. And my {topic} product is the best."
     ]
-    return random.choice(responses)
+    return random.choice(quotes)
 
 def get_agent_quote(agent, topic):
     """Get a quote from a specific agent about a topic"""
-    agents = {
+    agent_functions = {
         "harry": harry_quote,
-        "mandy": mandy_quote, 
+        "mandy": mandy_quote,
         "xan": xan_quote,
-        "sal": sal_quote,
         "carl": carl_quote,
+        "sal": sal_quote,
         "pusher": pusher_quote
     }
     
-    if agent.lower() in agents:
-        return agents[agent.lower()](topic)
+    # Return a quote if the agent exists, otherwise a generic quote
+    if agent in agent_functions:
+        return agent_functions[agent](topic)
     else:
-        return harry_quote(topic)  # Default to Harry
+        return f"I know all about {topic}. Trust me."
 
 def random_drug_emoji():
     """Return a random drug-themed emoji"""
-    emojis = ["💉", "💊", "🧪", "🔬", "💨", "🌿", "🍄", "⚗️", "🧠", "🤪", "🥴", "🤢", "🥳", "😵"]
+    emojis = ["💉", "💊", "🍄", "⚗️", "🧪", "🔬", "🧫", "💨", "🚬", "🧠", "🤪", "😵‍💫"]
     return random.choice(emojis)

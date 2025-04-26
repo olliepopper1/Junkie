@@ -5,6 +5,7 @@ Orchestrates the flow between commands and specialized agents
 import logging
 import discord
 from datetime import datetime
+import os
 
 from config import AGENT_NAMES, COLORS
 from agents.identity_agent import IdentityAgent
@@ -21,6 +22,11 @@ class Pusher:
     def __init__(self, db):
         """Initialize the pusher with all agents"""
         self.db = db
+        
+        # Check if RapidAPI key is available
+        rapidapi_key = os.getenv("RAPIDAPI_KEY")
+        if not rapidapi_key:
+            logger.warning("RAPIDAPI_KEY not found in environment variables. API requests will likely fail.")
         
         # Initialize all specialized agents
         self.identity_agent = IdentityAgent(db)
