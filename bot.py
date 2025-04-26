@@ -376,6 +376,77 @@ def setup_bot():
         
         await ctx.send(embed=embed)
         
+    @bot.command(name="plans")
+    async def plans_command(ctx):
+        """Display available subscription plans"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Show typing indicator
+        async with ctx.typing():
+            # Create a rich embed for plans
+            embed = discord.Embed(
+                title="💉 Trial Junkie Subscription Plans 💊",
+                description="Choose your level of addiction below:",
+                color=COLORS["payment"]
+            )
+            
+            # One-Time Hit (Free Plan)
+            embed.add_field(
+                name="💨 One-Time Hit (Free)",
+                value="A quick blast of freedom, no strings attached.\n" + 
+                      "• One-time free trial\n" +
+                      "• No credit card required\n" +
+                      "• Basic features only\n" +
+                      "• `!pay one_time_hit` to activate",
+                inline=False
+            )
+            
+            # Five Dollar Rush
+            embed.add_field(
+                name="💵 Five Dollar Rush ($5)",
+                value="A rush of power for just five bucks.\n" + 
+                      "• Limited-time access\n" +
+                      "• Multiple trials per day\n" +
+                      "• Standard features\n" +
+                      "• `!pay five_dollar_rush` to purchase",
+                inline=False
+            )
+            
+            # 13 Junkified
+            embed.add_field(
+                name="💎 13 Junkified ($13)",
+                value="Unlock unlimited possibilities—no limits, just freedom.\n" + 
+                      "• Unlimited access\n" +
+                      "• Priority support\n" +
+                      "• All premium features\n" +
+                      "• No daily limits\n" +
+                      "• `!pay junkified` to purchase",
+                inline=False
+            )
+            
+            # Add footer
+            embed.set_footer(
+                text=f"Requested by {username} | All payments in SOL | Use !pay <plan_name> to subscribe",
+                icon_url="https://cdn.discordapp.com/embed/avatars/0.png"
+            )
+            
+            # Send the embed
+            await ctx.send(embed=embed)
+            
+            # Log command
+            cmd_logger.log_command(user_id, username, "plans", "")
+            
+            # Add a random quote from Crypto Craig
+            crypto_quotes = [
+                "Pick your poison carefully. The stronger the dose, the better the high.",
+                "First one's free, but the good stuff costs. That's just how the game works.",
+                "These plans hit different. Choose based on how deep you wanna go.",
+                "Every junkie has their preferred dose. What's yours gonna be?",
+                "Quality product for quality customers. I don't cut my services with fillers."
+            ]
+            await ctx.send(f"💰 **{AGENT_NAMES['craig']}**: {random.choice(crypto_quotes)}")
+    
     @bot.command(name="pay")
     async def pay_command(ctx, service_type: str = None):
         """Payment command for services"""
@@ -390,10 +461,10 @@ def setup_bot():
             return
         
         # Validate service type
-        valid_services = ["hit", "dose", "trip", "premium"]
+        valid_services = ["hit", "dose", "trip", "premium", "one_time_hit", "five_dollar_rush", "junkified"]
         if not service_type or service_type.lower() not in valid_services:
             services_str = ", ".join([f"`{s}`" for s in valid_services])
-            await ctx.send(f"Please specify a valid service type. Available types: {services_str}")
+            await ctx.send(f"Please specify a valid service type. Available types: {services_str}\n\nUse `!plans` to see details about our subscription plans.")
             return
         
         # Set cooldown

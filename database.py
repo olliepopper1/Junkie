@@ -3,32 +3,36 @@ Database module for Trial Junkie
 Handles database connections and operations
 """
 import os
-import sqlite3
 import json
 import logging
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 class Database:
-    def __init__(self, db_path=None):
+    def __init__(self, db_url=None):
         """Initialize the database connection"""
-        if db_path is None:
-            db_path = os.getenv("DATABASE_PATH", "trial_junkie.db")
+        if db_url is None:
+            db_url = os.getenv("DATABASE_URL")
         
-        self.db_path = db_path
+        self.db_url = db_url
         self._initialize_db()
     
     def _get_connection(self):
         """Get a database connection"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # Return rows as dictionaries
+        conn = psycopg2.connect(self.db_url)
         return conn
+    
+    def _get_cursor(self, conn):
+        """Get a database cursor that returns dictionaries"""
+        return conn.cursor(cursor_factory=RealDictCursor)
     
     def _initialize_db(self):
         """Initialize the database with necessary tables"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         # Create users table
         cursor.execute('''
@@ -36,14 +40,16 @@ class Database:
             user_id TEXT PRIMARY KEY,
             username TEXT,
             created_at TEXT,
-            last_active TEXT
+            last_active TEXT,
+            tier TEXT DEFAULT 'free',
+            membership_expires TEXT
         )
         ''')
         
         # Create credentials table
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS credentials (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id TEXT,
             service TEXT,
             credential_type TEXT,
@@ -56,12 +62,41 @@ class Database:
         # Create commands table
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS commands (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id TEXT,
             command TEXT,
             parameters TEXT,
             executed_at TEXT,
             status TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (user_id)
+        )
+        ''')
+        
+        # Create payments table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT,
+            reference TEXT UNIQUE,
+            amount REAL,
+            service_type TEXT,
+            status TEXT DEFAULT 'pending',
+            tx_signature TEXT,
+            created_at TEXT,
+            completed_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (user_id)
+        )
+        ''')
+        
+        # Create usage_limits table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usage_limits (
+            id SERIAL PRIMARY KEY,
+            user_id TEXT,
+            command TEXT,
+            date TEXT,
+            count INTEGER DEFAULT 0,
+            UNIQUE(user_id, command, date),
             FOREIGN KEY (user_id) REFERENCES users (user_id)
         )
         ''')
@@ -74,9 +109,9 @@ class Database:
     def user_exists(self, user_id):
         """Check if a user exists in the database"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
-        cursor.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT 1 FROM users WHERE user_id = %s", (user_id,))
         result = cursor.fetchone() is not None
         
         conn.close()
@@ -88,11 +123,11 @@ class Database:
             return self.update_user_activity(user_id)
         
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         cursor.execute(
-            "INSERT INTO users (user_id, username, created_at, last_active) VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (user_id, username, created_at, last_active) VALUES (%s, %s, %s, %s)",
             (user_id, username, now, now)
         )
         
@@ -105,11 +140,11 @@ class Database:
     def update_user_activity(self, user_id):
         """Update a user's last active timestamp"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         cursor.execute(
-            "UPDATE users SET last_active = ? WHERE user_id = ?",
+            "UPDATE users SET last_active = %s WHERE user_id = %s",
             (now, user_id)
         )
         
@@ -120,11 +155,11 @@ class Database:
     def log_command(self, user_id, command, parameters, status="success"):
         """Log a command execution"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         cursor.execute(
-            "INSERT INTO commands (user_id, command, parameters, executed_at, status) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO commands (user_id, command, parameters, executed_at, status) VALUES (%s, %s, %s, %s, %s)",
             (user_id, command, parameters, now, status)
         )
         
@@ -137,7 +172,7 @@ class Database:
     def save_credential(self, user_id, service, credential_type, credential_value):
         """Save a generated credential"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         
@@ -146,7 +181,7 @@ class Database:
             credential_value = json.dumps(credential_value)
         
         cursor.execute(
-            "INSERT INTO credentials (user_id, service, credential_type, credential_value, created_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO credentials (user_id, service, credential_type, credential_value, created_at) VALUES (%s, %s, %s, %s, %s)",
             (user_id, service, credential_type, credential_value, now)
         )
         
@@ -159,13 +194,13 @@ class Database:
     def get_user_credentials(self, user_id, service=None):
         """Get a user's credentials, optionally filtered by service"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
-        query = "SELECT * FROM credentials WHERE user_id = ?"
+        query = "SELECT * FROM credentials WHERE user_id = %s"
         params = [user_id]
         
         if service:
-            query += " AND service = ?"
+            query += " AND service = %s"
             params.append(service)
         
         query += " ORDER BY created_at DESC"
@@ -196,10 +231,10 @@ class Database:
     def clear_user_data(self, user_id):
         """Clear all user data (for rehab command)"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         # Delete user credentials
-        cursor.execute("DELETE FROM credentials WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM credentials WHERE user_id = %s", (user_id,))
         
         # Don't delete the user or command history, just credentials
         
@@ -212,12 +247,12 @@ class Database:
     def get_user_stats(self, user_id):
         """Get statistics about a user's activity"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         stats = {}
         
         # Get basic user info
-        cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
         user = cursor.fetchone()
         if user:
             stats['username'] = user['username']
@@ -226,19 +261,19 @@ class Database:
         
         # Count credentials by type
         cursor.execute(
-            "SELECT credential_type, COUNT(*) as count FROM credentials WHERE user_id = ? GROUP BY credential_type",
+            "SELECT credential_type, COUNT(*) as count FROM credentials WHERE user_id = %s GROUP BY credential_type",
             (user_id,)
         )
         cred_counts = cursor.fetchall()
         stats['credentials'] = {row['credential_type']: row['count'] for row in cred_counts}
         
         # Count total credentials
-        cursor.execute("SELECT COUNT(*) as count FROM credentials WHERE user_id = ?", (user_id,))
-        stats['total_credentials'] = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(*) as count FROM credentials WHERE user_id = %s", (user_id,))
+        stats['total_credentials'] = cursor.fetchone()['count'] if cursor.fetchone() else 0
         
         # Count commands
         cursor.execute(
-            "SELECT command, COUNT(*) as count FROM commands WHERE user_id = ? GROUP BY command",
+            "SELECT command, COUNT(*) as count FROM commands WHERE user_id = %s GROUP BY command",
             (user_id,)
         )
         cmd_counts = cursor.fetchall()
@@ -255,28 +290,12 @@ class Database:
     def save_payment_request(self, user_id, amount, reference, service_type):
         """Save a payment request"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         
-        # Check if payments table exists, create if not
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            reference TEXT UNIQUE,
-            amount REAL,
-            service_type TEXT,
-            status TEXT,
-            tx_signature TEXT,
-            created_at TEXT,
-            completed_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
         cursor.execute(
-            "INSERT INTO payments (user_id, reference, amount, service_type, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO payments (user_id, reference, amount, service_type, status, created_at) VALUES (%s, %s, %s, %s, %s, %s)",
             (user_id, reference, amount, service_type, 'pending', now)
         )
         
@@ -289,18 +308,18 @@ class Database:
     def update_payment_status(self, reference, status, tx_signature=None):
         """Update a payment status"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         now = datetime.now().isoformat()
         
         if status == 'completed' and tx_signature:
             cursor.execute(
-                "UPDATE payments SET status = ?, tx_signature = ?, completed_at = ? WHERE reference = ?",
+                "UPDATE payments SET status = %s, tx_signature = %s, completed_at = %s WHERE reference = %s",
                 (status, tx_signature, now, reference)
             )
         else:
             cursor.execute(
-                "UPDATE payments SET status = ? WHERE reference = ?",
+                "UPDATE payments SET status = %s WHERE reference = %s",
                 (status, reference)
             )
         
@@ -313,9 +332,9 @@ class Database:
     def get_payment_by_reference(self, reference):
         """Get a payment by reference"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
-        cursor.execute("SELECT * FROM payments WHERE reference = ?", (reference,))
+        cursor.execute("SELECT * FROM payments WHERE reference = %s", (reference,))
         payment = cursor.fetchone()
         
         conn.close()
@@ -328,13 +347,13 @@ class Database:
     def get_user_payments(self, user_id, status=None):
         """Get payments for a user, optionally filtered by status"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
-        query = "SELECT * FROM payments WHERE user_id = ?"
+        query = "SELECT * FROM payments WHERE user_id = %s"
         params = [user_id]
         
         if status:
-            query += " AND status = ?"
+            query += " AND status = %s"
             params.append(status)
         
         query += " ORDER BY created_at DESC"
@@ -350,25 +369,16 @@ class Database:
     def update_user_tier(self, user_id, tier, expires_at=None):
         """Update a user's membership tier"""
         conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        # Make sure users table has tier and membership_expires columns
-        try:
-            cursor.execute("SELECT tier FROM users LIMIT 1")
-        except sqlite3.OperationalError:
-            # Add tier column if it doesn't exist
-            cursor.execute("ALTER TABLE users ADD COLUMN tier TEXT DEFAULT 'free'")
-            cursor.execute("ALTER TABLE users ADD COLUMN membership_expires TEXT")
-            conn.commit()
+        cursor = self._get_cursor(conn)
         
         if expires_at:
             cursor.execute(
-                "UPDATE users SET tier = ?, membership_expires = ? WHERE user_id = ?",
+                "UPDATE users SET tier = %s, membership_expires = %s WHERE user_id = %s",
                 (tier, expires_at, user_id)
             )
         else:
             cursor.execute(
-                "UPDATE users SET tier = ? WHERE user_id = ?",
+                "UPDATE users SET tier = %s WHERE user_id = %s",
                 (tier, user_id)
             )
         
@@ -381,17 +391,10 @@ class Database:
     def get_user_tier(self, user_id):
         """Get a user's membership tier"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
-        try:
-            cursor.execute("SELECT tier, membership_expires FROM users WHERE user_id = ?", (user_id,))
-            result = cursor.fetchone()
-        except sqlite3.OperationalError:
-            # If tier column doesn't exist, add it
-            cursor.execute("ALTER TABLE users ADD COLUMN tier TEXT DEFAULT 'free'")
-            cursor.execute("ALTER TABLE users ADD COLUMN membership_expires TEXT")
-            conn.commit()
-            result = {'tier': 'free', 'membership_expires': None}
+        cursor.execute("SELECT tier, membership_expires FROM users WHERE user_id = %s", (user_id,))
+        result = cursor.fetchone()
         
         conn.close()
         
@@ -416,34 +419,27 @@ class Database:
     def track_usage(self, user_id, command):
         """Track command usage for daily limits"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         today = datetime.now().strftime('%Y-%m-%d')
         
-        # Create table if it doesn't exist
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS usage_limits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            command TEXT,
-            date TEXT,
-            count INTEGER DEFAULT 0,
-            UNIQUE(user_id, command, date)
-        )
-        ''')
-        
-        # Try to update existing record
-        cursor.execute(
-            "UPDATE usage_limits SET count = count + 1 WHERE user_id = ? AND command = ? AND date = ?",
-            (user_id, command, today)
-        )
-        
-        # If no record was updated, insert new record
-        if cursor.rowcount == 0:
+        try:
+            # Try to update existing record
             cursor.execute(
-                "INSERT INTO usage_limits (user_id, command, date, count) VALUES (?, ?, ?, 1)",
+                "UPDATE usage_limits SET count = count + 1 WHERE user_id = %s AND command = %s AND date = %s",
                 (user_id, command, today)
             )
+            
+            # If no record was updated, insert new record
+            if cursor.rowcount == 0:
+                cursor.execute(
+                    "INSERT INTO usage_limits (user_id, command, date, count) VALUES (%s, %s, %s, 1)",
+                    (user_id, command, today)
+                )
+        except Exception as e:
+            # Handle the case where the table might not exist yet
+            logger.error(f"Error tracking usage: {e}")
+            conn.rollback()
         
         conn.commit()
         conn.close()
@@ -454,36 +450,29 @@ class Database:
     def get_usage_count(self, user_id, command=None):
         """Get usage count for today"""
         conn = self._get_connection()
-        cursor = conn.cursor()
+        cursor = self._get_cursor(conn)
         
         today = datetime.now().strftime('%Y-%m-%d')
         
-        # Create table if it doesn't exist
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS usage_limits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            command TEXT,
-            date TEXT,
-            count INTEGER DEFAULT 0,
-            UNIQUE(user_id, command, date)
-        )
-        ''')
-        
-        if command:
-            cursor.execute(
-                "SELECT count FROM usage_limits WHERE user_id = ? AND command = ? AND date = ?",
-                (user_id, command, today)
-            )
-            result = cursor.fetchone()
-            count = result['count'] if result else 0
-        else:
-            cursor.execute(
-                "SELECT SUM(count) as total FROM usage_limits WHERE user_id = ? AND date = ?",
-                (user_id, today)
-            )
-            result = cursor.fetchone()
-            count = result['total'] if result and result['total'] else 0
+        try:
+            if command:
+                cursor.execute(
+                    "SELECT count FROM usage_limits WHERE user_id = %s AND command = %s AND date = %s",
+                    (user_id, command, today)
+                )
+                result = cursor.fetchone()
+                count = result['count'] if result else 0
+            else:
+                cursor.execute(
+                    "SELECT SUM(count) as total FROM usage_limits WHERE user_id = %s AND date = %s",
+                    (user_id, today)
+                )
+                result = cursor.fetchone()
+                count = result['total'] if result and result['total'] else 0
+        except Exception as e:
+            # Handle the case where the table might not exist yet
+            logger.error(f"Error getting usage count: {e}")
+            count = 0
         
         conn.close()
         return count

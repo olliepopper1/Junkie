@@ -47,7 +47,7 @@ COLORS = {
 }
 
 # Payment settings
-ADMIN_WALLET = os.getenv("SOLANA_WALLET_ADDRESS", "YourSolanaWalletAddressHere")
+ADMIN_WALLET = os.getenv("SOLANA_WALLET_ADDRESS", "J5ufWogRFSNYuULDC3EHTAcWYFASnbCo1kVS81eqnwyt")
 SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
 
 # Pricing in SOL
@@ -55,7 +55,10 @@ PRICES = {
     "hit": 0.01,       # Full trial creation costs 0.01 SOL
     "dose": 0.005,     # Single agent usage costs 0.005 SOL
     "trip": 0.02,      # Automation script costs 0.02 SOL
-    "premium": 0.1     # Premium membership monthly fee costs 0.1 SOL
+    "premium": 0.1,    # Premium membership monthly fee costs 0.1 SOL
+    "one_time_hit": 0.0,    # Free plan - no cost
+    "five_dollar_rush": 0.036,  # $5 in SOL (approx.)
+    "junkified": 0.093     # $13 in SOL (approx.)
 }
 
 # Trial service tiers
@@ -71,6 +74,21 @@ SERVICE_TIERS = {
     "premium": {
         "daily_limit": 50,
         "description": "Premium tier with high daily limits and priority support"
+    },
+    "one_time_hit": {
+        "daily_limit": 1,
+        "description": "A quick blast of freedom, no strings attached",
+        "features": ["One-time free trial", "No credit card required", "Basic features only"]
+    },
+    "five_dollar_rush": {
+        "daily_limit": 25,
+        "description": "A rush of power for just five bucks",
+        "features": ["Limited-time access", "Multiple trials per day", "Standard features"]
+    },
+    "junkified": {
+        "daily_limit": 100,
+        "description": "Unlock unlimited possibilities—no limits, just freedom",
+        "features": ["Unlimited access", "Priority support", "All premium features", "No daily limits"]
     }
 }
 
