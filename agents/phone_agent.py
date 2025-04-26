@@ -5,7 +5,7 @@ Generates random phone numbers
 import logging
 import aiohttp
 import random
-from config import ENDPOINTS, RAPIDAPI_HOSTS, DEFAULT_HEADERS
+from config import ENDPOINTS, API_HOSTS, DEFAULT_HEADERS
 from agents.proxy import get_proxy
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class PhoneAgent:
         
         url = ENDPOINTS["random_phone"]
         headers = DEFAULT_HEADERS.copy()
-        headers["X-RapidAPI-Host"] = RAPIDAPI_HOSTS["random_phone"]
+        # No RapidAPI host needed for public APIs
         
         try:
             # Get proxy if enabled

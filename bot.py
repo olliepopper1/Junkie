@@ -108,8 +108,8 @@ def setup_bot():
         await ctx.send(embed=embed)
         
     @bot.command(name="hit")
-    async def hit_command(ctx, service: str = None):
-        """Full trial setup command (all agents)"""
+    async def hit_command(ctx, *, service_or_url: str = None):
+        """Full trial setup command (all agents) - Works with services or URLs"""
         user_id = ctx.author.id
         username = ctx.author.name
         
@@ -120,26 +120,81 @@ def setup_bot():
             return
             
         # Check if service was provided
-        if not service:
-            await ctx.send("❌ **Missing service name**. Use `!hit <service>` to start a trial.")
+        if not service_or_url:
+            from config import TRIAL_SERVICES
+            services_list = ", ".join(f"`{service}`" for service in TRIAL_SERVICES.keys())
+            
+            await ctx.send("❌ **Missing service name or URL**. Use one of these options:")
+            await ctx.send(f"1️⃣ **Predefined services:** `!hit <service>` - Available: {services_list}")
+            await ctx.send("2️⃣ **Custom website:** `!hit url <website_url>` - Example: `!hit url https://www.example.com/trial`")
             return
             
-        # Log command usage
-        cmd_logger.log_command(user_id, username, "hit", service)
-        
-        # Send initial response
-        await ctx.send(f"💉 **The Pusher** is preparing your `{service}` trial... Hold tight.")
-        
-        # Set cooldown
-        cooldown.set_cooldown(user_id, "hit", 300)  # 5 minute cooldown
-        
-        # Process the request through the pusher
-        try:
-            result = await pusher.process_hit(user_id, username, service)
-            await ctx.send(embed=result)
-        except Exception as e:
-            logger.error(f"Error processing hit command: {e}")
-            await ctx.send(f"❌ **Bad batch!** Something went wrong: {str(e)}")
+        # Check if it's a URL-based request
+        if service_or_url.lower().startswith("url "):
+            url = service_or_url[4:].strip()  # Remove "url " prefix
+            
+            # Validate URL format
+            if not url.startswith("http"):
+                await ctx.send("❌ **Invalid URL format.** URL must start with http:// or https://")
+                return
+                
+            # Log command usage
+            cmd_logger.log_command(user_id, username, "hit", f"custom_url: {url}")
+            
+            # Extract domain name for service ID
+            try:
+                from urllib.parse import urlparse
+                domain = urlparse(url).netloc.replace("www.", "").split(".")[0]
+                
+                # Create temporary configuration
+                from config import TRIAL_SERVICES
+                
+                # Register as temporary service if not already in known services
+                if domain not in TRIAL_SERVICES:
+                    TRIAL_SERVICES[domain] = {
+                        "url": url,
+                        "trial_period_days": 14,  # Default assumption
+                        "price": "Unknown",
+                        "plan_name": f"{domain.capitalize()} Trial",
+                        "required_fields": ["identity", "email", "card"],
+                        "supports_automation": True,
+                        "cancellation_path": "Account Settings",
+                        "is_custom": True
+                    }
+                
+                # Send initial response
+                await ctx.send(f"💉 **The Pusher** is preparing your `{domain}` trial from {url}... Hold tight.")
+                
+                # Set cooldown
+                cooldown.set_cooldown(user_id, "hit", 300)  # 5 minute cooldown
+                
+                # Process the request through the pusher
+                result = await pusher.process_hit(user_id, username, domain)
+                await ctx.send(embed=result)
+                
+            except Exception as e:
+                logger.error(f"Error processing hit command with URL: {e}")
+                await ctx.send(f"❌ **Bad batch!** Something went wrong with the URL: {str(e)}")
+        else:
+            # Standard service hit
+            service = service_or_url.lower()
+            
+            # Log command usage
+            cmd_logger.log_command(user_id, username, "hit", service)
+            
+            # Send initial response
+            await ctx.send(f"💉 **The Pusher** is preparing your `{service}` trial... Hold tight.")
+            
+            # Set cooldown
+            cooldown.set_cooldown(user_id, "hit", 300)  # 5 minute cooldown
+            
+            # Process the request through the pusher
+            try:
+                result = await pusher.process_hit(user_id, username, service)
+                await ctx.send(embed=result)
+            except Exception as e:
+                logger.error(f"Error processing hit command: {e}")
+                await ctx.send(f"❌ **Bad batch!** Something went wrong: {str(e)}")
             
     @bot.command(name="dose")
     async def dose_command(ctx, agent_type: str = None, platform: str = None):
@@ -174,8 +229,8 @@ def setup_bot():
             await ctx.send(f"❌ **Bad trip!** Something went wrong: {str(e)}")
     
     @bot.command(name="trip")
-    async def trip_command(ctx, script: str = None):
-        """Run automation scripts"""
+    async def trip_command(ctx, *, script_or_url: str = None):
+        """Run automation scripts for predefined services or custom trial website URLs"""
         user_id = ctx.author.id
         username = ctx.author.name
         
@@ -186,27 +241,84 @@ def setup_bot():
             return
         
         # Check if script was provided
-        if not script:
-            await ctx.send("❌ **Missing script name**. Use `!trip <script>` to run an automation.")
-            await ctx.send("Available scripts: `signup`, `verify`, `cancel`")
+        if not script_or_url:
+            from config import TRIAL_SERVICES
+            services_list = ", ".join(f"`{service}`" for service in TRIAL_SERVICES.keys())
+            
+            await ctx.send("❌ **Missing service name or URL**. Use one of these options:")
+            await ctx.send(f"1️⃣ **Predefined services:** `!trip <service>` - Available: {services_list}")
+            await ctx.send("2️⃣ **Custom website:** `!trip url <website_url>` - Example: `!trip url https://www.example.com/trial`")
+            await ctx.send("3️⃣ **Basic scripts:** `!trip <script>` - Available: `signup`, `verify`, `cancel`")
             return
         
-        # Log command usage
-        cmd_logger.log_command(user_id, username, "trip", script)
-        
-        # Send initial response
-        await ctx.send(f"🍄 **Shroomy Sal** is taking you on a `{script}` trip... Enjoy the ride.")
-        
-        # Set cooldown
-        cooldown.set_cooldown(user_id, "trip", 600)  # 10 minute cooldown
-        
-        # Process the trip request
-        try:
-            result = await pusher.process_trip(user_id, username, script)
-            await ctx.send(embed=result)
-        except Exception as e:
-            logger.error(f"Error processing trip command: {e}")
-            await ctx.send(f"❌ **Bad trip!** Something went wrong: {str(e)}")
+        # Check if it's a custom URL
+        if script_or_url.lower().startswith("url "):
+            url = script_or_url[4:].strip()  # Remove "url " prefix
+            
+            # Check if URL is valid
+            if not url.startswith("http"):
+                await ctx.send("❌ **Invalid URL format.** URL must start with http:// or https://")
+                return
+                
+            # Log command usage
+            cmd_logger.log_command(user_id, username, "trip", f"custom_url: {url}")
+            
+            # Send initial response
+            await ctx.send(f"🍄 **Shroomy Sal** is exploring a new trip to `{url}`... Taking you on a guided expedition.")
+            
+            # Register custom URL as a temporary service
+            try:
+                # Extract domain name for service ID
+                from urllib.parse import urlparse
+                domain = urlparse(url).netloc.replace("www.", "").split(".")[0]
+                
+                # Create temporary configuration
+                from config import TRIAL_SERVICES
+                
+                # Register as temporary service if not already in known services
+                if domain not in TRIAL_SERVICES:
+                    TRIAL_SERVICES[domain] = {
+                        "url": url,
+                        "trial_period_days": 14,  # Default assumption
+                        "price": "Unknown",
+                        "plan_name": f"{domain.capitalize()} Trial",
+                        "required_fields": ["identity", "email", "card"],
+                        "supports_automation": True,
+                        "cancellation_path": "Account Settings",
+                        "is_custom": True
+                    }
+                    
+                # Set cooldown
+                cooldown.set_cooldown(user_id, "trip", 600)  # 10 minute cooldown
+                
+                # Process the trip request with the domain as the service name
+                result = await pusher.process_trip(user_id, username, domain)
+                await ctx.send(embed=result)
+                
+            except Exception as e:
+                logger.error(f"Error processing custom URL trip command: {e}")
+                await ctx.send(f"❌ **Bad trip!** Something went wrong with the custom URL: {str(e)}")
+                
+        else:
+            # Regular predefined script or service
+            script = script_or_url.lower()
+            
+            # Log command usage
+            cmd_logger.log_command(user_id, username, "trip", script)
+            
+            # Send initial response
+            await ctx.send(f"🍄 **Shroomy Sal** is taking you on a `{script}` trip... Enjoy the ride.")
+            
+            # Set cooldown
+            cooldown.set_cooldown(user_id, "trip", 600)  # 10 minute cooldown
+            
+            # Process the trip request
+            try:
+                result = await pusher.process_trip(user_id, username, script)
+                await ctx.send(embed=result)
+            except Exception as e:
+                logger.error(f"Error processing trip command: {e}")
+                await ctx.send(f"❌ **Bad trip!** Something went wrong: {str(e)}")
     
     @bot.command(name="stash")
     async def stash_command(ctx):
@@ -588,5 +700,172 @@ def setup_bot():
             except Exception as e:
                 await ctx.send(f"Error fetching tier status: {str(e)}")
                 logger.error(f"Error processing tier command: {str(e)}")
+    
+    @bot.command(name="referral")
+    async def referral_command(ctx):
+        """Get your referral code or see your referral stats"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "referral"):
+            remaining = cooldown.get_remaining_time(user_id, "referral")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Referral requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "referral", COOLDOWNS["referral"])
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                # Get or create a referral code
+                referral_code = db.get_referral_code(user_id)
+                if not referral_code:
+                    await ctx.send("❌ Could not create a referral code. Please try again later.")
+                    return
+                
+                # Get referral statistics
+                referrals = db.get_user_referrals(user_id)
+                total_referrals = len(referrals) if referrals else 0
+                
+                # Get commission statistics
+                total_commission = db.get_total_commission(user_id)
+                commissions = db.get_user_commissions(user_id)
+                pending_commission = sum(c['amount'] for c in commissions if c['status'] == 'pending') if commissions else 0
+                paid_commission = sum(c['amount'] for c in commissions if c['status'] == 'paid') if commissions else 0
+                
+                # Create an embed to display the information
+                embed = discord.Embed(
+                    title="🔌 Your Referral Program",
+                    description="Refer friends to Trial Junkie and earn 10% commission on their payments!",
+                    color=discord.Color.purple()
+                )
+                
+                embed.add_field(name="Your Referral Code", value=f"`{referral_code}`", inline=False)
+                embed.add_field(name="Refer Friends", value=f"Tell friends to use `!refer {referral_code}` to join with your referral", inline=False)
+                embed.add_field(name="Total Referrals", value=str(total_referrals), inline=True)
+                embed.add_field(name="Earnings", value=f"{total_commission:.4f} SOL", inline=True)
+                embed.add_field(name="Pending", value=f"{pending_commission:.4f} SOL", inline=True)
+                embed.add_field(name="Paid", value=f"{paid_commission:.4f} SOL", inline=True)
+                
+                embed.set_footer(text="10% commission on all payments from your referrals")
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "referral", "")
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error fetching referral info: {str(e)}")
+                logger.error(f"Error processing referral command: {str(e)}")
+    
+    @bot.command(name="refer")
+    async def refer_command(ctx, code: str = None):
+        """Register with someone's referral code"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        if not code:
+            await ctx.send("❌ Please provide a referral code. Usage: `!refer [code]`")
+            return
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                # Try to register the referral
+                success, message = db.register_referral(user_id, code)
+                
+                if success:
+                    # Get referrer's information
+                    embed = discord.Embed(
+                        title="✅ Referral Successful!",
+                        description=message,
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(name="Your Referral Benefits", value="Refer others with `!referral` to earn 10% commission on their payments!")
+                else:
+                    # Failed to register
+                    embed = discord.Embed(
+                        title="❌ Referral Failed",
+                        description=message,
+                        color=discord.Color.red()
+                    )
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "refer", code)
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error processing referral: {str(e)}")
+                logger.error(f"Error processing refer command: {str(e)}")
+                
+    @bot.command(name="commissions")
+    async def commissions_command(ctx):
+        """View your commission earnings from referrals"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "commissions"):
+            remaining = cooldown.get_remaining_time(user_id, "commissions")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Commission requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "commissions", COOLDOWNS["commissions"])
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                # Get commission details
+                commissions = db.get_user_commissions(user_id)
+                
+                if not commissions:
+                    await ctx.send("💸 You haven't earned any commissions yet. Use `!referral` to get your referral code and start earning!")
+                    return
+                
+                # Calculate totals
+                total_commission = db.get_total_commission(user_id)
+                pending = sum(c['amount'] for c in commissions if c['status'] == 'pending')
+                paid = sum(c['amount'] for c in commissions if c['status'] == 'paid')
+                
+                # Create an embed for the commissions
+                embed = discord.Embed(
+                    title="💰 Your Commission Earnings",
+                    description=f"Total earnings: {total_commission:.4f} SOL",
+                    color=discord.Color.gold()
+                )
+                
+                embed.add_field(name="Pending", value=f"{pending:.4f} SOL", inline=True)
+                embed.add_field(name="Paid", value=f"{paid:.4f} SOL", inline=True)
+                embed.add_field(name="Referrals", value=str(len(set(c['referred_id'] for c in commissions))), inline=True)
+                
+                # Add the most recent commissions
+                embed.add_field(name="Recent Commissions", value="-------------------", inline=False)
+                
+                for i, commission in enumerate(commissions[:5]):  # Show the 5 most recent
+                    embed.add_field(
+                        name=f"#{i+1} - {commission['created_at'][:10]}",
+                        value=f"From: {commission['referred_username']}\nAmount: {commission['amount']:.4f} SOL\nStatus: {commission['status'].title()}",
+                        inline=True
+                    )
+                
+                embed.set_footer(text="Use !referral to get your referral code and earn more!")
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "commissions", "")
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error fetching commissions: {str(e)}")
+                logger.error(f"Error processing commissions command: {str(e)}")
     
     return bot

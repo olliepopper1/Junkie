@@ -101,6 +101,39 @@ class Database:
         )
         ''')
         
+        # Create referrals table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referrals (
+            id SERIAL PRIMARY KEY,
+            referrer_id TEXT,
+            referred_id TEXT,
+            referral_code TEXT UNIQUE,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT,
+            confirmed_at TEXT,
+            FOREIGN KEY (referrer_id) REFERENCES users (user_id),
+            FOREIGN KEY (referred_id) REFERENCES users (user_id)
+        )
+        ''')
+        
+        # Create commissions table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS commissions (
+            id SERIAL PRIMARY KEY,
+            referrer_id TEXT,
+            referred_id TEXT,
+            payment_id INTEGER,
+            amount REAL,
+            percentage REAL,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT,
+            paid_at TEXT,
+            FOREIGN KEY (referrer_id) REFERENCES users (user_id),
+            FOREIGN KEY (referred_id) REFERENCES users (user_id),
+            FOREIGN KEY (payment_id) REFERENCES payments (id)
+        )
+        ''')
+        
         conn.commit()
         conn.close()
         
@@ -476,3 +509,285 @@ class Database:
         
         conn.close()
         return count
+        
+    # Referral system methods
+    def create_referral_code(self, user_id):
+        """Create a unique referral code for a user"""
+        import uuid
+        import base64
+        
+        # Generate a short, unique referral code based on the user ID and a random component
+        unique_id = str(uuid.uuid4())[:8]  # First 8 chars of UUID
+        code_base = f"{user_id}-{unique_id}"
+        
+        # Create a URL-safe code
+        referral_code = base64.urlsafe_b64encode(code_base.encode()).decode()[:12]
+        
+        # Store the referral code
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        now = datetime.now().isoformat()
+        
+        try:
+            # Check if user already has a referral code
+            cursor.execute(
+                "SELECT referral_code FROM referrals WHERE referrer_id = %s AND referred_id IS NULL",
+                (user_id,)
+            )
+            existing_code = cursor.fetchone()
+            
+            if existing_code:
+                # Return existing code
+                conn.close()
+                return existing_code['referral_code']
+            
+            # Create new referral code entry
+            cursor.execute(
+                "INSERT INTO referrals (referrer_id, referral_code, created_at) VALUES (%s, %s, %s)",
+                (user_id, referral_code, now)
+            )
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Created referral code - User: {user_id}, Code: {referral_code}")
+            return referral_code
+        except Exception as e:
+            logger.error(f"Error creating referral code: {e}")
+            conn.rollback()
+            conn.close()
+            return None
+    
+    def get_referral_code(self, user_id):
+        """Get a user's referral code, generating one if needed"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            cursor.execute(
+                "SELECT referral_code FROM referrals WHERE referrer_id = %s AND referred_id IS NULL",
+                (user_id,)
+            )
+            code = cursor.fetchone()
+            
+            conn.close()
+            
+            if code:
+                return code['referral_code']
+            else:
+                # No code exists, generate one
+                return self.create_referral_code(user_id)
+        except Exception as e:
+            logger.error(f"Error getting referral code: {e}")
+            conn.close()
+            return self.create_referral_code(user_id)
+    
+    def register_referral(self, referred_id, referral_code):
+        """Register a user as referred by another user via referral code"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            # First verify the code exists and is unused
+            cursor.execute(
+                "SELECT id, referrer_id FROM referrals WHERE referral_code = %s AND referred_id IS NULL",
+                (referral_code,)
+            )
+            referral = cursor.fetchone()
+            
+            if not referral:
+                conn.close()
+                return False, "Invalid or already used referral code"
+            
+            # Make sure user isn't referring themselves
+            if referral['referrer_id'] == referred_id:
+                conn.close()
+                return False, "You can't refer yourself"
+            
+            # Check if user is already referred
+            cursor.execute(
+                "SELECT 1 FROM referrals WHERE referred_id = %s AND status = 'active'",
+                (referred_id,)
+            )
+            if cursor.fetchone():
+                conn.close()
+                return False, "User is already referred by someone else"
+            
+            # Create a new referral entry linking to the code's owner
+            now = datetime.now().isoformat()
+            
+            cursor.execute(
+                "UPDATE referrals SET referred_id = %s, status = 'active', confirmed_at = %s WHERE id = %s",
+                (referred_id, now, referral['id'])
+            )
+            
+            # Create a new empty code for the referred user to be able to refer others
+            self.create_referral_code(referred_id)
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Registered referral - Referrer: {referral['referrer_id']}, Referred: {referred_id}")
+            return True, f"Successfully registered with referral code. Welcome to Trial Junkie!"
+        except Exception as e:
+            logger.error(f"Error registering referral: {e}")
+            conn.rollback()
+            conn.close()
+            return False, f"Error processing referral: {str(e)}"
+    
+    def record_commission(self, payment_id, amount):
+        """Record a commission when a referred user makes a payment"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            # Get payment details
+            cursor.execute("SELECT user_id, amount, service_type FROM payments WHERE id = %s", (payment_id,))
+            payment = cursor.fetchone()
+            
+            if not payment:
+                conn.close()
+                return False, "Payment not found"
+            
+            # Find the referrer (if any)
+            cursor.execute(
+                "SELECT referrer_id FROM referrals WHERE referred_id = %s AND status = 'active'",
+                (payment['user_id'],)
+            )
+            referral = cursor.fetchone()
+            
+            if not referral:
+                # No referrer found, no commission to record
+                conn.close()
+                return False, "No active referrer found for this user"
+            
+            # Calculate commission (10% of payment amount)
+            commission_amount = round(float(amount) * 0.1, 4)  # 10% commission, rounded to 4 decimal places
+            
+            # Record the commission
+            now = datetime.now().isoformat()
+            
+            cursor.execute(
+                """
+                INSERT INTO commissions 
+                (referrer_id, referred_id, payment_id, amount, percentage, status, created_at) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (referral['referrer_id'], payment['user_id'], payment_id, commission_amount, 10.0, 'pending', now)
+            )
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Recorded commission - Referrer: {referral['referrer_id']}, Amount: {commission_amount}")
+            return True, f"Commission of {commission_amount} SOL recorded for payment"
+        except Exception as e:
+            logger.error(f"Error recording commission: {e}")
+            conn.rollback()
+            conn.close()
+            return False, f"Error recording commission: {str(e)}"
+    
+    def get_user_referrals(self, user_id):
+        """Get all users referred by a given user"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            cursor.execute(
+                """
+                SELECT r.referred_id, u.username, r.confirmed_at, r.status 
+                FROM referrals r
+                JOIN users u ON r.referred_id = u.user_id
+                WHERE r.referrer_id = %s AND r.referred_id IS NOT NULL
+                ORDER BY r.confirmed_at DESC
+                """,
+                (user_id,)
+            )
+            referrals = cursor.fetchall()
+            
+            conn.close()
+            return [dict(r) for r in referrals]
+        except Exception as e:
+            logger.error(f"Error getting user referrals: {e}")
+            conn.close()
+            return []
+    
+    def get_user_commissions(self, user_id, status=None):
+        """Get all commissions for a user, optionally filtered by status"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            query = """
+                SELECT c.*, u.username as referred_username
+                FROM commissions c
+                JOIN users u ON c.referred_id = u.user_id
+                WHERE c.referrer_id = %s
+            """
+            params = [user_id]
+            
+            if status:
+                query += " AND c.status = %s"
+                params.append(status)
+            
+            query += " ORDER BY c.created_at DESC"
+            
+            cursor.execute(query, params)
+            commissions = cursor.fetchall()
+            
+            conn.close()
+            return [dict(c) for c in commissions]
+        except Exception as e:
+            logger.error(f"Error getting user commissions: {e}")
+            conn.close()
+            return []
+    
+    def get_total_commission(self, user_id):
+        """Get the total commission amount for a user"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            cursor.execute(
+                "SELECT SUM(amount) as total FROM commissions WHERE referrer_id = %s",
+                (user_id,)
+            )
+            result = cursor.fetchone()
+            
+            conn.close()
+            return result['total'] if result and result['total'] else 0.0
+        except Exception as e:
+            logger.error(f"Error getting total commission: {e}")
+            conn.close()
+            return 0.0
+    
+    def update_commission_status(self, commission_id, status, paid_at=None):
+        """Update the status of a commission (e.g., mark as paid)"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            now = datetime.now().isoformat() if paid_at is None else paid_at
+            
+            if status == 'paid':
+                cursor.execute(
+                    "UPDATE commissions SET status = %s, paid_at = %s WHERE id = %s",
+                    (status, now, commission_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE commissions SET status = %s WHERE id = %s",
+                    (status, commission_id)
+                )
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Updated commission status - ID: {commission_id}, Status: {status}")
+            return True
+        except Exception as e:
+            logger.error(f"Error updating commission status: {e}")
+            conn.rollback()
+            conn.close()
+            return False

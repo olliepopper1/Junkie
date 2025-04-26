@@ -7,7 +7,7 @@ import random
 import string
 import aiohttp
 import json
-from config import ENDPOINTS, RAPIDAPI_HOSTS, DEFAULT_HEADERS
+from config import ENDPOINTS, API_HOSTS, DEFAULT_HEADERS
 from agents.proxy import get_proxy
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class EmailAgent:
             # Use the RapidAPI random user generator to get email
             url = ENDPOINTS["random_user"]
             headers = DEFAULT_HEADERS.copy()
-            headers["X-RapidAPI-Host"] = RAPIDAPI_HOSTS["random_user"]
+            # No RapidAPI host needed for public APIs
             
             # Get proxy if enabled
             proxy = get_proxy()
@@ -102,7 +102,7 @@ class EmailAgent:
         try:
             url = ENDPOINTS["temp_email"]
             headers = DEFAULT_HEADERS.copy()
-            headers["X-RapidAPI-Host"] = RAPIDAPI_HOSTS["temp_email"]
+            # No RapidAPI host needed for public APIs
             
             # Get proxy if enabled
             proxy = get_proxy()

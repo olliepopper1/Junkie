@@ -24,7 +24,10 @@ COOLDOWNS = {
     "pay": 30,              # 30 seconds for payment commands
     "verify_payment": 10,   # 10 seconds for payment verification
     "payments": 60,         # 1 minute for payment history
-    "tier": 60              # 1 minute for tier status
+    "tier": 60,             # 1 minute for tier status
+    "referral": 30,         # 30 seconds for referral code 
+    "refer": 10,            # 10 seconds for using a referral code
+    "commissions": 30       # 30 seconds for commission status
 }
 
 # Agent names and themes
@@ -94,38 +97,133 @@ SERVICE_TIERS = {
 
 # API endpoints - All using RapidAPI services
 ENDPOINTS = {
-    # Identity generation
-    "random_user": "https://random-user-generator.p.rapidapi.com/api",
+    # Identity generation - Random Data API 
+    "random_user": "https://random-data-api.com/api/v2/users",
     
-    # Phone generation
-    "random_phone": "https://random-phone-number.p.rapidapi.com/api/phone/random",
+    # Phone generation - Randomized data generator
+    "random_phone": "https://random-data-api.com/api/v2/phones",
     
-    # Card generation
-    "fake_card": "https://fake-credit-card-generator.p.rapidapi.com/api/fake-credit-card-generator",
+    # Card generation - Credit Card Random API
+    "fake_card": "https://randomuser.me/api/?inc=name,location&nat=us",
     
-    # Email generation (using random user API for consistency)
-    "temp_email": "https://temp-mail44.p.rapidapi.com/api/v3/email/new",
+    # Email generation - Random User API for consistent data
+    "temp_email": "https://random-data-api.com/api/v2/users?response_type=json",
     
-    # Additional endpoints for potential expansion
-    "address_generator": "https://random-address-generator.p.rapidapi.com/api",
-    "currency_converter": "https://currency-converter18.p.rapidapi.com/api/v1/convert"
+    # Backup endpoints for reliable operation 
+    "random_address": "https://random-data-api.com/api/v2/addresses",
+    "random_bank": "https://random-data-api.com/api/v2/banks"
 }
 
-# RapidAPI host names
-RAPIDAPI_HOSTS = {
-    "random_user": "random-user-generator.p.rapidapi.com",
-    "random_phone": "random-phone-number.p.rapidapi.com",
-    "fake_card": "fake-credit-card-generator.p.rapidapi.com",
-    "temp_email": "temp-mail44.p.rapidapi.com",
-    "address_generator": "random-address-generator.p.rapidapi.com",
-    "currency_converter": "currency-converter18.p.rapidapi.com"
+# Supported trial services with configuration
+TRIAL_SERVICES = {
+    "hulu": {
+        "url": "https://www.hulu.com/",
+        "trial_period_days": 30,
+        "price": "$14.99/month",
+        "plan_name": "Hulu (No Ads)",
+        "required_fields": ["identity", "email", "card", "phone"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Cancel Subscription"
+    },
+    "netflix": {
+        "url": "https://www.netflix.com/",
+        "trial_period_days": 30,
+        "price": "$15.49/month",
+        "plan_name": "Netflix Standard",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Cancel Membership"
+    },
+    "disney": {
+        "url": "https://www.disneyplus.com/",
+        "trial_period_days": 7,
+        "price": "$10.99/month",
+        "plan_name": "Disney+ Premium",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Profile > Account > Cancel Subscription"
+    },
+    "spotify": {
+        "url": "https://www.spotify.com/",
+        "trial_period_days": 30,
+        "price": "$10.99/month",
+        "plan_name": "Spotify Premium",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Subscription > Cancel Premium"
+    },
+    "amazon": {
+        "url": "https://www.amazon.com/",
+        "trial_period_days": 30,
+        "price": "$14.99/month",
+        "plan_name": "Amazon Prime",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Prime > Manage Membership > End Membership"
+    },
+    "youtube": {
+        "url": "https://www.youtube.com/premium",
+        "trial_period_days": 30,
+        "price": "$13.99/month",
+        "plan_name": "YouTube Premium",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Memberships > Cancel Membership"
+    },
+    "paramount": {
+        "url": "https://www.paramountplus.com/",
+        "trial_period_days": 7,
+        "price": "$11.99/month",
+        "plan_name": "Paramount+ Essential",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Cancel Subscription"
+    },
+    "apple": {
+        "url": "https://www.apple.com/apple-tv-plus/",
+        "trial_period_days": 7,
+        "price": "$9.99/month",
+        "plan_name": "Apple TV+",
+        "required_fields": ["identity", "email", "card", "apple_id"],
+        "supports_automation": True,
+        "cancellation_path": "Settings > Apple ID > Subscriptions > Apple TV+ > Cancel"
+    },
+    "hbomax": {
+        "url": "https://www.max.com/",
+        "trial_period_days": 7,
+        "price": "$15.99/month",
+        "plan_name": "Max Ad-Free",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Billing Information > Cancel Subscription"
+    },
+    "peacock": {
+        "url": "https://www.peacocktv.com/",
+        "trial_period_days": 7,
+        "price": "$11.99/month",
+        "plan_name": "Peacock Premium Plus",
+        "required_fields": ["identity", "email", "card"],
+        "supports_automation": True,
+        "cancellation_path": "Account > Plans & Payment > Cancel Plan"
+    }
+}
+
+# API host settings - We've migrated to open APIs that don't require RapidAPI keys
+API_HOSTS = {
+    "random_user": "random-data-api.com",
+    "random_phone": "random-data-api.com",
+    "fake_card": "randomuser.me",
+    "temp_email": "random-data-api.com",
+    "random_address": "random-data-api.com",
+    "random_bank": "random-data-api.com"
 }
 
 # Proxy settings
 PROXY_ENABLED = os.getenv("PROXY_ENABLED", "False").lower() == "true"
 
-# Default headers for API requests
+# Default headers for regular API requests
 DEFAULT_HEADERS = {
-    "X-RapidAPI-Key": RAPIDAPI_KEY,
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "TrialJunkie/1.0.0"
 }

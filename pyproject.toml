@@ -14,5 +14,6 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "pyyaml>=6.0.2",
     "solana>=0.36.6",
+    "trafilatura>=2.0.0",
     "web3>=7.10.0",
 ]

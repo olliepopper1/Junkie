@@ -7,7 +7,7 @@ import aiohttp
 import random
 import json
 from datetime import datetime, timedelta
-from config import ENDPOINTS, RAPIDAPI_HOSTS, DEFAULT_HEADERS
+from config import ENDPOINTS, API_HOSTS, DEFAULT_HEADERS
 from agents.proxy import get_proxy
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,6 @@ class IdentityAgent:
         
         url = ENDPOINTS["random_user"]
         headers = DEFAULT_HEADERS.copy()
-        headers["X-RapidAPI-Host"] = RAPIDAPI_HOSTS["random_user"]
         
         # Add query parameters if provided
         params = {}
