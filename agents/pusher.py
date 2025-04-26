@@ -355,18 +355,25 @@ class Pusher:
         
         return embed
     
-    async def process_verify_payment(self, user_id, username, reference=None):
+    async def process_verify_payment(self, user_id, username, tx_id=None):
         """Verify a payment"""
         logger.info(f"Verifying payment for {username} ({user_id})")
         
         # Ensure user exists in database
         self.db.create_user(user_id, username)
         
-        # Check payment status
-        is_paid = await self.payment_agent.check_payment(user_id, reference)
+        # For this simplified version, we'll consider providing a tx_id as manual confirmation
+        is_manual_confirmation = tx_id is not None and tx_id.lower() != "check"
+        
+        if is_manual_confirmation:
+            # User is confirming they sent payment
+            is_paid = await self.payment_agent.process_manual_payment(user_id)
+        else:
+            # Check payment status automatically (simulated for demo)
+            is_paid = await self.payment_agent.check_payment(user_id)
         
         # Log the command
-        self.db.log_command(user_id, "verify_payment", reference or "")
+        self.db.log_command(user_id, "verify_payment", tx_id or "")
         
         # Get payment status
         status = await self.payment_agent.get_payment_status(user_id)
@@ -376,7 +383,8 @@ class Pusher:
             # Payment was successful
             
             # Update user tier based on the service type
-            payment = self.db.get_payment_by_reference(reference or status.get('reference', ''))
+            reference = status.get('reference', '')
+            payment = self.db.get_payment_by_reference(reference)
             if payment and payment['service_type'] == 'premium':
                 # Set premium membership for 30 days
                 expiry_date = (datetime.now() + timedelta(days=30)).isoformat()
@@ -395,9 +403,16 @@ class Pusher:
                 inline=False
             )
             
+            if payment and payment['service_type'] == 'premium':
+                embed.add_field(
+                    name="Premium Status", 
+                    value="Your Premium membership is now active for 30 days!", 
+                    inline=False
+                )
+            
             embed.add_field(
                 name="Next Steps", 
-                value="You can now use the premium features of Trial Junkie!", 
+                value=f"You can now use the paid features of Trial Junkie for `{payment['service_type'] if payment else 'service'}`!", 
                 inline=False
             )
             
@@ -432,25 +447,31 @@ class Pusher:
             )
             
             if 'time_left' in status:
+                # Convert seconds to hours and minutes for better readability
+                hours = status['time_left'] // 3600
+                minutes = (status['time_left'] % 3600) // 60
+                time_display = f"**{hours}h {minutes}m**" if hours > 0 else f"**{minutes}m**"
+                
                 embed.add_field(
                     name="Time Remaining", 
-                    value=f"**{status['time_left'] // 60}m {status['time_left'] % 60}s**", 
+                    value=time_display, 
                     inline=True
                 )
             
-            embed.add_field(
-                name="Reference", 
-                value=f"```{status.get('reference', 'N/A')}```" if 'reference' in status else "No reference found", 
-                inline=False
-            )
+            if 'reference' in status:
+                embed.add_field(
+                    name="Reference Code", 
+                    value=f"```{status['reference']}```", 
+                    inline=False
+                )
             
             embed.add_field(
                 name="Instructions", 
                 value=(
-                    "1. Make sure you've sent the payment to the correct wallet address\n"
-                    "2. Ensure you included the reference in the transaction memo\n"
-                    "3. Wait for blockchain confirmation (may take a few minutes)\n"
-                    "4. Use `!verify_payment` again to check status"
+                    "1. Send the exact SOL amount to the wallet address provided\n"
+                    "2. Once sent, use `!verify_payment sent` to confirm your payment\n"
+                    "3. Your payment will be manually verified\n"
+                    "4. Use `!verify_payment` at any time to check status"
                 ), 
                 inline=False
             )
