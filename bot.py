@@ -361,6 +361,12 @@ def setup_bot():
         )
         
         embed.add_field(
+            name="💰 Crypto Craig",
+            value="Payment processor. Handles all your Solana transactions with the utmost discretion.",
+            inline=False
+        )
+        
+        embed.add_field(
             name="🎯 The Pusher",
             value="Main dealer. Controls all agents and delivers the goods.",
             inline=False
@@ -369,5 +375,147 @@ def setup_bot():
         embed.set_footer(text="Use !quote <agent> to hear from your favorite agent")
         
         await ctx.send(embed=embed)
+        
+    @bot.command(name="pay")
+    async def pay_command(ctx, service_type: str = None):
+        """Payment command for services"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "pay"):
+            remaining = cooldown.get_remaining_time(user_id, "pay")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Payment requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Validate service type
+        valid_services = ["hit", "dose", "trip", "premium"]
+        if not service_type or service_type.lower() not in valid_services:
+            services_str = ", ".join([f"`{s}`" for s in valid_services])
+            await ctx.send(f"Please specify a valid service type. Available types: {services_str}")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "pay", COOLDOWNS["pay"])
+        
+        # Generate payment request
+        try:
+            # Show typing indicator
+            async with ctx.typing():
+                embed = await pusher.process_payment(user_id, username, service_type.lower())
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "pay", service_type)
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+                # Add a random quote from Crypto Craig
+                crypto_quotes = [
+                    "Blockchain doesn't lie, but people do. I only deal in the former.",
+                    "Your SOL will be as secure as your trial credentials.",
+                    "In crypto we trust. All other payment methods are sus.",
+                    "Remember: no refunds, no chargebacks, no mercy. That's the crypto way.",
+                    "Slinging SOL is my specialty. Keep it flowing and I'll keep your trials going."
+                ]
+                await ctx.send(f"💰 **{AGENT_NAMES['craig']}**: {random.choice(crypto_quotes)}")
+                
+        except Exception as e:
+            await ctx.send(f"Error creating payment: {str(e)}")
+            logger.error(f"Error processing payment command: {str(e)}")
+    
+    @bot.command(name="verify_payment")
+    async def verify_payment_command(ctx, reference: str = None):
+        """Verify payment status"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "verify_payment"):
+            remaining = cooldown.get_remaining_time(user_id, "verify_payment")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Payment verification requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "verify_payment", COOLDOWNS["verify_payment"])
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                embed = await pusher.process_verify_payment(user_id, username, reference)
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "verify_payment", reference or "")
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error verifying payment: {str(e)}")
+                logger.error(f"Error processing verify_payment command: {str(e)}")
+    
+    @bot.command(name="payments")
+    async def payments_command(ctx):
+        """View payment history"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "payments"):
+            remaining = cooldown.get_remaining_time(user_id, "payments")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Payment history requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "payments", COOLDOWNS["payments"])
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                embed = await pusher.process_payments(user_id, username)
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "payments", "")
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error fetching payments: {str(e)}")
+                logger.error(f"Error processing payments command: {str(e)}")
+    
+    @bot.command(name="tier")
+    async def tier_command(ctx):
+        """View user tier status"""
+        user_id = str(ctx.author.id)
+        username = str(ctx.author)
+        
+        # Check if user is on cooldown
+        if cooldown.is_on_cooldown(user_id, "tier"):
+            remaining = cooldown.get_remaining_time(user_id, "tier")
+            emoji = random_drug_emoji()
+            await ctx.send(f"{emoji} Tier status requests are limited. Try again in {remaining} seconds.")
+            return
+        
+        # Set cooldown
+        cooldown.set_cooldown(user_id, "tier", COOLDOWNS["tier"])
+        
+        # Show typing indicator
+        async with ctx.typing():
+            try:
+                embed = await pusher.process_user_tier(user_id, username)
+                
+                # Log command
+                cmd_logger.log_command(user_id, username, "tier", "")
+                
+                # Send response
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                await ctx.send(f"Error fetching tier status: {str(e)}")
+                logger.error(f"Error processing tier command: {str(e)}")
     
     return bot

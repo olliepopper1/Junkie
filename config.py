@@ -17,10 +17,14 @@ DATABASE_PATH = os.getenv("DATABASE_PATH", "trial_junkie.db")
 
 # Cooldown settings (in seconds)
 COOLDOWNS = {
-    "hit": 300,        # 5 minutes
-    "dose": 60,        # 1 minute
-    "trip": 600,       # 10 minutes
-    "rehab": 3600      # 1 hour
+    "hit": 300,             # 5 minutes
+    "dose": 60,             # 1 minute
+    "trip": 600,            # 10 minutes
+    "rehab": 3600,          # 1 hour
+    "pay": 30,              # 30 seconds for payment commands
+    "verify_payment": 10,   # 10 seconds for payment verification
+    "payments": 60,         # 1 minute for payment history
+    "tier": 60              # 1 minute for tier status
 }
 
 # Agent names and themes
@@ -29,7 +33,8 @@ AGENT_NAMES = {
     "mandy": "Meth Mandy",        # Card generation
     "xan": "Xanny Xan",           # Email generation
     "sal": "Shroomy Sal",         # Browser automation
-    "carl": "Cokehead Carl"       # SMS/Phone verification
+    "carl": "Cokehead Carl",      # SMS/Phone verification
+    "craig": "Crypto Craig"       # Payment processing
 }
 
 # Colors for embeds
@@ -37,7 +42,36 @@ COLORS = {
     "success": 0x4CAF50,  # Green
     "error": 0xF44336,    # Red
     "warning": 0xFFC107,  # Yellow
-    "info": 0x2196F3      # Blue
+    "info": 0x2196F3,     # Blue
+    "payment": 0x9C27B0   # Purple
+}
+
+# Payment settings
+ADMIN_WALLET = os.getenv("SOLANA_WALLET_ADDRESS", "YourSolanaWalletAddressHere")
+SOLANA_RPC_URL = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+
+# Pricing in SOL
+PRICES = {
+    "hit": 0.01,       # Full trial creation costs 0.01 SOL
+    "dose": 0.005,     # Single agent usage costs 0.005 SOL
+    "trip": 0.02,      # Automation script costs 0.02 SOL
+    "premium": 0.1     # Premium membership monthly fee costs 0.1 SOL
+}
+
+# Trial service tiers
+SERVICE_TIERS = {
+    "free": {
+        "daily_limit": 3,
+        "description": "Basic free tier with limited daily usage"
+    },
+    "paid": {
+        "daily_limit": 15,
+        "description": "Pay-per-use tier with higher limits"
+    },
+    "premium": {
+        "daily_limit": 50,
+        "description": "Premium tier with high daily limits and priority support"
+    }
 }
 
 # API endpoints - All using RapidAPI services

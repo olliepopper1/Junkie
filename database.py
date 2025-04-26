@@ -244,5 +244,246 @@ class Database:
         cmd_counts = cursor.fetchall()
         stats['commands'] = {row['command']: row['count'] for row in cmd_counts}
         
+        # Get hit, dose, and trip counts
+        stats['hit_count'] = stats['commands'].get('hit', 0)
+        stats['dose_count'] = stats['commands'].get('dose', 0)
+        stats['trip_count'] = stats['commands'].get('trip', 0)
+        
         conn.close()
         return stats
+        
+    def save_payment_request(self, user_id, amount, reference, service_type):
+        """Save a payment request"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        now = datetime.now().isoformat()
+        
+        # Check if payments table exists, create if not
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            reference TEXT UNIQUE,
+            amount REAL,
+            service_type TEXT,
+            status TEXT,
+            tx_signature TEXT,
+            created_at TEXT,
+            completed_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (user_id)
+        )
+        ''')
+        
+        cursor.execute(
+            "INSERT INTO payments (user_id, reference, amount, service_type, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, reference, amount, service_type, 'pending', now)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Saved payment request - User: {user_id}, Reference: {reference}, Amount: {amount}")
+        return True
+    
+    def update_payment_status(self, reference, status, tx_signature=None):
+        """Update a payment status"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        now = datetime.now().isoformat()
+        
+        if status == 'completed' and tx_signature:
+            cursor.execute(
+                "UPDATE payments SET status = ?, tx_signature = ?, completed_at = ? WHERE reference = ?",
+                (status, tx_signature, now, reference)
+            )
+        else:
+            cursor.execute(
+                "UPDATE payments SET status = ? WHERE reference = ?",
+                (status, reference)
+            )
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Updated payment status - Reference: {reference}, Status: {status}")
+        return True
+    
+    def get_payment_by_reference(self, reference):
+        """Get a payment by reference"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM payments WHERE reference = ?", (reference,))
+        payment = cursor.fetchone()
+        
+        conn.close()
+        
+        if not payment:
+            return None
+        
+        return dict(payment)
+    
+    def get_user_payments(self, user_id, status=None):
+        """Get payments for a user, optionally filtered by status"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM payments WHERE user_id = ?"
+        params = [user_id]
+        
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+        
+        query += " ORDER BY created_at DESC"
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        result = [dict(row) for row in rows]
+        
+        conn.close()
+        return result
+        
+    def update_user_tier(self, user_id, tier, expires_at=None):
+        """Update a user's membership tier"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        # Make sure users table has tier and membership_expires columns
+        try:
+            cursor.execute("SELECT tier FROM users LIMIT 1")
+        except sqlite3.OperationalError:
+            # Add tier column if it doesn't exist
+            cursor.execute("ALTER TABLE users ADD COLUMN tier TEXT DEFAULT 'free'")
+            cursor.execute("ALTER TABLE users ADD COLUMN membership_expires TEXT")
+            conn.commit()
+        
+        if expires_at:
+            cursor.execute(
+                "UPDATE users SET tier = ?, membership_expires = ? WHERE user_id = ?",
+                (tier, expires_at, user_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE users SET tier = ? WHERE user_id = ?",
+                (tier, user_id)
+            )
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Updated user tier - User: {user_id}, Tier: {tier}")
+        return True
+        
+    def get_user_tier(self, user_id):
+        """Get a user's membership tier"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("SELECT tier, membership_expires FROM users WHERE user_id = ?", (user_id,))
+            result = cursor.fetchone()
+        except sqlite3.OperationalError:
+            # If tier column doesn't exist, add it
+            cursor.execute("ALTER TABLE users ADD COLUMN tier TEXT DEFAULT 'free'")
+            cursor.execute("ALTER TABLE users ADD COLUMN membership_expires TEXT")
+            conn.commit()
+            result = {'tier': 'free', 'membership_expires': None}
+        
+        conn.close()
+        
+        if not result:
+            return {'tier': 'free', 'membership_expires': None}
+        
+        tier_info = dict(result)
+        
+        # Check if premium membership has expired
+        if tier_info['tier'] == 'premium' and tier_info['membership_expires']:
+            try:
+                expires = datetime.fromisoformat(tier_info['membership_expires'])
+                if expires < datetime.now():
+                    # Membership has expired, update in database
+                    self.update_user_tier(user_id, 'free')
+                    return {'tier': 'free', 'membership_expires': None}
+            except (ValueError, TypeError):
+                pass
+        
+        return tier_info
+        
+    def track_usage(self, user_id, command):
+        """Track command usage for daily limits"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # Create table if it doesn't exist
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usage_limits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            command TEXT,
+            date TEXT,
+            count INTEGER DEFAULT 0,
+            UNIQUE(user_id, command, date)
+        )
+        ''')
+        
+        # Try to update existing record
+        cursor.execute(
+            "UPDATE usage_limits SET count = count + 1 WHERE user_id = ? AND command = ? AND date = ?",
+            (user_id, command, today)
+        )
+        
+        # If no record was updated, insert new record
+        if cursor.rowcount == 0:
+            cursor.execute(
+                "INSERT INTO usage_limits (user_id, command, date, count) VALUES (?, ?, ?, 1)",
+                (user_id, command, today)
+            )
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Tracked usage - User: {user_id}, Command: {command}, Date: {today}")
+        return True
+        
+    def get_usage_count(self, user_id, command=None):
+        """Get usage count for today"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # Create table if it doesn't exist
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usage_limits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            command TEXT,
+            date TEXT,
+            count INTEGER DEFAULT 0,
+            UNIQUE(user_id, command, date)
+        )
+        ''')
+        
+        if command:
+            cursor.execute(
+                "SELECT count FROM usage_limits WHERE user_id = ? AND command = ? AND date = ?",
+                (user_id, command, today)
+            )
+            result = cursor.fetchone()
+            count = result['count'] if result else 0
+        else:
+            cursor.execute(
+                "SELECT SUM(count) as total FROM usage_limits WHERE user_id = ? AND date = ?",
+                (user_id, today)
+            )
+            result = cursor.fetchone()
+            count = result['total'] if result and result['total'] else 0
+        
+        conn.close()
+        return count
