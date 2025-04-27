@@ -7,6 +7,8 @@ const AgentSection = window.AgentSection || (() => <div>Agent Section Loading...
 const DiscordSection = window.DiscordSection || (() => <div>Discord Section Loading...</div>);
 const ReferralSection = window.ReferralSection || (() => <div>Referral Section Loading...</div>);
 const RoadmapSection = window.RoadmapSection || (() => <div>Roadmap Section Loading...</div>);
+const ComicsSection = window.ComicsSection || (() => <div>Comics Section Loading...</div>);
+const MeetTheBotsSection = window.MeetTheBotsSection || (() => <div>Meet The Bots Section Loading...</div>);
 
 // Main App Component
 function App() {
@@ -26,8 +28,10 @@ function App() {
       <Navbar />
       <Hero />
       <ServicesSection />
-      <AgentSection />
+      <MeetTheBotsSection />
       <HowItWorksSection />
+      <ComicsSection />
+      <AgentSection />
       <DiscordSection />
       <PricingSection />
       <ReferralSection />
@@ -77,10 +81,16 @@ function Navbar() {
               <a className="nav-link" href="#services">Services</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#agents">Agents</a>
+              <a className="nav-link" href="#meet-the-bots">Meet The Bots</a>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#how-it-works">How It Works</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="#comics">Comics</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="#agents">Agents</a>
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#discord">Discord Bot</a>
