@@ -68,21 +68,45 @@ def dashboard():
 
 @app.route('/agents')
 def agents():
-    return send_from_directory('src/public', 'agents.html')
+    return send_from_directory('static', 'agents.html')
 
 @app.route('/referrals')
 def referrals():
-    return send_from_directory('src/public', 'referrals.html')
+    return send_from_directory('static', 'referrals.html')
 
 @app.route('/roadmap')
 def roadmap():
-    return send_from_directory('src/public', 'roadmap.html')
+    return send_from_directory('static', 'roadmap.html')
 
 @app.route('/trials')
 def trials():
     if 'user_id' not in session:
         return redirect('/login')
     return send_from_directory('static', 'trials.html')
+
+# Catch-all route for any dashboard pages that don't exist yet
+@app.route('/<path:path>')
+def catch_all(path):
+    # Check if file exists in static folder first
+    static_file_path = os.path.join(app.static_folder, path)
+    if os.path.isfile(static_file_path):
+        return send_from_directory(app.static_folder, path)
+    
+    # If it's an HTML page in our known pages, try to serve it
+    if path.endswith('.html'):
+        try:
+            return send_from_directory('static', path)
+        except:
+            pass
+
+    # If it's likely a frontend route, serve the main index
+    probable_routes = ['dashboard', 'login', 'register', 'profile', 'settings', 'agents', 'trials', 'referrals', 'roadmap']
+    for route in probable_routes:
+        if path.startswith(route):
+            return send_from_directory('static', 'index.html')
+    
+    # Otherwise, return a custom 404 page
+    return render_404()
 
 # Static assets routes
 @app.route('/css/<path:filename>')
