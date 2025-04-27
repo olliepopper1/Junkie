@@ -5,6 +5,5 @@
 
 echo "Starting Discord bot (standalone, no port conflicts)..."
 
-# Run the fixed Discord bot standalone script
-# This version doesn't attempt to start a Flask app
-python fixed_discord_bot.py
+# Run the new standalone Discord bot script
+python start_discord_bot.py

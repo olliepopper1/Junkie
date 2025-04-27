@@ -97,21 +97,23 @@ SERVICE_TIERS = {
 
 # API endpoints - All using RapidAPI services
 ENDPOINTS = {
-    # Identity generation - Random Data API 
-    "random_user": "https://random-data-api.com/api/v2/users",
+    # Identity generation - Personator API
+    "personator": "https://personator.p.rapidapi.com/v1/generate",
     
-    # Phone generation - Using backup API for verification
-    "random_phone": "https://api.randomuser.me/1.3/?nat=us",
+    # Phone generation - Virtual Number API
+    "virtual_number": "https://virtual-number.p.rapidapi.com/v1/numbers",
     
-    # Card generation - Valid Credit Card API
-    "fake_card": "https://randomuser.me/api/?inc=name,location&nat=us",
+    # Card generation - Fake Valid CC Data Generator
+    "fake_card": "https://fake-valid-cc-data-generator.p.rapidapi.com/v1/card/generate",
     
-    # Email generation - Random User API for consistent data
-    "temp_email": "https://random-data-api.com/api/v2/users?response_type=json",
+    # Free trial Virtual Card API for payment methods
+    "virtual_card": "https://free-trial-virtual-card-issuing.p.rapidapi.com/v1/generate",
     
-    # Backup endpoints for reliable operation 
-    "random_address": "https://random-data-api.com/api/v2/addresses",
-    "random_bank": "https://random-data-api.com/api/v2/banks"
+    # Email generation - Fast & Reliable Disposable Email
+    "temp_email": "https://fast-reliable-disposable-mx-email-checker.p.rapidapi.com/v1/email/generate",
+    
+    # Temp Mail API as backup for email verification
+    "temp_mail_backup": "https://temp-mail.p.rapidapi.com/v1/mail/create"
 }
 
 # Supported trial services with configuration
@@ -208,14 +210,14 @@ TRIAL_SERVICES = {
     }
 }
 
-# API host settings - We've migrated to open APIs that don't require RapidAPI keys
+# API host settings for RapidAPI
 API_HOSTS = {
-    "random_user": "random-data-api.com",
-    "random_phone": "random-data-api.com",
-    "fake_card": "randomuser.me",
-    "temp_email": "random-data-api.com",
-    "random_address": "random-data-api.com",
-    "random_bank": "random-data-api.com"
+    "personator": "personator.p.rapidapi.com",
+    "virtual_number": "virtual-number.p.rapidapi.com",
+    "fake_card": "fake-valid-cc-data-generator.p.rapidapi.com",
+    "virtual_card": "free-trial-virtual-card-issuing.p.rapidapi.com",
+    "temp_email": "fast-reliable-disposable-mx-email-checker.p.rapidapi.com",
+    "temp_mail_backup": "temp-mail.p.rapidapi.com"
 }
 
 # Proxy settings

@@ -1,11 +1,10 @@
 """
-Standalone Discord Bot Runner
-This script runs the Discord bot without conflicting with the web application
+Trial Junkie Discord Bot Workflow
+This script runs the Discord bot standalone without port conflicts
 """
 import os
 import sys
 import logging
-import asyncio
 import random
 import discord
 from discord.ext import commands
@@ -25,6 +24,21 @@ logger = logging.getLogger("discord_bot")
 # Load environment variables
 load_dotenv()
 
+# Try to import the database and trial generator
+try:
+    from database import Database
+    db = Database()
+    logger.info("Database connection established")
+except Exception as e:
+    logger.error(f"Error connecting to database: {e}")
+    db = None
+
+try:
+    from simplified_hulu_trial import generate_hulu_trial, generate_identity, generate_card, generate_email
+    logger.info("Trial generator successfully imported")
+except Exception as e:
+    logger.error(f"Error importing trial generator: {e}")
+    
 # Bot configuration
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 if not DISCORD_BOT_TOKEN:
@@ -37,22 +51,6 @@ intents.message_content = True  # For reading message content
 intents.members = True  # For accessing member information
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-# Import database functionality
-try:
-    from database import Database
-    db = Database()
-    logger.info("Database connection established")
-except Exception as e:
-    logger.error(f"Error connecting to database: {e}")
-    db = None
-
-# Import the simplified Hulu trial generator
-try:
-    from simplified_hulu_trial import generate_hulu_trial, generate_identity, generate_card, generate_email
-    logger.info("Trial generator loaded successfully")
-except Exception as e:
-    logger.error(f"Error loading trial generator: {e}")
 
 # Quote database for different agents
 AGENT_QUOTES = {
@@ -330,57 +328,6 @@ async def quote_command(ctx, agent: str = None):
     embed.set_footer(text="Trial Junkie - Words of wisdom from the street")
     await ctx.send(embed=embed)
 
-@bot.command(name="stash")
-async def stash_command(ctx):
-    """View user's generated items"""
-    if not db:
-        await ctx.send("Database connection is not available.")
-        return
-    
-    # Get user's credentials from database
-    credentials = db.get_user_credentials(ctx.author.id)
-    
-    if not credentials:
-        await ctx.send("Your stash is empty! Try using the `!hit` command to generate some trials.")
-        return
-    
-    # Group credentials by service
-    services = {}
-    for cred in credentials:
-        service = cred.get('service', 'unknown')
-        if service not in services:
-            services[service] = []
-        services[service].append(cred)
-    
-    # Create embed
-    embed = discord.Embed(
-        title="Your Trial Stash",
-        description=f"You have trials for {len(services)} services",
-        color=0x4caf50
-    )
-    
-    # Add fields for each service
-    for service, creds in services.items():
-        # Find email and password
-        email = next((c['value'] for c in creds if c['type'] == 'email'), 'N/A')
-        password = next((c['value'] for c in creds if c['type'] == 'password'), 'N/A')
-        card = next((c['value'] for c in creds if c['type'] == 'card'), 'N/A')
-        created = next((c['created_at'] for c in creds), 'Unknown')
-        
-        embed.add_field(
-            name=f"{service.upper()}",
-            value=(
-                f"📧 **Email**: {email}\n"
-                f"🔑 **Password**: {password}\n"
-                f"💳 **Card**: {card}\n"
-                f"📆 **Created**: {created}\n"
-            ),
-            inline=False
-        )
-    
-    embed.set_footer(text="Trial Junkie - Your digital fix storage")
-    await ctx.send(embed=embed)
-
 @bot.command(name="agents")
 async def agents_command(ctx):
     """Display information about all agents"""
@@ -393,37 +340,37 @@ async def agents_command(ctx):
     # Add fields for each agent
     embed.add_field(
         name="💉 Heroin Harry - Identity Specialist",
-        value="Generates realistic identities with names, addresses, and personal details.",
+        value="Generates realistic identities with names, addresses, and personal details using the Personator API.",
         inline=False
     )
     
     embed.add_field(
         name="💨 Meth Mandy - Card Expert",
-        value="Creates valid credit card numbers that pass verification but don't charge.",
+        value="Creates valid credit card numbers that pass verification but don't charge with Fake Valid CC Data Generator.",
         inline=False
     )
     
     embed.add_field(
         name="💊 Xanny Xan - Email Manager",
-        value="Sets up temporary emails and handles verification processes.",
+        value="Sets up disposable emails and handles verification processes with Fast & Reliable Email API.",
         inline=False
     )
     
     embed.add_field(
         name="❄️ Cokehead Carl - Phone Specialist",
-        value="Provides temporary phone numbers for SMS verification.",
+        value="Provides temporary phone numbers for SMS verification with Virtual Number API.",
         inline=False
     )
     
     embed.add_field(
         name="🍄 Shroomy Sal - Automation Expert",
-        value="Navigates websites and automates the trial signup process.",
+        value="Navigates websites and automates the trial signup process with browser automation.",
         inline=False
     )
     
     embed.add_field(
         name="💸 Crypto Craig - Payment Processor",
-        value="Handles all subscription payments through crypto transactions.",
+        value="Creates virtual cards for trial signups and handles crypto payments with Virtual Card Issuing API.",
         inline=False
     )
     
@@ -431,11 +378,11 @@ async def agents_command(ctx):
     await ctx.send(embed=embed)
 
 if __name__ == "__main__":
+    print("Starting Trial Junkie Discord Bot (Workflow Version)...")
+    print("This is a standalone bot that won't conflict with the web server")
     try:
-        print("Starting Trial Junkie Discord Bot...")
-        print("Bot will run standalone without port conflicts")
         bot.run(DISCORD_BOT_TOKEN)
     except Exception as e:
-        logger.error(f"Failed to start bot: {e}")
+        logger.error(f"Error running bot: {e}")
         print(f"Error: {e}")
         sys.exit(1)
