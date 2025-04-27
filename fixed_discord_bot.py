@@ -33,8 +33,8 @@ if not DISCORD_BOT_TOKEN:
 # Set up the bot with intents
 intents = discord.Intents.default()
 intents.message_content = True
-# Disable privileged intents that need to be activated in Discord Developer Portal
-intents.members = False
+# Enable privileged intents that have been activated in Discord Developer Portal
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 

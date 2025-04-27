@@ -26,4 +26,5 @@ dependencies = [
     "colorama>=0.4.6",
     "pytest>=8.3.5",
     "pytest-mock>=3.14.0",
+    "twilio>=9.5.2",
 ]

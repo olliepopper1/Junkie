@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# This script is specifically for the Replit workflow to run the Discord bot
-# It uses the standalone version to avoid port conflicts with the main Flask app
+# This script runs the Discord bot as a standalone process
+# without attempting to use port 5000, avoiding conflicts with the web app
 
-python discord_bot_standalone.py
+echo "Starting Discord bot (standalone, no port conflicts)..."
+
+# Run the fixed Discord bot standalone script
+# This version doesn't attempt to start a Flask app
+python fixed_discord_bot.py

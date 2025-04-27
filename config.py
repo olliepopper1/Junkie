@@ -100,10 +100,10 @@ ENDPOINTS = {
     # Identity generation - Random Data API 
     "random_user": "https://random-data-api.com/api/v2/users",
     
-    # Phone generation - Randomized data generator
-    "random_phone": "https://random-data-api.com/api/v2/phones",
+    # Phone generation - Using backup API for verification
+    "random_phone": "https://api.randomuser.me/1.3/?nat=us",
     
-    # Card generation - Credit Card Random API
+    # Card generation - Valid Credit Card API
     "fake_card": "https://randomuser.me/api/?inc=name,location&nat=us",
     
     # Email generation - Random User API for consistent data
