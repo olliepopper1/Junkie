@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Trial Junkie{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trial-card {
+        transition: transform 0.2s;
+    }
+    .trial-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold">Dashboard</h1>
+            <p class="lead">Manage your trial accounts and settings</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateTrialModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg me-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                </svg>
+                Generate New Trial
+            </button>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Active Trials</h5>
+                    <p class="card-text display-4">4</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Current Tier</h5>
+                    <p class="card-text">Five Dollar Rush</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Hits Available</h5>
+                    <p class="card-text">3/5 today</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Days Remaining</h5>
+                    <p class="card-text">5 days</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Trials</h5>
+                    <div class="input-group w-50">
+                        <input type="text" class="form-control" placeholder="Search trials..." id="searchTrials">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4" id="trialsList">
+                        <div class="col">
+                            <div class="card h-100 trial-card">
+                                <div class="card-header bg-danger text-white">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Netflix</span>
+                                        <span class="badge bg-warning">3 days left</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Standard Plan</h6>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> user123@example.com<br>
+                                        <strong>Password:</strong> ••••••••<br>
+                                        <strong>Created:</strong> Apr 24, 2025<br>
+                                        <strong>Expires:</strong> May 24, 2025
+                                    </p>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyTrialDetails(1)">Copy Details</button>
+                                    <a href="https://netflix.com/YourAccount" target="_blank" class="btn btn-sm btn-outline-danger">Cancel Trial</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col">
+                            <div class="card h-100 trial-card">
+                                <div class="card-header bg-success text-white">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Hulu</span>
+                                        <span class="badge bg-warning">5 days left</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">No Ads Plan</h6>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> user456@example.com<br>
+                                        <strong>Password:</strong> ••••••••<br>
+                                        <strong>Created:</strong> Apr 22, 2025<br>
+                                        <strong>Expires:</strong> May 22, 2025
+                                    </p>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyTrialDetails(2)">Copy Details</button>
+                                    <a href="https://www.hulu.com/account/cancel" target="_blank" class="btn btn-sm btn-outline-danger">Cancel Trial</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col">
+                            <div class="card h-100 trial-card">
+                                <div class="card-header bg-primary text-white">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Disney+</span>
+                                        <span class="badge bg-warning">10 days left</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Premium Plan</h6>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> user789@example.com<br>
+                                        <strong>Password:</strong> ••••••••<br>
+                                        <strong>Created:</strong> Apr 19, 2025<br>
+                                        <strong>Expires:</strong> May 19, 2025
+                                    </p>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyTrialDetails(3)">Copy Details</button>
+                                    <a href="https://www.disneyplus.com/account" target="_blank" class="btn btn-sm btn-outline-danger">Cancel Trial</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col">
+                            <div class="card h-100 trial-card">
+                                <div class="card-header bg-warning text-dark">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Amazon Prime</span>
+                                        <span class="badge bg-warning">15 days left</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">Prime Video</h6>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> userabc@example.com<br>
+                                        <strong>Password:</strong> ••••••••<br>
+                                        <strong>Created:</strong> Apr 12, 2025<br>
+                                        <strong>Expires:</strong> May 12, 2025
+                                    </p>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyTrialDetails(4)">Copy Details</button>
+                                    <a href="https://www.amazon.com/gp/primecentral" target="_blank" class="btn btn-sm btn-outline-danger">Cancel Trial</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Subscription Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Current Plan:</strong> Five Dollar Rush</p>
+                    <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                    <p><strong>Next Billing:</strong> May 3, 2025</p>
+                    <p><strong>Limits:</strong></p>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 40%;" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5">Hits: 2/5</div>
+                    </div>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 30%;" aria-valuenow="3" aria-valuemin="0" aria-valuemax="10">Doses: 3/10</div>
+                    </div>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 33%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="3">Trips: 1/3</div>
+                    </div>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upgradeModal">Upgrade Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Referral Program</h5>
+                </div>
+                <div class="card-body">
+                    <p>Earn commission by referring friends to Trial Junkie!</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="TJ-ABCD1234" id="referralCode" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyReferralCode()">Copy</button>
+                    </div>
+                    <p><strong>Your Referrals:</strong> 3</p>
+                    <p><strong>Total Commission:</strong> 2.45 SOL</p>
+                    <p><strong>Pending Commission:</strong> 0.75 SOL</p>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#withdrawModal">Withdraw Commission</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Trial Modal -->
+<div class="modal fade" id="generateTrialModal" tabindex="-1" aria-labelledby="generateTrialModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateTrialModalLabel">Generate New Trial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generateTrialForm">
+                    <div class="mb-3">
+                        <label for="trialService" class="form-label">Select Service</label>
+                        <select class="form-select" id="trialService" required>
+                            <option value="" selected disabled>Choose a service...</option>
+                            <option value="netflix">Netflix</option>
+                            <option value="hulu">Hulu</option>
+                            <option value="disney">Disney+</option>
+                            <option value="amazon">Amazon Prime</option>
+                            <option value="youtube">YouTube Premium</option>
+                            <option value="spotify">Spotify</option>
+                            <option value="paramount">Paramount+</option>
+                            <option value="hbomax">HBO Max</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="trialType" class="form-label">Generation Type</label>
+                        <select class="form-select" id="trialType" required>
+                            <option value="hit">Full Trial (Hit)</option>
+                            <option value="dose_identity">Identity Only (Dose)</option>
+                            <option value="dose_card">Payment Card Only (Dose)</option>
+                            <option value="dose_email">Email Only (Dose)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="automateSignup">
+                        <label class="form-check-label" for="automateSignup">Automate Signup (Trip)</label>
+                    </div>
+                    <div class="alert alert-info">
+                        <small>This will use 1 Hit credit from your daily limit.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="generateTrial()">Generate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal fade" id="upgradeModal" tabindex="-1" aria-labelledby="upgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upgradeModalLabel">Upgrade Subscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action" onclick="selectPlan('five_dollar_rush')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Five Dollar Rush</h5>
+                            <span>$5.00</span>
+                        </div>
+                        <p class="mb-1">7-day premium access with 5 hits per day</p>
+                        <small>Includes automation capabilities</small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="selectPlan('one_time_hit')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">One-time Hit</h5>
+                            <span>$2.00</span>
+                        </div>
+                        <p class="mb-1">Single automated trial creation</p>
+                        <small>One-time purchase, no recurring charges</small>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="selectPlan('junkified')">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Junkified</h5>
+                            <span>$19.99</span>
+                        </div>
+                        <p class="mb-1">30-day premium access with 50 hits per day</p>
+                        <small>Unlimited trial generation and priority support</small>
+                    </a>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <small>Payments are processed securely using Solana cryptocurrency.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="upgradePlan()">Proceed to Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Commission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="withdrawForm">
+                    <div class="mb-3">
+                        <label for="withdrawAmount" class="form-label">Amount (SOL)</label>
+                        <input type="number" class="form-control" id="withdrawAmount" min="0.1" max="2.45" step="0.01" value="2.45">
+                        <div class="form-text">Available: 2.45 SOL</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="solanaAddress" class="form-label">Solana Wallet Address</label>
+                        <input type="text" class="form-control" id="solanaAddress" placeholder="Enter your Solana wallet address">
+                    </div>
+                    <div class="alert alert-warning">
+                        <small>Please double-check your wallet address. Incorrect addresses may result in lost funds.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="withdrawCommission()">Withdraw</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Generate trial function (placeholder)
+    function generateTrial() {
+        const service = document.getElementById('trialService').value;
+        const type = document.getElementById('trialType').value;
+        const automate = document.getElementById('automateSignup').checked;
+        
+        // In a real implementation, this would call an API endpoint
+        alert(`Generating ${type} for ${service}${automate ? ' with automation' : ''}`);
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('generateTrialModal'));
+        modal.hide();
+    }
+    
+    // Copy trial details function (placeholder)
+    function copyTrialDetails(id) {
+        // In a real implementation, this would copy the trial details to clipboard
+        alert(`Trial details copied to clipboard`);
+    }
+    
+    // Copy referral code function
+    function copyReferralCode() {
+        const referralCode = document.getElementById('referralCode');
+        referralCode.select();
+        navigator.clipboard.writeText(referralCode.value);
+        alert('Referral code copied to clipboard!');
+    }
+    
+    // Select subscription plan (placeholder)
+    function selectPlan(plan) {
+        // Highlight the selected plan
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+    }
+    
+    // Upgrade plan function (placeholder)
+    function upgradePlan() {
+        const selectedPlan = document.querySelector('.list-group-item.active');
+        if (!selectedPlan) {
+            alert('Please select a plan');
+            return;
+        }
+        
+        const planName = selectedPlan.querySelector('h5').textContent;
+        
+        // In a real implementation, this would redirect to payment page
+        alert(`Proceeding to payment for ${planName}`);
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('upgradeModal'));
+        modal.hide();
+    }
+    
+    // Withdraw commission function (placeholder)
+    function withdrawCommission() {
+        const amount = document.getElementById('withdrawAmount').value;
+        const address = document.getElementById('solanaAddress').value;
+        
+        if (!address) {
+            alert('Please enter a valid Solana wallet address');
+            return;
+        }
+        
+        // In a real implementation, this would call an API endpoint
+        alert(`Withdrawing ${amount} SOL to ${address}`);
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('withdrawModal'));
+        modal.hide();
+    }
+</script>
+{% endblock %}

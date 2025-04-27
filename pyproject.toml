@@ -13,7 +13,9 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "python-dotenv>=1.1.0",
     "pyyaml>=6.0.2",
+    "selenium>=4.31.0",
     "solana>=0.36.6",
     "trafilatura>=2.0.0",
     "web3>=7.10.0",
+    "webdriver-manager>=4.0.2",
 ]

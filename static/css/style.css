@@ -1,0 +1,195 @@
+/* 
+ * Trial Junkie - Custom Styles
+ * Dark theme styling to complement Bootstrap dark theme
+ */
+
+/* Body styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Custom background gradient for hero sections */
+.hero-gradient {
+    background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+}
+
+/* Card hover effects */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom styling for plan cards */
+.card-pricing {
+    border: none;
+    overflow: hidden;
+}
+
+.card-pricing .card-header {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-pricing .card-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.card-pricing.featured {
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+/* Custom styling for trial service icons */
+.service-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.service-icon.netflix {
+    background-color: #e50914;
+}
+
+.service-icon.hulu {
+    background-color: #1ce783;
+}
+
+.service-icon.disney {
+    background-color: #0063e5;
+}
+
+.service-icon.amazon {
+    background-color: #ff9900;
+}
+
+.service-icon.youtube {
+    background-color: #ff0000;
+}
+
+.service-icon.spotify {
+    background-color: #1db954;
+}
+
+/* Custom animation for copy buttons */
+.btn-copy.copied {
+    background-color: #198754;
+    color: white;
+}
+
+/* Dashboard stats styling */
+.stat-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    opacity: 0.2;
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+/* Trial card badges */
+.trial-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0.5rem;
+}
+
+/* Custom dark mode tweaks */
+[data-bs-theme=dark] .text-bg-light {
+    background-color: #2b3035 !important;
+}
+
+[data-bs-theme=dark] .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Referral card styling */
+.referral-link {
+    background-color: #2b3035;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+}
+
+/* Dashboard activity feed */
+.activity-feed {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+/* Custom tooltip styling */
+.custom-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 120px;
+    background-color: #212529;
+    color: #fff;
+    text-align: center;
+    border-radius: 0.25rem;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.custom-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-pricing.featured {
+        transform: scale(1);
+    }
+    
+    .trial-card {
+        margin-bottom: 1rem;
+    }
+}

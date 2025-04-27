@@ -144,7 +144,8 @@ class Database:
         conn = self._get_connection()
         cursor = self._get_cursor(conn)
         
-        cursor.execute("SELECT 1 FROM users WHERE user_id = %s", (user_id,))
+        # Cast user_id to TEXT to handle different types (PostgreSQL requires explicit casting)
+        cursor.execute("SELECT 1 FROM users WHERE user_id::TEXT = %s", (str(user_id),))
         result = cursor.fetchone() is not None
         
         conn.close()
@@ -177,8 +178,8 @@ class Database:
         
         now = datetime.now().isoformat()
         cursor.execute(
-            "UPDATE users SET last_active = %s WHERE user_id = %s",
-            (now, user_id)
+            "UPDATE users SET last_active = %s WHERE user_id::TEXT = %s",
+            (now, str(user_id))
         )
         
         conn.commit()
@@ -301,8 +302,9 @@ class Database:
         stats['credentials'] = {row['credential_type']: row['count'] for row in cred_counts}
         
         # Count total credentials
-        cursor.execute("SELECT COUNT(*) as count FROM credentials WHERE user_id = %s", (user_id,))
-        stats['total_credentials'] = cursor.fetchone()['count'] if cursor.fetchone() else 0
+        cursor.execute("SELECT COUNT(*) as count FROM credentials WHERE user_id::TEXT = %s", (str(user_id),))
+        result = cursor.fetchone()
+        stats['total_credentials'] = result['count'] if result else 0
         
         # Count commands
         cursor.execute(

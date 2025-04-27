@@ -1,0 +1,25 @@
+{
+  "user_info": {
+    "email": "joseph.johnson7756@gmail.com",
+    "password": "8hrvQSA@LV^5",
+    "first_name": "Joseph",
+    "last_name": "Johnson",
+    "gender": "male",
+    "address": "8053 Washington Street",
+    "city": "Seattle",
+    "state": "MA",
+    "zipcode": "55286",
+    "phone": "813-906-5933",
+    "card_type": "discover",
+    "card_number": "6011633324728421",
+    "card_expiry": "02/26",
+    "card_cvv": "818",
+    "card_holder": "Joseph Johnson"
+  },
+  "trial_start_date": "2025-04-26T23:47:03.384866",
+  "trial_end_date": "2025-05-26T23:47:03.384866",
+  "service": "hulu",
+  "plan": "Hulu (No Ads)",
+  "monthly_price": "$12.99",
+  "generated_at": "2025-04-26T23:47:03.385824"
+}

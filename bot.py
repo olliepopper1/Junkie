@@ -15,6 +15,7 @@ from utils.cooldown import Cooldown
 from utils.response_templates import get_agent_quote, random_drug_emoji
 from database import Database
 from config import AGENT_NAMES, COLORS
+from commands.trial_commands import TrialCommands
 
 logger = logging.getLogger(__name__)
 
@@ -867,5 +868,9 @@ def setup_bot():
             except Exception as e:
                 await ctx.send(f"Error fetching commissions: {str(e)}")
                 logger.error(f"Error processing commissions command: {str(e)}")
+    
+    # Set up trial commands
+    from commands.trial_commands import setup as setup_trial_commands
+    setup_trial_commands(bot, db)
     
     return bot

@@ -5,7 +5,22 @@ Handles browser automation for trial signups
 import logging
 import asyncio
 import random
+import string
+import sys
+import os
 from datetime import datetime, timedelta
+
+# Add the parent directory to sys.path to allow importing from root
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import the real trial creation modules
+try:
+    from create_real_trial import TrialCreator
+    from youtube_trial import create_youtube_premium_trial
+    REAL_AUTOMATION_AVAILABLE = True
+except ImportError:
+    REAL_AUTOMATION_AVAILABLE = False
+    logging.warning("Real automation modules not available. Will use simulation mode.")
 
 logger = logging.getLogger(__name__)
 
@@ -654,29 +669,144 @@ class AutomationAgent:
                     cred["service"] = service_name
                     
         else:
-            # Partial success with a random failure point
-            failed_step = random.randint(5, len(steps) - 1)
-            completed_steps = steps[:failed_step]
-            status = "⚠️ Partial Success"
-            details = f"{service_name.title()} signup process started but encountered an issue at step {failed_step}: {steps[failed_step-1]}."
-            details += "\n\nPossible reasons for failure:\n"
-            
-            # Add context-specific failure reasons
-            if "card" in steps[failed_step-1].lower():
-                details += "- Card was declined or has insufficient funds\n"
-                details += "- Card information format was incorrect\n"
-                details += "- Billing address verification failed\n"
-            elif "account" in steps[failed_step-1].lower() or "email" in steps[failed_step-1].lower():
-                details += "- Email may already be in use\n"
-                details += "- Email domain might be blacklisted\n"
-            elif "terms" in steps[failed_step-1].lower():
-                details += "- Service detected VPN/proxy usage\n"
-                details += "- Regional restrictions may apply\n"
-            else:
-                details += "- Server timeout or connection issue\n"
-                details += "- Service may be temporarily unavailable\n"
+            # Check if we should use real automation instead of simulation
+            if REAL_AUTOMATION_AVAILABLE and service_config.get("supports_automation", False):
+                # Use real automation with Selenium/ChromeDriver
+                logger.info(f"Switching to real automation for {service_name}")
                 
-            details += "\nYou may need to try again with different credentials or complete the process manually."
+                # Extract needed info from credentials
+                identity_cred = next((c["value"] for c in credentials if c["type"] == "identity"), None)
+                email_cred = next((c["value"] for c in credentials if c["type"] == "email"), None)
+                card_cred = next((c["value"] for c in credentials if c["type"] == "card"), None)
+                phone_cred = next((c["value"] for c in credentials if c["type"] == "phone"), None)
+                
+                # Generate password
+                password = ''.join(random.choice(string.ascii_letters + string.digits + "!@#$%^&*") for _ in range(12))
+                
+                # Prepare user info for automation
+                user_info = {
+                    "email": email_cred,
+                    "password": password,
+                    "first_name": identity_cred.get("first_name", identity_cred.get("name", "").split()[0] if identity_cred else ""),
+                    "last_name": identity_cred.get("last_name", identity_cred.get("name", "").split()[-1] if identity_cred else ""),
+                    "address": identity_cred.get("street", identity_cred.get("address", "") if identity_cred else ""),
+                    "city": identity_cred.get("city", "") if identity_cred else "",
+                    "state": identity_cred.get("state", "") if identity_cred else "",
+                    "zipcode": identity_cred.get("postal_code", identity_cred.get("zip", "") if identity_cred else ""),
+                    "card_number": card_cred.get("number", "") if card_cred else "",
+                    "card_expiry": card_cred.get("expiry", "") if card_cred else "",
+                    "card_cvv": card_cred.get("cvv", "") if card_cred else "",
+                    "card_holder": f"{identity_cred.get('first_name', '')} {identity_cred.get('last_name', '')}" if identity_cred else "",
+                    "phone": phone_cred
+                }
+                
+                try:
+                    # Create TrialCreator instance
+                    creator = TrialCreator()
+                    
+                    # Run in executor to not block the event loop
+                    loop = asyncio.get_event_loop()
+                    result = await loop.run_in_executor(None,
+                        lambda: creator.create_trial(service_name.lower(), user_info)
+                    )
+                    
+                    # Check result
+                    if result.get("success", False):
+                        status = "✅ Success"
+                        completed_steps = steps
+                        
+                        # Record real trial information
+                        trial_info = {
+                            "service": service_name,
+                            "email": email_cred,
+                            "password": password,
+                            "actual_url": result.get("final_url", service_config.get("url", "")),
+                            "start_date": datetime.now().strftime("%Y-%m-%d"),
+                            "end_date": (datetime.now() + timedelta(days=trial_days)).strftime("%Y-%m-%d")
+                        }
+                        
+                        # Override details with real success details
+                        details = f"✅ **Real Trial Created Successfully!**\n\n"
+                        details += f"**Service:** {service_name.title()}\n"
+                        details += f"**Login Email:** {email_cred}\n"
+                        details += f"**Password:** {password}\n\n"
+                        details += f"**Plan:** {plan_name}\n"
+                        details += f"**Trial Expires:** {trial_info['end_date']} ({trial_days} days)\n"
+                        details += f"**Price After Trial:** {price}\n\n"
+                        details += f"**⚠️ IMPORTANT:** Remember to cancel before trial ends to avoid charges!\n"
+                        details += f"**Cancellation Path:** {cancellation_path}\n\n"
+                        details += f"**Website:** {result.get('final_url', service_config.get('url', ''))}"
+                        
+                    else:
+                        # Partial success with real error information
+                        error_msg = result.get("error", "Unknown error")
+                        
+                        # Determine how far we got based on error message
+                        if "card" in error_msg.lower() or "payment" in error_msg.lower():
+                            failed_step = next((i for i, s in enumerate(steps) if "payment" in s.lower()), 5)
+                        elif "email" in error_msg.lower() or "account" in error_msg.lower():
+                            failed_step = next((i for i, s in enumerate(steps) if "account" in s.lower()), 3)
+                        else:
+                            failed_step = random.randint(2, 4)
+                            
+                        completed_steps = steps[:failed_step]
+                        status = "⚠️ Partial Success"
+                        
+                        details = f"⚠️ **Real Trial Creation Partially Completed**\n\n"
+                        details += f"Started creating trial for {service_name.title()} but encountered an issue.\n\n"
+                        details += f"**Error:** {error_msg}\n\n"
+                        details += "**Steps completed:**\n"
+                        for step in completed_steps:
+                            details += f"- ✅ {step}\n"
+                            
+                        details += f"\n**Next step (failed):** {steps[failed_step] if failed_step < len(steps) else 'Final verification'}\n\n"
+                        details += "You may need to complete the process manually using these credentials:\n"
+                        details += f"**Email:** {email_cred}\n"
+                        details += f"**Password:** {password}\n"
+                        details += f"**Website:** {service_config.get('url', '')}"
+                    
+                    # Save the result to database
+                    # (Additional database saving logic would go here)
+                    
+                except Exception as e:
+                    logger.error(f"Error during real automation for {service_name}: {str(e)}")
+                    
+                    # Fall back to simulation with error information
+                    failed_step = random.randint(2, 4)
+                    completed_steps = steps[:failed_step]
+                    status = "⚠️ Partial Success"
+                    
+                    details = f"⚠️ **Automation Error**\n\n"
+                    details += f"Started creating trial for {service_name.title()} but encountered a technical issue.\n\n"
+                    details += f"**Error:** {str(e)}\n\n"
+                    details += "The system tried to create a real trial but could not complete the process. "
+                    details += "You may need to try again or complete the signup manually."
+                
+            else:
+                # Use simulation mode
+                # Partial success with a random failure point
+                failed_step = random.randint(5, len(steps) - 1)
+                completed_steps = steps[:failed_step]
+                status = "⚠️ Partial Success"
+                details = f"{service_name.title()} signup process started but encountered an issue at step {failed_step}: {steps[failed_step-1]}."
+                details += "\n\nPossible reasons for failure:\n"
+                
+                # Add context-specific failure reasons
+                if "card" in steps[failed_step-1].lower():
+                    details += "- Card was declined or has insufficient funds\n"
+                    details += "- Card information format was incorrect\n"
+                    details += "- Billing address verification failed\n"
+                elif "account" in steps[failed_step-1].lower() or "email" in steps[failed_step-1].lower():
+                    details += "- Email may already be in use\n"
+                    details += "- Email domain might be blacklisted\n"
+                elif "terms" in steps[failed_step-1].lower():
+                    details += "- Service detected VPN/proxy usage\n"
+                    details += "- Regional restrictions may apply\n"
+                else:
+                    details += "- Server timeout or connection issue\n"
+                    details += "- Service may be temporarily unavailable\n"
+                    
+                details += "\nYou may need to try again with different credentials or complete the process manually."
         
         # Add random delay simulation for realism
         await asyncio.sleep(random.uniform(2.0, 5.0))

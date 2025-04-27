@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "generated_info": {
+    "user_info": {
+      "email": "karen-harris6189@hotmail.com",
+      "password": "2fkyVpzDdQh&",
+      "first_name": "Karen",
+      "last_name": "Harris",
+      "gender": "female",
+      "address": "2354 Park Drive",
+      "city": "Fort Worth",
+      "state": "HI",
+      "zipcode": "73332",
+      "phone": "279-685-3526",
+      "card_type": "discover",
+      "card_number": "6011350191961715",
+      "card_expiry": "05/30",
+      "card_cvv": "590",
+      "card_holder": "Karen Harris"
+    },
+    "trial_start_date": "2025-04-26T23:49:14.460632",
+    "trial_end_date": "2025-05-26T23:49:14.460632",
+    "service": "hulu",
+    "plan": "Hulu (No Ads)",
+    "monthly_price": "$12.99",
+    "generated_at": "2025-04-26T23:49:14.460644",
+    "trial_days": 30,
+    "cancellation_url": "https://www.hulu.com/account/cancel"
+  },
+  "automation_result": {
+    "success": true,
+    "message": "Successfully signed up for hulu trial (mock)",
+    "final_url": "https://www.hulu.com/account",
+    "credentials": {
+      "email": "karen-harris6189@hotmail.com",
+      "password": "2fkyVpzDdQh&"
+    },
+    "mock": true
+  },
+  "timestamp": "2025-04-26T23:49:14.469223"
+}

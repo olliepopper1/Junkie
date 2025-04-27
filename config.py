@@ -227,3 +227,25 @@ DEFAULT_HEADERS = {
     "Accept": "application/json",
     "User-Agent": "TrialJunkie/1.0.0"
 }
+
+# Browser automation settings
+AUTOMATION_SETTINGS = {
+    "enabled": True,  # Enable real browser automation for trial creation
+    "screenshots_path": "screenshots",  # Path to save screenshots during automation
+    "timeout": 30,  # Default timeout in seconds for waiting for elements
+    "headless": True,  # Run browser in headless mode (no UI)
+    "use_real_user_data": False,  # Whether to use real user data for trials
+    "generic_service_enabled": True  # Enable automatic handling of any website
+}
+
+# Default trial site categories for automation - used for custom sites
+GENERIC_SITE_PATTERNS = {
+    "streaming": ["netflix", "hulu", "disney", "stream", "watch", "tv", "video", "movie"],
+    "shopping": ["shop", "store", "amazon", "buy", "cart", "checkout", "retail"],
+    "music": ["music", "audio", "listen", "spotify", "sound", "song", "track"],
+    "productivity": ["work", "office", "software", "cloud", "storage", "document", "productivity"],
+    "gaming": ["game", "play", "gaming", "console", "steam", "xbox", "playstation"],
+    "education": ["learn", "course", "class", "education", "study", "tutorial", "teach"],
+    "finance": ["bank", "money", "finance", "invest", "trading", "crypto", "payment"],
+    "other": []  # Default category
+}
