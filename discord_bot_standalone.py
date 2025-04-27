@@ -112,7 +112,7 @@ async def on_ready():
 async def on_command_error(ctx, error):
     """Handle command errors"""
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found. Type `!help` for a list of commands.")
+        await ctx.send("Command not found. Type `!guide` for a list of commands.")
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(f"Missing required argument: {error.param}")
     elif isinstance(error, commands.BadArgument):
@@ -121,8 +121,8 @@ async def on_command_error(ctx, error):
         logger.error(f"Command error: {error}")
         await ctx.send(f"An error occurred: {error}")
 
-@bot.command(name="help")
-async def help_command(ctx):
+@bot.command(name="guide")
+async def guide_command(ctx):
     """Display help information"""
     embed = discord.Embed(
         title="Trial Junkie Help",
@@ -519,7 +519,7 @@ def setup_commands(external_bot=None):
     target_bot.event(on_command_error)
     
     # Register commands
-    target_bot.command(name="help")(help_command)
+    target_bot.command(name="guide")(guide_command)
     target_bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
     target_bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
     target_bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
