@@ -1,8 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import discordBotApi from "../discord_bot_api";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Discord Bot API - register the router
+  app.use('/api/discord-bot', discordBotApi);
+  
   // Referral API endpoints
   app.get('/api/referral/stats', (req, res) => {
     // Simulated referral stats for the Trial Junkies project
@@ -46,6 +50,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ];
     
     res.json(comics);
+  });
+  
+  // Bot trials API endpoint - connect to Python bot database
+  app.get('/api/trials', (req, res) => {
+    // Execute Python script to get trials
+    const { spawn } = require('child_process');
+    const userId = req.query.user_id || 'test_user';
+    
+    const process = spawn('python', ['get_bot_trials.py', '--user_id', userId.toString()]);
+    
+    let outputData = '';
+    let errorData = '';
+    
+    process.stdout.on('data', (data) => {
+      outputData += data.toString();
+    });
+    
+    process.stderr.on('data', (data) => {
+      errorData += data.toString();
+    });
+    
+    process.on('close', (code) => {
+      if (code !== 0) {
+        return res.status(500).json({ 
+          error: 'Failed to fetch trials', 
+          details: errorData || `Process exited with code ${code}` 
+        });
+      }
+      
+      try {
+        const result = JSON.parse(outputData);
+        return res.json(result.trials || []);
+      } catch (e) {
+        return res.status(500).json({ 
+          error: 'Failed to parse trials data',
+          details: e instanceof Error ? e.message : 'Unknown error'
+        });
+      }
+    });
   });
 
   const httpServer = createServer(app);
