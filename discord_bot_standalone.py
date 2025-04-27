@@ -31,11 +31,10 @@ if not DISCORD_BOT_TOKEN:
     logger.error("DISCORD_BOT_TOKEN not found in environment variables")
     sys.exit(1)
 
-# Set up the bot with only necessary intents
+# Set up the bot with intents
 intents = discord.Intents.default()
-intents.message_content = True  # This is privileged but needed for commands
-# We don't need members intent for basic functionality 
-# intents.members = True
+intents.message_content = True
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -536,8 +535,15 @@ def main():
     """Start the bot"""
     logger.info("Starting Discord bot...")
     
-    # Don't re-register commands here since they are already decorated above
+    # Register commands directly (don't use setup_commands to avoid duplicate registration)
     try:
+        # Register commands directly
+        bot.command(name="guide")(guide_command)
+        bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
+        bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
+        bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
+        bot.command(name="stash", description="View your generated credentials")(stash_command)
+        bot.command(name="agents", description="View information about available agents")(agents_command)
         
         # Run the bot
         bot.run(DISCORD_BOT_TOKEN)
