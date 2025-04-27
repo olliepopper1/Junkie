@@ -442,19 +442,5 @@ if __name__ == "__main__":
     # Load environment variables
     load_dotenv()
     
-    # Check if we're running the Discord bot
-    if os.environ.get("RUN_DISCORD_BOT", "0") == "1":
-        # Check if Discord token is available
-        token = os.getenv("DISCORD_BOT_TOKEN")
-        if not token:
-            logger.error("DISCORD_BOT_TOKEN not found in environment variables")
-            logger.info("Please set DISCORD_BOT_TOKEN in the .env file")
-            exit(1)
-        
-        # Run the bot
-        logger.info("Starting Trial Junkie Discord Bot...")
-        bot = setup_bot()
-        bot.run(token)
-    else:
-        # Run the web app
-        app.run(host='0.0.0.0', port=5000)
+    # Always run the web app only (Discord bot runs separately)
+    app.run(host='0.0.0.0', port=5000)
