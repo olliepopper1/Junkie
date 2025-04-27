@@ -1,25 +1,25 @@
 {
   "user_info": {
-    "email": "sarahsmith6233@aol.com",
-    "password": "1ycIY7ozssik",
-    "first_name": "Sarah",
-    "last_name": "Smith",
+    "email": "jenniferjones3467@outlook.com",
+    "password": "g3hpi7PrOm4q",
+    "first_name": "Jennifer",
+    "last_name": "Jones",
     "gender": "female",
-    "address": "9026 Maple Boulevard",
-    "city": "Charlotte",
-    "state": "KS",
-    "zipcode": "58162",
-    "phone": "311-914-9057",
+    "address": "9912 Lake Court",
+    "city": "San Jose",
+    "state": "AL",
+    "zipcode": "47701",
+    "phone": "498-902-9423",
     "card_type": "amex",
-    "card_number": "340355502181775",
-    "card_expiry": "12/28",
-    "card_cvv": "7504",
-    "card_holder": "Sarah Smith"
+    "card_number": "340825320237885",
+    "card_expiry": "11/29",
+    "card_cvv": "9562",
+    "card_holder": "Jennifer Jones"
   },
-  "trial_start_date": "2025-04-27T02:38:55.939457",
-  "trial_end_date": "2025-05-27T02:38:55.939457",
+  "trial_start_date": "2025-04-27T02:44:23.883699",
+  "trial_end_date": "2025-05-27T02:44:23.883699",
   "service": "hulu",
   "plan": "Hulu (No Ads)",
   "monthly_price": "$12.99",
-  "generated_at": "2025-04-27T02:38:55.940160"
+  "generated_at": "2025-04-27T02:44:23.884624"
 }
