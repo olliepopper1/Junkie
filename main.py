@@ -549,6 +549,7 @@ def get_referral_stats():
 
 @app.route('/api/register-referral', methods=['POST'])
 def register_referral():
+    """Register a referral code for the current user"""
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -559,24 +560,40 @@ def register_referral():
         return jsonify({'error': 'Referral code is required'}), 400
     
     try:
-        # Import the referral system
-        from utils.referral_system import ReferralSystem
+        # Get the current user
+        user_id = session['user_id']
+        user = WebUser.query.get(user_id)
         
-        # Register referral
-        referral_system = ReferralSystem()
-        result = asyncio.run(referral_system.register_referral(session['user_id'], referral_code))
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
-        if result['success']:
-            return jsonify({
-                'success': True,
-                'message': result['message'],
-                'referrer': result.get('referrer')
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': result['message']
-            })
+        # Check if they're already referred
+        if user.referred_by_id:
+            return jsonify({'error': 'You are already referred by someone else'}), 400
+        
+        # Find the referring user
+        referring_user = WebUser.query.filter_by(referral_code=referral_code).first()
+        
+        if not referring_user:
+            return jsonify({'error': 'Invalid referral code'}), 400
+        
+        # Can't refer yourself
+        if referring_user.id == user.id:
+            return jsonify({'error': 'You cannot refer yourself'}), 400
+        
+        # Set the referral relationship
+        user.referred_by_id = referring_user.id
+        referring_user.referral_count += 1
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'You are now referred by {referring_user.username}',
+            'referrer': {
+                'username': referring_user.username,
+                'id': referring_user.id
+            }
+        })
     except Exception as e:
         logger.error(f"Error registering referral: {str(e)}")
         return jsonify({'error': str(e)}), 500

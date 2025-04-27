@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trial Junkie - Roadmap</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Roadmap specific styles */
+        .roadmap-section {
+            margin-bottom: 3rem;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--bs-success) 0%, var(--bs-purple) 100%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: var(--bs-dark);
+            border: 4px solid var(--bs-success);
+            border-radius: 50%;
+        }
+        
+        .timeline-item.completed::before {
+            background: var(--bs-success);
+        }
+        
+        .timeline-item.in-progress::before {
+            background: var(--bs-warning);
+            border-color: var(--bs-warning);
+        }
+        
+        .timeline-item.future::before {
+            border-color: var(--bs-purple);
+        }
+        
+        .timeline-date {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .timeline-title {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .agent-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--bs-success);
+        }
+        
+        .agent-image {
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .agent-image img {
+            max-height: 130px;
+            max-width: 130px;
+        }
+        
+        .glowing-text {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
+            }
+            to {
+                text-shadow: 0 0 10px #8A2BE2, 0 0 20px #8A2BE2, 0 0 30px #8A2BE2;
+            }
+        }
+        
+        .future-feature {
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .future-feature:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="/img/logo.svg" alt="Trial Junkie" width="40" height="40" class="me-2">
+                <span class="fs-4">Trial Junkie</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agents">Agents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/trials">Trials</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/referrals">Referrals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/roadmap">Roadmap</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        <header class="text-center mb-5">
+            <h1 class="display-4 mb-4 glowing-text">Project Roadmap</h1>
+            <p class="lead">Our ambitious journey to build the ultimate trial generation ecosystem</p>
+        </header>
+
+        <div class="timeline">
+            <!-- Completed Phases -->
+            <div class="timeline-item completed">
+                <div class="timeline-date">Phase 1 - Q1 2025</div>
+                <h3 class="timeline-title">Core Platform Development</h3>
+                <p>Development of the core platform including Discord bot with basic service automation, identity generation, and card generation capabilities.</p>
+                <div class="badge bg-success">Completed</div>
+            </div>
+            
+            <div class="timeline-item completed">
+                <div class="timeline-date">Phase 2 - Q2 2025</div>
+                <h3 class="timeline-title">Agent System Implementation</h3>
+                <p>Developed our distinctive agent system featuring Heroin Harry, Meth Mandy, Cokehead Carl, Xanny Xan, and Shroomy Sal. Each agent now provides specialized functionalities for trial generation.</p>
+                <div class="badge bg-success">Completed</div>
+            </div>
+            
+            <div class="timeline-item in-progress">
+                <div class="timeline-date">Phase 3 - Q2 2025</div>
+                <h3 class="timeline-title">Web Platform & Payment Integration</h3>
+                <p>Development of the web application with user authentication, payment processing, and integration with the Discord bot for seamless experience across platforms.</p>
+                <div class="badge bg-warning">In Progress</div>
+            </div>
+            
+            <!-- Future Phases -->
+            <div class="timeline-item future">
+                <div class="timeline-date">Phase 4 - Q3 2025</div>
+                <h3 class="timeline-title">Advanced Automation</h3>
+                <p>Expansion of automation capabilities to handle more complex website interactions and an increasing number of supported services.</p>
+                <div class="badge bg-secondary">Coming Soon</div>
+            </div>
+            
+            <div class="timeline-item future">
+                <div class="timeline-date">Phase 5 - Q4 2025</div>
+                <h3 class="timeline-title">Mobile Application</h3>
+                <p>Development of dedicated mobile apps for iOS and Android platforms to access trials on the go.</p>
+                <div class="badge bg-secondary">Planned</div>
+            </div>
+            
+            <div class="timeline-item future">
+                <div class="timeline-date">Phase 6 - Q1 2026</div>
+                <h3 class="timeline-title">AI-Enhanced Trial Generation</h3>
+                <p>Implementation of AI to intelligently analyze websites and automatically generate trials for new services without manual configuration.</p>
+                <div class="badge bg-secondary">Planned</div>
+            </div>
+        </div>
+
+        <section class="roadmap-section">
+            <h2 class="text-center mb-4">New Agents Coming Soon</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card agent-card h-100">
+                        <div class="agent-image">
+                            <img src="/img/new-agent-1.svg" alt="New Agent">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Acid Andy</h5>
+                            <p class="card-text">Specializing in visual identification and CAPTCHA solving for advanced website automation.</p>
+                            <div class="badge bg-secondary">Coming in Phase 4</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card agent-card h-100">
+                        <div class="agent-image">
+                            <img src="/img/new-agent-2.svg" alt="New Agent">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Molly Maven</h5>
+                            <p class="card-text">AI communication specialist that handles email verification and support interactions.</p>
+                            <div class="badge bg-secondary">Coming in Phase 4</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card agent-card h-100">
+                        <div class="agent-image">
+                            <img src="/img/new-agent-3.svg" alt="New Agent">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Ketamine Kevin</h5>
+                            <p class="card-text">Virtual machine specialist that creates isolated environments for testing and trial security.</p>
+                            <div class="badge bg-secondary">Coming in Phase 5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="roadmap-section">
+            <h2 class="text-center mb-4">Future Features</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-mobile-alt me-2"></i>Mobile Applications</h5>
+                            <p class="card-text">Native mobile apps for iOS and Android with push notifications for trial status and expiration alerts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-robot me-2"></i>AI Website Analysis</h5>
+                            <p class="card-text">Automatically analyze any trial website and generate working credentials without manual configuration.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-shield-alt me-2"></i>Enhanced Security</h5>
+                            <p class="card-text">Advanced proxy rotation, device fingerprinting evasion, and more security features.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-exchange-alt me-2"></i>Trial Trading Marketplace</h5>
+                            <p class="card-text">A secure platform for users to exchange or trade trial accounts with others in the community.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-calendar-alt me-2"></i>Subscription Manager</h5>
+                            <p class="card-text">Automatically track all your trials and get notifications before they convert to paid subscriptions.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 future-feature">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-globe me-2"></i>Multi-language Support</h5>
+                            <p class="card-text">Support for multiple languages and region-specific trial services worldwide.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Trial Junkie</h5>
+                    <p>The ultimate drug-themed trial generation platform. Get your digital fix today!</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/dashboard" class="text-white">Dashboard</a></li>
+                        <li><a href="/agents" class="text-white">Agents</a></li>
+                        <li><a href="/trials" class="text-white">Trials</a></li>
+                        <li><a href="/referrals" class="text-white">Referrals</a></li>
+                        <li><a href="/roadmap" class="text-white">Roadmap</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect</h5>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-white fs-4"><i class="fab fa-discord"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 text-center">
+                <p class="mb-0">&copy; 2025 Trial Junkie. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="/js/roadmap.js"></script>
+    <script src="/js/psychedelic-bg.js"></script>
+</body>
+</html>
