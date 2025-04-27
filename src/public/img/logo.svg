@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .skull { fill: #6f42c1; }
+    .skull-detail { fill: #20c997; }
+    .glow { filter: drop-shadow(0 0 5px #6f42c1); }
+  </style>
+  <g class="glow">
+    <!-- Skull base -->
+    <path class="skull" d="M50,10 C30,10 15,25 15,45 C15,60 25,70 35,75 L35,85 C35,90 40,95 50,95 C60,95 65,90 65,85 L65,75 C75,70 85,60 85,45 C85,25 70,10 50,10 Z"/>
+    
+    <!-- Eye sockets -->
+    <circle class="skull-detail" cx="35" cy="45" r="10"/>
+    <circle class="skull-detail" cx="65" cy="45" r="10"/>
+    
+    <!-- Nose -->
+    <path class="skull-detail" d="M50,55 L45,65 L55,65 Z"/>
+    
+    <!-- Teeth -->
+    <path class="skull-detail" d="M40,75 L40,85 L45,80 L50,85 L55,80 L60,85 L60,75 Z"/>
+  </g>
+</svg>

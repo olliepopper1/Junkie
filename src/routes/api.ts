@@ -8,165 +8,195 @@ const execPromise = promisify(exec);
 const router = Router();
 
 // Get trials for a user
-router.get('/trials/:userId', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Execute the Python script to get trials
-    const { stdout, stderr } = await execPromise(`python get_bot_trials.py --user_id "${userId}"`);
-
-    if (stderr) {
-      console.error(`Get trials stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to get trials', details: stderr });
-    }
-
-    // Parse the output
+router.get('/trials/:userId', function(req: Request, res: Response) {
+  const handleAsync = async () => {
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`Failed to parse trials output: ${e.message}`);
-      res.status(500).json({ error: 'Invalid trials output', details: e.message, output: stdout });
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+      }
+
+      // Execute the Python script to get trials
+      const { stdout, stderr } = await execPromise(`python get_bot_trials.py --user_id "${userId}"`);
+
+      if (stderr) {
+        console.error(`Get trials stderr: ${stderr}`);
+        return res.status(500).json({ error: 'Failed to get trials', details: stderr });
+      }
+
+      // Parse the output
+      try {
+        const result = JSON.parse(stdout);
+        res.json(result);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Failed to parse trials output: ${e.message}`);
+        res.status(500).json({ error: 'Invalid trials output', details: e.message, output: stdout });
+      }
+    } catch (error) {
+      const e = error as Error;
+      console.error(`Get trials error: ${e.message}`);
+      res.status(500).json({ error: 'Failed to get trials', details: e.message });
     }
-  } catch (error) {
-    console.error(`Get trials error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get trials', details: error.message });
-  }
+  };
+  
+  handleAsync();
 });
 
 // Get user statistics
-router.get('/stats/:userId', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Execute the Python script to get user stats
-    const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_user_stats`);
-
-    if (stderr) {
-      console.error(`Get stats stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to get user stats', details: stderr });
-    }
-
-    // Parse the output
+router.get('/stats/:userId', function(req: Request, res: Response) {
+  const handleAsync = async () => {
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`Failed to parse stats output: ${e.message}`);
-      res.status(500).json({ error: 'Invalid stats output', details: e.message, output: stdout });
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+      }
+
+      // Execute the Python script to get user stats
+      const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_user_stats`);
+
+      if (stderr) {
+        console.error(`Get stats stderr: ${stderr}`);
+        return res.status(500).json({ error: 'Failed to get user stats', details: stderr });
+      }
+
+      // Parse the output
+      try {
+        const result = JSON.parse(stdout);
+        res.json(result);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Failed to parse stats output: ${e.message}`);
+        res.status(500).json({ error: 'Invalid stats output', details: e.message, output: stdout });
+      }
+    } catch (error) {
+      const e = error as Error;
+      console.error(`Get stats error: ${e.message}`);
+      res.status(500).json({ error: 'Failed to get user stats', details: e.message });
     }
-  } catch (error) {
-    console.error(`Get stats error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get user stats', details: error.message });
-  }
+  };
+  
+  handleAsync();
 });
 
 // Get user payments
-router.get('/payments/:userId', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    const { status } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Build the command
-    let command = `python bot_api_helpers.py --user_id "${userId}" --action get_user_payments`;
-    if (status) {
-      command += ` --status "${status}"`;
-    }
-
-    // Execute the Python script to get user payments
-    const { stdout, stderr } = await execPromise(command);
-
-    if (stderr) {
-      console.error(`Get payments stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to get user payments', details: stderr });
-    }
-
-    // Parse the output
+router.get('/payments/:userId', function(req: Request, res: Response) {
+  const handleAsync = async () => {
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`Failed to parse payments output: ${e.message}`);
-      res.status(500).json({ error: 'Invalid payments output', details: e.message, output: stdout });
+      const { userId } = req.params;
+      const { status } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+      }
+
+      // Build the command
+      let command = `python bot_api_helpers.py --user_id "${userId}" --action get_user_payments`;
+      if (status) {
+        command += ` --status "${status}"`;
+      }
+
+      // Execute the Python script to get user payments
+      const { stdout, stderr } = await execPromise(command);
+
+      if (stderr) {
+        console.error(`Get payments stderr: ${stderr}`);
+        return res.status(500).json({ error: 'Failed to get user payments', details: stderr });
+      }
+
+      // Parse the output
+      try {
+        const result = JSON.parse(stdout);
+        res.json(result);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Failed to parse payments output: ${e.message}`);
+        res.status(500).json({ error: 'Invalid payments output', details: e.message, output: stdout });
+      }
+    } catch (error) {
+      const e = error as Error;
+      console.error(`Get payments error: ${e.message}`);
+      res.status(500).json({ error: 'Failed to get user payments', details: e.message });
     }
-  } catch (error) {
-    console.error(`Get payments error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get user payments', details: error.message });
-  }
+  };
+  
+  handleAsync();
 });
 
 // Get user tier
-router.get('/tier/:userId', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Execute the Python script to get user tier
-    const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_user_tier`);
-
-    if (stderr) {
-      console.error(`Get tier stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to get user tier', details: stderr });
-    }
-
-    // Parse the output
+router.get('/tier/:userId', function(req: Request, res: Response) {
+  const handleAsync = async () => {
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`Failed to parse tier output: ${e.message}`);
-      res.status(500).json({ error: 'Invalid tier output', details: e.message, output: stdout });
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+      }
+
+      // Execute the Python script to get user tier
+      const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_user_tier`);
+
+      if (stderr) {
+        console.error(`Get tier stderr: ${stderr}`);
+        return res.status(500).json({ error: 'Failed to get user tier', details: stderr });
+      }
+
+      // Parse the output
+      try {
+        const result = JSON.parse(stdout);
+        res.json(result);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Failed to parse tier output: ${e.message}`);
+        res.status(500).json({ error: 'Invalid tier output', details: e.message, output: stdout });
+      }
+    } catch (error) {
+      const e = error as Error;
+      console.error(`Get tier error: ${e.message}`);
+      res.status(500).json({ error: 'Failed to get user tier', details: e.message });
     }
-  } catch (error) {
-    console.error(`Get tier error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get user tier', details: error.message });
-  }
+  };
+  
+  handleAsync();
 });
 
 // Get referral stats
-router.get('/referrals/:userId', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Execute the Python script to get referral stats
-    const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_referral_stats`);
-
-    if (stderr) {
-      console.error(`Get referrals stderr: ${stderr}`);
-      return res.status(500).json({ error: 'Failed to get referral stats', details: stderr });
-    }
-
-    // Parse the output
+router.get('/referrals/:userId', function(req: Request, res: Response) {
+  const handleAsync = async () => {
     try {
-      const result = JSON.parse(stdout);
-      res.json(result);
-    } catch (e) {
-      console.error(`Failed to parse referrals output: ${e.message}`);
-      res.status(500).json({ error: 'Invalid referrals output', details: e.message, output: stdout });
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+      }
+
+      // Execute the Python script to get referral stats
+      const { stdout, stderr } = await execPromise(`python bot_api_helpers.py --user_id "${userId}" --action get_referral_stats`);
+
+      if (stderr) {
+        console.error(`Get referrals stderr: ${stderr}`);
+        return res.status(500).json({ error: 'Failed to get referral stats', details: stderr });
+      }
+
+      // Parse the output
+      try {
+        const result = JSON.parse(stdout);
+        res.json(result);
+      } catch (error) {
+        const e = error as Error;
+        console.error(`Failed to parse referrals output: ${e.message}`);
+        res.status(500).json({ error: 'Invalid referrals output', details: e.message, output: stdout });
+      }
+    } catch (error) {
+      const e = error as Error;
+      console.error(`Get referrals error: ${e.message}`);
+      res.status(500).json({ error: 'Failed to get referral stats', details: e.message });
     }
-  } catch (error) {
-    console.error(`Get referrals error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get referral stats', details: error.message });
-  }
+  };
+  
+  handleAsync();
 });
 
 export default router;

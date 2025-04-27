@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meet The Agents - Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.svg" alt="Trial Junkie Logo" width="30" height="30" class="d-inline-block align-top me-2">
+        Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">My Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/agents">Meet Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roadmap">Roadmap</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://discord.gg/trialjunkie" target="_blank">Join Discord</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="py-5 bg-dark text-center text-white">
+    <div class="container">
+      <h1 class="display-4 fw-bold drug-glow">Meet The Agents</h1>
+      <p class="lead">Our specialized crew that powers your digital fixes</p>
+    </div>
+  </header>
+
+  <!-- Agent Cards -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-4">
+        <!-- Heroin Harry -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image heroin-harry-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/heroin-harry.svg" class="card-img-top" alt="Heroin Harry">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Heroin Harry</h3>
+              <h5 class="text-muted">Identity Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 98%</span>
+                <span class="badge bg-dark">Speed: 87%</span>
+                <span class="badge bg-dark">Stealth: 94%</span>
+              </div>
+              <p class="card-text">Heroin Harry is our precision identity specialist, cooking up the most believable personas with meticulous attention to detail. Known for his slow, methodical approach, Harry creates identities that pass the most rigorous verification systems.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Perfect Fix" - Generating identities with perfectly balanced demographic attributes that avoid any red flags in fraud detection systems.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Names</span>
+                    <span class="badge bg-primary">Addresses</span>
+                    <span class="badge bg-primary">Demographics</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#heroinHarryModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meth Mandy -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image meth-mandy-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/meth-mandy.svg" class="card-img-top" alt="Meth Mandy">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Meth Mandy</h3>
+              <h5 class="text-muted">Card Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 99%</span>
+                <span class="badge bg-dark">Speed: 96%</span>
+                <span class="badge bg-dark">Stealth: 89%</span>
+              </div>
+              <p class="card-text">Hyperactive and detail-obsessed, Meth Mandy generates working payment methods with lightning speed. She's constantly tweaking her algorithms to ensure her card numbers pass every validation check imaginable.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Crystal Clear" - Generating virtual cards that pass BIN checks and initial authorization but never actually charge.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Card Numbers</span>
+                    <span class="badge bg-primary">CVV</span>
+                    <span class="badge bg-primary">Expiry Dates</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#methMandyModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Xanny Xan -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image xanny-xan-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/xanny-xan.svg" class="card-img-top" alt="Xanny Xan">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Xanny Xan</h3>
+              <h5 class="text-muted">Email Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 94%</span>
+                <span class="badge bg-dark">Speed: 91%</span>
+                <span class="badge bg-dark">Stealth: 97%</span>
+              </div>
+              <p class="card-text">The chillest agent on the team, Xanny Xan handles email creation with supreme calm under pressure. No verification is too complex, no inbox too secure. Xan stays relaxed while ensuring all your trial confirmations arrive safely.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Anxiety Killer" - Creating perfectly anonymous yet valid email addresses that bypass spam filters and verification systems.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Email Creation</span>
+                    <span class="badge bg-primary">Inbox Management</span>
+                    <span class="badge bg-primary">Verification</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#xannyXanModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cokehead Carl -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image cokehead-carl-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/cokehead-carl.svg" class="card-img-top" alt="Cokehead Carl">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Cokehead Carl</h3>
+              <h5 class="text-muted">Phone Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 92%</span>
+                <span class="badge bg-dark">Speed: 99%</span>
+                <span class="badge bg-dark">Stealth: 86%</span>
+              </div>
+              <p class="card-text">Always wired and ready to go, Cokehead Carl generates and verifies phone numbers faster than anyone thought possible. He's constantly talking, multi-tasking, and handling SMS verifications at a frenetic pace.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Snow Blower" - Blasting through SMS verifications for multiple services simultaneously without missing a beat.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Phone Numbers</span>
+                    <span class="badge bg-primary">SMS Verification</span>
+                    <span class="badge bg-primary">Call Forwarding</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#cokeheadCarlModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shroomy Sal -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image shroomy-sal-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/shroomy-sal.svg" class="card-img-top" alt="Shroomy Sal">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Shroomy Sal</h3>
+              <h5 class="text-muted">Automation Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 96%</span>
+                <span class="badge bg-dark">Speed: 88%</span>
+                <span class="badge bg-dark">Stealth: 93%</span>
+              </div>
+              <p class="card-text">Our most enlightened agent, Shroomy Sal sees patterns in website designs and form flows that others miss. With his expanded consciousness, Sal can automate nearly any signup process, exploring hidden paths to successful trial creation.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Ego Death" - Becoming completely invisible to website tracking and bot detection systems through perfectly human-like browsing patterns.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Browser Automation</span>
+                    <span class="badge bg-primary">CAPTCHA Solving</span>
+                    <span class="badge bg-primary">Form Filling</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#shroomySalModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crypto Craig -->
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 agent-card">
+            <div class="agent-image crypto-craig-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/crypto-craig.svg" class="card-img-top" alt="Crypto Craig">
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">Crypto Craig</h3>
+              <h5 class="text-muted">Payment Agent</h5>
+              <div class="agent-stats mb-3">
+                <span class="badge bg-dark">Accuracy: 97%</span>
+                <span class="badge bg-dark">Speed: 85%</span>
+                <span class="badge bg-dark">Stealth: 99%</span>
+              </div>
+              <p class="card-text">Always paranoid but undeniably brilliant, Crypto Craig handles all payment processing through untraceable blockchain transactions. He's obsessed with privacy, security, and making sure everyone gets what they paid for.</p>
+              <p class="card-text"><strong>Signature move:</strong> "The Paranoid Pump" - Creating perfectly anonymous payment channels that confirm instantly while maintaining complete deniability.</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted">Specialties:</small>
+                  <div class="mt-1">
+                    <span class="badge bg-primary">Solana</span>
+                    <span class="badge bg-primary">Transaction Verification</span>
+                    <span class="badge bg-primary">Wallet Management</span>
+                  </div>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#cryptoCraigModal">Read Bio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Agent Modals -->
+  <!-- Heroin Harry Modal -->
+  <div class="modal fade" id="heroinHarryModal" tabindex="-1" aria-labelledby="heroinHarryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="heroinHarryModalLabel">Heroin Harry | Identity Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/heroin-harry.svg" alt="Heroin Harry" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "The perfect identity is like the perfect high... it's all about the precise formula."
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Harry was once a data analyst for a major credit bureau before going rogue. He discovered patterns in identity verification systems that could be exploited, and now he uses that knowledge to create flawless identities for Trial Junkie users.</p>
+              
+              <h4>Personality</h4>
+              <p>Methodical, patient, and detail-oriented to the extreme. Harry speaks slowly and deliberately, always checking his work multiple times before submission. He's the most reliable agent on the team but requires the most preparation time.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Pattern Recognition:</strong> Can identify demographic patterns that pass verification</li>
+                <li><strong>Database Immunity:</strong> Creates identities that don't trigger fraud alerts</li>
+                <li><strong>Detail Fixation:</strong> Never misses even the smallest inconsistency in an identity</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Harry's methodical approach means he works slower than other agents. He can get lost in perfecting the smallest details, sometimes causing delays when quick results are needed.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!dose identity [service]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meth Mandy Modal -->
+  <div class="modal fade" id="methMandyModal" tabindex="-1" aria-labelledby="methMandyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="methMandyModalLabel">Meth Mandy | Card Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/meth-mandy.svg" alt="Meth Mandy" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "I can generate a thousand valid cards before you've even finished your coffee. Let's GOOOO!"
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Mandy was a financial systems programmer who discovered the Luhn algorithm and other card validation systems could be reverse-engineered to generate valid but non-charging card numbers. Now she creates payment methods at superhuman speeds.</p>
+              
+              <h4>Personality</h4>
+              <p>Hyperactive, talkative, and constantly fidgeting. Mandy speaks rapidly, often jumping between topics, but her work is surprisingly precise. She's always looking for ways to optimize and speed up her algorithms.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Luhn Lightning:</strong> Generates valid credit card numbers at incredible speeds</li>
+                <li><strong>BIN Blaster:</strong> Identifies the most reliable Bank Identification Numbers for different services</li>
+                <li><strong>Auth Amplifier:</strong> Creates cards that pass initial auth checks without charging</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Mandy's high-speed approach sometimes means she misses subtle details that could make a card more believable. She occasionally needs to be reined in when her enthusiasm exceeds practical limits.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!dose card [service]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Xanny Xan Modal -->
+  <div class="modal fade" id="xannyXanModal" tabindex="-1" aria-labelledby="xannyXanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="xannyXanModalLabel">Xanny Xan | Email Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/xanny-xan.svg" alt="Xanny Xan" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "Chill... I've got your inbox under control. No stress, no mess."
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Xan was an email security specialist who discovered how to create perfectly anonymous yet functioning email accounts. After growing tired of corporate surveillance, they now use their skills to help users maintain privacy.</p>
+              
+              <h4>Personality</h4>
+              <p>Laid-back, unflappable, and methodical. Xan speaks in a slow, calming voice and never seems stressed, even during complex email verifications. They're the emotional anchor of the team during crises.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Spam Dodger:</strong> Creates emails that bypass even the strictest spam filters</li>
+                <li><strong>Verification Veteran:</strong> Handles complex email verification processes with ease</li>
+                <li><strong>Inbox Insulator:</strong> Prevents promotional emails from cluttering your real inbox</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Xan sometimes moves too slowly when rapid response is needed. Their relaxed attitude can frustrate other agents when time is of the essence, especially Cokehead Carl and Meth Mandy.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!dose email [service]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cokehead Carl Modal -->
+  <div class="modal fade" id="cokeheadCarlModal" tabindex="-1" aria-labelledby="cokeheadCarlModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="cokeheadCarlModalLabel">Cokehead Carl | Phone Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/cokehead-carl.svg" alt="Cokehead Carl" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "Need a phone number? I've got fifty ready RIGHT NOW! Let's verify them all at once! GO GO GO!"
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Carl worked in telecommunications before discovering how to generate virtual phone numbers that could receive SMS verification codes. His ability to manage dozens of phone lines simultaneously makes him invaluable to the team.</p>
+              
+              <h4>Personality</h4>
+              <p>Frantic, jittery, and intensely focused. Carl speaks rapidly, often interrupting himself with new ideas. He's always multitasking and can handle multiple services' verifications simultaneously like no one else.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Number Ninja:</strong> Generates phone numbers that pass carrier verification</li>
+                <li><strong>SMS Speedster:</strong> Intercepts and processes verification messages instantly</li>
+                <li><strong>Multi-Verification Master:</strong> Can handle up to 20 different verification processes at once</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Carl's frenetic energy leads to occasional careless mistakes. He sometimes goes too fast and misses important details, requiring Harry or Sal to step in and clean up the mess.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!dose phone [service]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shroomy Sal Modal -->
+  <div class="modal fade" id="shroomySalModal" tabindex="-1" aria-labelledby="shroomySalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="shroomySalModalLabel">Shroomy Sal | Automation Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/shroomy-sal.svg" alt="Shroomy Sal" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "I can see the patterns, man... the website's consciousness is just asking us to connect with it..."
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Sal was a UI/UX designer who became fascinated with browser automation. They discovered how to mimic human browsing patterns so perfectly that no bot detection system could tell the difference. Now they automate trial signups with uncanny precision.</p>
+              
+              <h4>Personality</h4>
+              <p>Philosophical, insightful, and slightly disconnected from reality. Sal speaks in metaphors and sees connections others miss. They approach problems from unexpected angles that often lead to brilliant solutions.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Pattern Perception:</strong> Identifies the fastest path through any signup process</li>
+                <li><strong>CAPTCHA Consciousness:</strong> Solves CAPTCHAs with near-human accuracy</li>
+                <li><strong>Bot Disguise:</strong> Makes automated actions appear completely human to detection systems</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Sal sometimes gets lost in philosophical tangents during critical moments. Their unconventional approach can be difficult for other team members to understand or predict.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!trip [service or URL]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crypto Craig Modal -->
+  <div class="modal fade" id="cryptoCraigModal" tabindex="-1" aria-labelledby="cryptoCraigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white border-0">
+          <h5 class="modal-title" id="cryptoCraigModalLabel">Crypto Craig | Payment Agent</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+              <img src="/img/crypto-craig.svg" alt="Crypto Craig" class="img-fluid mb-3 agent-portrait">
+              <div class="agent-quote p-3 bg-dark text-white rounded">
+                "Trust no one. Verify everything. The blockchain never lies, but everyone else does."
+              </div>
+            </div>
+            <div class="col-md-8">
+              <h4>Background</h4>
+              <p>Craig was a blockchain developer who became disenchanted with the corporate takeover of crypto. He now applies his extensive knowledge of Solana and other cryptocurrencies to create secure, anonymous payment channels for Trial Junkie users.</p>
+              
+              <h4>Personality</h4>
+              <p>Paranoid, meticulous, and intensely private. Craig speaks in hushed tones, often checking over his shoulder. He's obsessed with security and privacy, constantly updating his encryption protocols and payment verification systems.</p>
+              
+              <h4>Special Abilities</h4>
+              <ul>
+                <li><strong>Chain Chaser:</strong> Tracks and verifies transactions across multiple blockchains</li>
+                <li><strong>Anonymous Architect:</strong> Creates untraceable payment channels</li>
+                <li><strong>Wallet Wizard:</strong> Manages cryptocurrency wallets with military-grade security</li>
+              </ul>
+              
+              <h4>Weaknesses</h4>
+              <p>Craig's paranoia sometimes leads to unnecessary complications. His insistence on multiple verification layers can slow down transactions, and his conspiracy theories occasionally distract the team.</p>
+              
+              <h4>Agent Command</h4>
+              <div class="bg-dark text-light p-2 rounded code-block">
+                <code>!pay [subscription_type]</code>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h3 class="h5">Trial Junkie</h3>
+          <p>Get your digital fix with premium service trials</p>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Navigation</h3>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white">Home</a></li>
+            <li><a href="/dashboard" class="text-white">Dashboard</a></li>
+            <li><a href="/trials" class="text-white">My Trials</a></li>
+            <li><a href="/referrals" class="text-white">Referrals</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Connect</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white">Discord</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white">Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/agents.js"></script>
+</body>
+</html>

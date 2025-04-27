@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Program - Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.svg" alt="Trial Junkie Logo" width="30" height="30" class="d-inline-block align-top me-2">
+        Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">My Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/agents">Meet Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roadmap">Roadmap</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://discord.gg/trialjunkie" target="_blank">Join Discord</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="py-5 bg-dark text-center text-white">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <h1 class="display-4 fw-bold drug-glow">Become a Dealer</h1>
+          <p class="lead mb-4">Share the good stuff, earn commissions, build your network</p>
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <button id="get-referral-btn" class="btn btn-primary btn-lg px-4 gap-3 pulsate">Get Your Referral Code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+    <!-- Discord ID Input -->
+    <div class="row mb-5">
+      <div class="col-md-6 mx-auto">
+        <div class="card bg-dark-subtle border-0 shadow">
+          <div class="card-body p-4">
+            <h3 class="h4 mb-3">Enter Your Discord ID</h3>
+            <p class="text-muted mb-3">To view your referral stats or generate a new code</p>
+            <div class="input-group mb-3">
+              <input type="text" id="discord-id-input" class="form-control" placeholder="Your Discord ID">
+              <button id="load-referrals-btn" class="btn btn-primary">Load Data</button>
+            </div>
+            <div class="form-text">Your referral data is tied to your Discord account</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Code Section (Hidden initially) -->
+    <div id="referral-code-section" class="row mb-5 d-none">
+      <div class="col-md-8 mx-auto">
+        <div class="card border-0 bg-dark ref-card-glow">
+          <div class="card-body p-5 text-center position-relative overflow-hidden">
+            <div class="floating-particles"></div>
+            <h2 class="mb-4">Your Referral Code</h2>
+            <div class="referral-code-display p-3 mb-4">
+              <span id="referral-code" class="display-6 monospace drug-glow">LOADING...</span>
+            </div>
+            <p class="mb-4">Share this code and earn 15% commission on all your referrals' purchases</p>
+            <div class="d-flex justify-content-center gap-3">
+              <button id="copy-code-btn" class="btn btn-primary">
+                <i class="bi bi-clipboard me-2"></i>Copy Code
+              </button>
+              <div class="dropdown">
+                <button class="btn btn-outline-light dropdown-toggle" type="button" id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-share me-2"></i>Share
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="shareDropdown">
+                  <li><a class="dropdown-item" href="#" id="share-discord"><i class="bi bi-discord me-2"></i>Discord</a></li>
+                  <li><a class="dropdown-item" href="#" id="share-twitter"><i class="bi bi-twitter-x me-2"></i>Twitter</a></li>
+                  <li><a class="dropdown-item" href="#" id="share-telegram"><i class="bi bi-telegram me-2"></i>Telegram</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#" id="share-custom"><i class="bi bi-link-45deg me-2"></i>Custom Message</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discord Command Section -->
+    <div class="row mb-5">
+      <div class="col-md-8 mx-auto">
+        <div class="card bg-dark-subtle border-0">
+          <div class="card-body p-4">
+            <h3 class="h4 mb-3">How to Use Referral Codes</h3>
+            <div class="mb-4">
+              <h5>For your friends to join using your code:</h5>
+              <div class="bg-dark p-3 rounded mb-3">
+                <code class="d-block">!refer YOUR_CODE</code>
+              </div>
+              <p class="text-muted">They need to type this command in the Trial Junkie Discord server</p>
+            </div>
+            <div>
+              <h5>To check your referral statistics:</h5>
+              <div class="bg-dark p-3 rounded mb-3">
+                <code class="d-block">!referral</code>
+              </div>
+              <p class="text-muted">This shows your referral code and statistics in Discord</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Stats Section (Hidden initially) -->
+    <div id="referral-stats-section" class="row mb-5 d-none">
+      <div class="col-12">
+        <h2 class="h3 mb-4">Your Referral Statistics</h2>
+        <div class="row g-4">
+          <!-- Stats Cards -->
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0 shadow-sm">
+              <div class="card-body text-center p-4">
+                <div class="icon-wrapper mb-3">
+                  <i class="bi bi-people-fill display-4 text-primary"></i>
+                </div>
+                <h3 class="h5 mb-3">Total Referrals</h3>
+                <p class="display-5 fw-bold" id="total-referrals">0</p>
+                <p class="text-muted">Users who joined with your code</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0 shadow-sm">
+              <div class="card-body text-center p-4">
+                <div class="icon-wrapper mb-3">
+                  <i class="bi bi-cash-stack display-4 text-success"></i>
+                </div>
+                <h3 class="h5 mb-3">Total Earnings</h3>
+                <p class="display-5 fw-bold" id="total-earnings">$0.00</p>
+                <p class="text-muted">15% commission on all purchases</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0 shadow-sm">
+              <div class="card-body text-center p-4">
+                <div class="icon-wrapper mb-3">
+                  <i class="bi bi-wallet2 display-4 text-warning"></i>
+                </div>
+                <h3 class="h5 mb-3">Available Balance</h3>
+                <p class="display-5 fw-bold" id="available-balance">$0.00</p>
+                <div class="mt-3">
+                  <button id="withdraw-btn" class="btn btn-outline-primary" disabled>Withdraw Funds</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Leaderboard -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="card bg-dark-subtle border-0">
+          <div class="card-header bg-dark text-white py-3">
+            <h3 class="h4 mb-0">Top Dealers Leaderboard</h3>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-dark">
+                  <tr>
+                    <th class="ps-3">Rank</th>
+                    <th>Dealer</th>
+                    <th>Referrals</th>
+                    <th>Total Earnings</th>
+                    <th>Dealer Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="top-dealer">
+                    <td class="ps-3">
+                      <span class="badge bg-warning text-dark">1</span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">👑</div>
+                        <div>
+                          <h6 class="mb-0">CryptoKing</h6>
+                          <small class="text-muted">Since Jan 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>247</td>
+                    <td>$3,705.25</td>
+                    <td><span class="badge bg-danger">Kingpin</span></td>
+                  </tr>
+                  <tr class="top-dealer">
+                    <td class="ps-3">
+                      <span class="badge bg-secondary">2</span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">🥈</div>
+                        <div>
+                          <h6 class="mb-0">TrialMaster</h6>
+                          <small class="text-muted">Since Feb 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>183</td>
+                    <td>$2,745.00</td>
+                    <td><span class="badge bg-danger">Kingpin</span></td>
+                  </tr>
+                  <tr class="top-dealer">
+                    <td class="ps-3">
+                      <span class="badge bg-secondary">3</span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">🥉</div>
+                        <div>
+                          <h6 class="mb-0">StreamQueen</h6>
+                          <small class="text-muted">Since Feb 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>142</td>
+                    <td>$2,130.00</td>
+                    <td><span class="badge bg-danger">Kingpin</span></td>
+                  </tr>
+                  <tr>
+                    <td class="ps-3">4</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">🏅</div>
+                        <div>
+                          <h6 class="mb-0">DigitalDealer</h6>
+                          <small class="text-muted">Since Mar 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>98</td>
+                    <td>$1,470.00</td>
+                    <td><span class="badge bg-warning text-dark">Distributor</span></td>
+                  </tr>
+                  <tr>
+                    <td class="ps-3">5</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">🏅</div>
+                        <div>
+                          <h6 class="mb-0">TrialConnect</h6>
+                          <small class="text-muted">Since Jan 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>76</td>
+                    <td>$1,140.00</td>
+                    <td><span class="badge bg-warning text-dark">Distributor</span></td>
+                  </tr>
+                  <tr id="your-rank-row" class="d-none bg-dark-subtle">
+                    <td class="ps-3" id="your-rank">?</td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="dealer-avatar me-3">👤</div>
+                        <div>
+                          <h6 class="mb-0">You</h6>
+                          <small class="text-muted" id="member-since">Since Apr 2025</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td id="your-referrals">0</td>
+                    <td id="your-earnings">$0.00</td>
+                    <td id="your-status"><span class="badge bg-primary">Starter</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Tiers -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <h2 class="h3 mb-4">Dealer Status Tiers</h2>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0">
+              <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="h4 mb-0">Starter</h3>
+              </div>
+              <div class="card-body p-4">
+                <div class="text-center mb-3">
+                  <i class="bi bi-stars display-4"></i>
+                </div>
+                <h4 class="text-center mb-3">0-25 Referrals</h4>
+                <ul class="list-group list-group-flush bg-transparent">
+                  <li class="list-group-item bg-transparent">15% commission on all referral purchases</li>
+                  <li class="list-group-item bg-transparent">Basic referral tracking</li>
+                  <li class="list-group-item bg-transparent">Weekly commission payouts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0">
+              <div class="card-header bg-warning text-dark text-center py-3">
+                <h3 class="h4 mb-0">Distributor</h3>
+              </div>
+              <div class="card-body p-4">
+                <div class="text-center mb-3">
+                  <i class="bi bi-lightning-charge display-4"></i>
+                </div>
+                <h4 class="text-center mb-3">26-100 Referrals</h4>
+                <ul class="list-group list-group-flush bg-transparent">
+                  <li class="list-group-item bg-transparent">18% commission on all referral purchases</li>
+                  <li class="list-group-item bg-transparent">Advanced referral analytics</li>
+                  <li class="list-group-item bg-transparent">Custom referral links</li>
+                  <li class="list-group-item bg-transparent">Daily commission payouts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 bg-dark-subtle border-0">
+              <div class="card-header bg-danger text-white text-center py-3">
+                <h3 class="h4 mb-0">Kingpin</h3>
+              </div>
+              <div class="card-body p-4">
+                <div class="text-center mb-3">
+                  <i class="bi bi-trophy display-4"></i>
+                </div>
+                <h4 class="text-center mb-3">100+ Referrals</h4>
+                <ul class="list-group list-group-flush bg-transparent">
+                  <li class="list-group-item bg-transparent">20% commission on all referral purchases</li>
+                  <li class="list-group-item bg-transparent">Multi-level commission structure</li>
+                  <li class="list-group-item bg-transparent">VIP Discord channel access</li>
+                  <li class="list-group-item bg-transparent">Instant commission payouts</li>
+                  <li class="list-group-item bg-transparent">Early access to new features</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <h2 class="h3 mb-4">How The Referral Program Works</h2>
+        <div class="card bg-dark-subtle border-0">
+          <div class="card-body p-4">
+            <div class="row g-4">
+              <div class="col-md-3">
+                <div class="text-center mb-3">
+                  <div class="step-circle bg-primary">1</div>
+                </div>
+                <h4 class="h5 text-center">Get Your Code</h4>
+                <p>Generate your unique referral code from the dashboard or Discord</p>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center mb-3">
+                  <div class="step-circle bg-primary">2</div>
+                </div>
+                <h4 class="h5 text-center">Share With Friends</h4>
+                <p>Share your code on social media, with friends, or in communities</p>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center mb-3">
+                  <div class="step-circle bg-primary">3</div>
+                </div>
+                <h4 class="h5 text-center">Friends Use Your Code</h4>
+                <p>They join with <code>!refer YOUR_CODE</code> in Discord</p>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center mb-3">
+                  <div class="step-circle bg-primary">4</div>
+                </div>
+                <h4 class="h5 text-center">Earn Commissions</h4>
+                <p>Get 15-20% of all their purchases as commission</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marketing Materials -->
+    <div class="row">
+      <div class="col-12">
+        <h2 class="h3 mb-4">Dealer Marketing Kit</h2>
+        <div class="card bg-dark-subtle border-0">
+          <div class="card-body p-4">
+            <p class="mb-4">Use these pre-made graphics and messages to share Trial Junkie with your audience</p>
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0">
+                  <img src="/img/marketing-banner-1.svg" class="card-img-top" alt="Marketing Banner 1">
+                  <div class="card-body">
+                    <h5 class="card-title">Social Media Banner</h5>
+                    <p class="card-text">Perfect for Twitter, Facebook, and Discord</p>
+                    <a href="#" class="btn btn-sm btn-primary">Download</a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0">
+                  <img src="/img/marketing-banner-2.svg" class="card-img-top" alt="Marketing Banner 2">
+                  <div class="card-body">
+                    <h5 class="card-title">Streaming Banner</h5>
+                    <p class="card-text">Great for Twitch and YouTube streamers</p>
+                    <a href="#" class="btn btn-sm btn-primary">Download</a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100 bg-dark border-0">
+                  <img src="/img/marketing-banner-3.svg" class="card-img-top" alt="Marketing Banner 3">
+                  <div class="card-body">
+                    <h5 class="card-title">Forum Signature</h5>
+                    <p class="card-text">Perfect for forums and Reddit</p>
+                    <a href="#" class="btn btn-sm btn-primary">Download</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Share Modal -->
+  <div class="modal fade" id="customShareModal" tabindex="-1" aria-labelledby="customShareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title" id="customShareModalLabel">Custom Referral Message</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Customize your message to share with friends:</p>
+          <div class="mb-3">
+            <textarea id="custom-message" class="form-control" rows="4">I just discovered Trial Junkie - a service that generates trial accounts for streaming platforms. Use my referral code {CODE} to get started!</textarea>
+          </div>
+          <p class="text-muted">Your referral code will automatically replace {CODE}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="copy-custom-message">Copy Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="bi bi-check-circle-fill text-success display-1 mb-3"></i>
+          <h5 id="success-message">Copied to clipboard!</h5>
+        </div>
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h3 class="h5">Trial Junkie</h3>
+          <p>Get your digital fix with premium service trials</p>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Navigation</h3>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white">Home</a></li>
+            <li><a href="/dashboard" class="text-white">Dashboard</a></li>
+            <li><a href="/trials" class="text-white">My Trials</a></li>
+            <li><a href="/referrals" class="text-white">Referrals</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Connect</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white">Discord</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white">Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/referrals.js"></script>
+</body>
+</html>
