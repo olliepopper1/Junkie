@@ -509,10 +509,33 @@ async def agents_command(ctx):
     embed.set_footer(text="Get a random quote with !quote [agent]")
     await ctx.send(embed=embed)
 
+# Function to set up commands for external use
+def setup_commands(external_bot=None):
+    """Set up bot commands for use in external scripts"""
+    target_bot = external_bot or bot
+    
+    # Register event handlers
+    target_bot.event(on_ready)
+    target_bot.event(on_command_error)
+    
+    # Register commands
+    target_bot.command(name="help")(help_command)
+    target_bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
+    target_bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
+    target_bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
+    target_bot.command(name="stash", description="View your generated credentials")(stash_command)
+    target_bot.command(name="agents", description="View information about available agents")(agents_command)
+    
+    return target_bot
+
 # Main function to run the bot
 def main():
     """Start the bot"""
     logger.info("Starting Discord bot...")
+    
+    # Set up the bot commands
+    setup_commands()
+    
     try:
         bot.run(DISCORD_BOT_TOKEN)
     except discord.errors.LoginFailure:
