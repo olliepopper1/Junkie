@@ -99,7 +99,15 @@ def get_discord_oauth():
 # Web routes for static pages
 @app.route('/')
 def index():
-    return send_from_directory('static', 'index.html')
+    # Read index.html content
+    with open(os.path.join('static', 'index.html'), 'r') as file:
+        content = file.read()
+    
+    # Replace the Discord client ID placeholder
+    client_id = os.environ.get('DISCORD_CLIENT_ID', '')
+    content = content.replace('CLIENT_ID_PLACEHOLDER', client_id)
+    
+    return content
 
 @app.route('/dashboard')
 def dashboard():
