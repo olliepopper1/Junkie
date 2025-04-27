@@ -8,10 +8,15 @@ import logging
 import random
 import time
 import asyncio
+import json
+from functools import wraps
+from urllib.parse import urlencode
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from requests_oauthlib import OAuth2Session
 from bot import setup_bot
 
 # Initialize Flask app
@@ -36,24 +41,60 @@ logger = logging.getLogger(__name__)
 # Initialize database
 db = SQLAlchemy(app)
 
+# Initialize login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
 # Define models
-class WebUser(db.Model):
+class WebUser(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    discord_id = db.Column(db.String(64), unique=True)
+    password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Discord login
+    discord_id = db.Column(db.String(64), unique=True, nullable=True)
+    discord_username = db.Column(db.String(80), nullable=True)
+    discord_discriminator = db.Column(db.String(10), nullable=True)
+    discord_avatar = db.Column(db.String(256), nullable=True)
+    discord_access_token = db.Column(db.String(256), nullable=True)
+    discord_refresh_token = db.Column(db.String(256), nullable=True)
+    discord_token_expires_at = db.Column(db.DateTime, nullable=True)
+    referral_code = db.Column(db.String(20), unique=True, nullable=True)
+    referred_by_id = db.Column(db.Integer, db.ForeignKey('web_user.id'), nullable=True)
+    referral_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    # Self-referential relationship for referrals
+    referred_by = db.relationship('WebUser', remote_side=[id], backref=db.backref('referrals', lazy='dynamic'))
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
         
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return self.password_hash and check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return WebUser.query.get(int(user_id))
 
 # In newer Flask versions, we use this pattern instead of before_first_request
 with app.app_context():
     db.create_all()
+
+# Discord OAuth2 Configuration
+DISCORD_CLIENT_ID = os.environ.get("DISCORD_CLIENT_ID", "")
+DISCORD_CLIENT_SECRET = os.environ.get("DISCORD_CLIENT_SECRET", "")
+DISCORD_REDIRECT_URI = os.environ.get("DISCORD_REDIRECT_URI", "http://localhost:5000/discord-callback")
+DISCORD_API_BASE_URL = "https://discord.com/api"
+DISCORD_AUTHORIZATION_BASE_URL = DISCORD_API_BASE_URL + "/oauth2/authorize"
+DISCORD_TOKEN_URL = DISCORD_API_BASE_URL + "/oauth2/token"
+
+def get_discord_oauth():
+    return OAuth2Session(
+        client_id=DISCORD_CLIENT_ID,
+        redirect_uri=DISCORD_REDIRECT_URI,
+        scope=["identify", "email"]
+    )
 
 # Web routes for static pages
 @app.route('/')
@@ -143,7 +184,12 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        return redirect('/login')
+        # Log the user in
+        login_user(user)
+        session['user_id'] = user.id
+        session['username'] = user.username
+        
+        return redirect('/dashboard')
     
     return send_from_directory('static', 'register.html')
 
@@ -156,6 +202,7 @@ def login():
         user = WebUser.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
+            login_user(user)
             session['user_id'] = user.id
             session['username'] = user.username
             return redirect('/dashboard')
@@ -166,8 +213,107 @@ def login():
 
 @app.route('/logout')
 def logout():
+    logout_user()
     session.clear()
     return redirect('/')
+
+# Discord OAuth2 Routes
+@app.route('/login-with-discord')
+def login_with_discord():
+    """Initiate the Discord OAuth2 flow"""
+    if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
+        flash('Discord login is not configured', 'danger')
+        return redirect('/login')
+    
+    discord = get_discord_oauth()
+    authorization_url, state = discord.authorization_url(DISCORD_AUTHORIZATION_BASE_URL)
+    session['oauth2_state'] = state
+    return redirect(authorization_url)
+
+@app.route('/discord-callback')
+def discord_callback():
+    """Handle the Discord OAuth2 callback"""
+    if 'oauth2_state' not in session:
+        return redirect('/login')
+    
+    if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
+        flash('Discord login is not configured', 'danger')
+        return redirect('/login')
+    
+    try:
+        # Get the authorization code
+        discord = get_discord_oauth()
+        token = discord.fetch_token(
+            DISCORD_TOKEN_URL,
+            client_secret=DISCORD_CLIENT_SECRET,
+            authorization_response=request.url
+        )
+        
+        # Get the user info
+        discord = OAuth2Session(DISCORD_CLIENT_ID, token=token)
+        user_data = discord.get(f"{DISCORD_API_BASE_URL}/users/@me").json()
+        
+        # Check if we already have a user with this Discord ID
+        discord_id = user_data.get('id')
+        user = WebUser.query.filter_by(discord_id=discord_id).first()
+        
+        if not user:
+            # Check if there's a user with this email
+            discord_email = user_data.get('email')
+            if discord_email:
+                user = WebUser.query.filter_by(email=discord_email).first()
+                
+            if not user:
+                # Create a new user
+                username = f"{user_data.get('username')}#{user_data.get('discriminator', '')}"
+                email = discord_email or f"{discord_id}@example.com"  # Fallback email if none provided
+                
+                # Make sure username is unique
+                base_username = username
+                counter = 1
+                while WebUser.query.filter_by(username=username).first():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                user = WebUser(
+                    username=username,
+                    email=email,
+                    discord_id=discord_id,
+                    discord_username=user_data.get('username'),
+                    discord_discriminator=user_data.get('discriminator', ''),
+                    discord_avatar=user_data.get('avatar'),
+                    discord_access_token=token.get('access_token'),
+                    discord_refresh_token=token.get('refresh_token'),
+                )
+                db.session.add(user)
+                db.session.commit()
+            else:
+                # Update the existing user with Discord info
+                user.discord_id = discord_id
+                user.discord_username = user_data.get('username')
+                user.discord_discriminator = user_data.get('discriminator', '')
+                user.discord_avatar = user_data.get('avatar')
+                user.discord_access_token = token.get('access_token')
+                user.discord_refresh_token = token.get('refresh_token')
+                db.session.commit()
+        else:
+            # Update token info
+            user.discord_access_token = token.get('access_token')
+            user.discord_refresh_token = token.get('refresh_token')
+            db.session.commit()
+        
+        # Log the user in
+        login_user(user)
+        session['user_id'] = user.id
+        session['username'] = user.username
+        
+        # Redirect to dashboard
+        return redirect('/dashboard')
+        
+    except Exception as e:
+        logger.error(f"Discord login error: {str(e)}")
+        flash('An error occurred during Discord login', 'danger')
+        return redirect('/login')
 
 # API routes
 @app.route('/api/trials', methods=['GET'])
@@ -359,20 +505,43 @@ def get_user_tier():
 
 @app.route('/api/referral-stats', methods=['GET'])
 def get_referral_stats():
+    """Get referral statistics for the current user"""
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
     try:
-        # Import the referral system
-        from utils.referral_system import ReferralSystem
+        # Get the user
+        user_id = session['user_id']
+        user = WebUser.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Generate a referral code if they don't have one
+        if not user.referral_code:
+            import uuid
+            import base64
+            # Generate a unique code based on user ID and random values
+            code_base = f"{user_id}-{uuid.uuid4()}"
+            # Create a URL-safe base64 encoded string and truncate to 12 chars
+            user.referral_code = base64.urlsafe_b64encode(code_base.encode()).decode()[:12].upper()
+            db.session.commit()
         
         # Get referral stats
-        referral_system = ReferralSystem()
-        stats = asyncio.run(referral_system.get_referral_stats(session['user_id']))
+        referrals = user.referrals.all()
         
+        # Format the response
         return jsonify({
             'success': True,
-            'stats': stats
+            'referral_code': user.referral_code,
+            'referral_count': len(referrals),
+            'referrals': [
+                {
+                    'username': ref.username,
+                    'joined_at': ref.created_at.isoformat() if ref.created_at else None
+                }
+                for ref in referrals
+            ]
         })
     except Exception as e:
         logger.error(f"Error fetching referral stats: {str(e)}")

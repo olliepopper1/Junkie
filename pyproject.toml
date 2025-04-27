@@ -21,4 +21,5 @@ dependencies = [
     "web3>=7.10.0",
     "webdriver-manager>=4.0.2",
     "flask-wtf>=1.2.2",
+    "requests-oauthlib>=2.0.0",
 ]
