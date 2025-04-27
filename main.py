@@ -106,7 +106,7 @@ def catch_all(path):
             return send_from_directory('static', 'index.html')
     
     # Otherwise, return a custom 404 page
-    return render_404()
+    return render_template('404.html'), 404
 
 # Static assets routes
 @app.route('/css/<path:filename>')

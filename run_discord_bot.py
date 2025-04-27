@@ -1,28 +1,27 @@
+#!/usr/bin/env python3
 """
-Discord Bot Runner for Trial Junkie
-This script runs only the Discord bot functionality without starting a web server
+Run Discord Bot
+This script runs the standalone Discord bot without using Flask
 """
 import os
 import sys
 import logging
-import discord
-from discord.ext import commands
 from dotenv import load_dotenv
-from bot import setup_bot
+import discord_bot_standalone
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
+        logging.FileHandler("discord_bot.log"),
         logging.StreamHandler()
     ]
 )
+logger = logging.getLogger("discord_bot_runner")
 
-logger = logging.getLogger(__name__)
-
-def run_discord_bot():
-    """Run the Discord bot without starting a Flask server"""
+def main():
+    """Main function to run the Discord bot"""
     # Load environment variables
     load_dotenv()
     
@@ -31,20 +30,15 @@ def run_discord_bot():
     if not token:
         logger.error("DISCORD_BOT_TOKEN not found in environment variables")
         logger.info("Please set DISCORD_BOT_TOKEN in the .env file")
-        return False
-    
-    # Create the bot using the setup function
-    bot = setup_bot()
+        sys.exit(1)
     
     # Run the bot
     logger.info("Starting Trial Junkie Discord Bot...")
-    
     try:
-        bot.run(token)
-        return True
+        discord_bot_standalone.main()
     except Exception as e:
-        logger.error(f"Error starting bot: {e}")
-        return False
+        logger.error(f"Error running Discord bot: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(0 if run_discord_bot() else 1)
+    main()

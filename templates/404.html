@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Trial Junkie</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        body {
+            background-color: #1c1c1c;
+            color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(circle at center, #2c2c2c 0%, #1c1c1c 100%);
+        }
+        
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+            background-color: rgba(33, 37, 41, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #343a40;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            margin: 0;
+            background: linear-gradient(45deg, #9a43f2 0%, #4adede 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 15px rgba(154, 67, 242, 0.3);
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: #cfcfcf;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #9a43f2 0%, #4adede 100%);
+            border: none;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(154, 67, 242, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(154, 67, 242, 0.5);
+        }
+        
+        .drug-animation {
+            animation: float 3s ease-in-out infinite;
+            margin: 1rem;
+            display: inline-block;
+            font-size: 2.5rem;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .drug-container {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="drug-container">
+            <span class="drug-animation" style="animation-delay: 0s;">💉</span>
+            <span class="drug-animation" style="animation-delay: 0.3s;">💊</span>
+            <span class="drug-animation" style="animation-delay: 0.6s;">🍄</span>
+            <span class="drug-animation" style="animation-delay: 0.9s;">💨</span>
+            <span class="drug-animation" style="animation-delay: 1.2s;">❄️</span>
+        </div>
+        
+        <h1 class="error-code">404</h1>
+        <p class="error-message">Looks like you took a wrong trip. This page doesn't exist in our universe.</p>
+        
+        <a href="/" class="btn btn-primary btn-lg">Return to Reality</a>
+    </div>
+</body>
+</html>
