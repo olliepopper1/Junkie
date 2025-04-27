@@ -518,13 +518,15 @@ def setup_commands(external_bot=None):
     target_bot.event(on_ready)
     target_bot.event(on_command_error)
     
-    # Register commands
-    target_bot.command(name="guide")(guide_command)
-    target_bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
-    target_bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
-    target_bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
-    target_bot.command(name="stash", description="View your generated credentials")(stash_command)
-    target_bot.command(name="agents", description="View information about available agents")(agents_command)
+    # Only register commands if this is an external bot
+    # (Commands are already registered for the global bot in main())
+    if external_bot:
+        target_bot.command(name="guide")(guide_command)
+        target_bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
+        target_bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
+        target_bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
+        target_bot.command(name="stash", description="View your generated credentials")(stash_command)
+        target_bot.command(name="agents", description="View information about available agents")(agents_command)
     
     return target_bot
 
@@ -533,10 +535,17 @@ def main():
     """Start the bot"""
     logger.info("Starting Discord bot...")
     
-    # Set up the bot commands
-    setup_commands()
-    
+    # Register commands directly (don't use setup_commands to avoid duplicate registration)
     try:
+        # Register commands directly
+        bot.command(name="guide")(guide_command)
+        bot.command(name="hit", description="Generate trial credentials for a service")(hit_command)
+        bot.command(name="dose", description="Generate a specific type of credential")(dose_command)
+        bot.command(name="quote", description="Get a random quote from an agent")(quote_command)
+        bot.command(name="stash", description="View your generated credentials")(stash_command)
+        bot.command(name="agents", description="View information about available agents")(agents_command)
+        
+        # Run the bot
         bot.run(DISCORD_BOT_TOKEN)
     except discord.errors.LoginFailure:
         logger.error("Invalid Discord bot token")
