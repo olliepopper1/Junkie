@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #dc3545; }
+    .eyes { fill: #6f42c1; }
+    .mouth { fill: #444; }
+    .powder { fill: #fff; }
+    .effects { fill: rgba(220, 53, 69, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #dc3545); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Coke lines -->
+  <g class="glow">
+    <line x1="30" y1="50" x2="70" y2="50" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="130" y1="50" x2="170" y2="50" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="30" y1="150" x2="70" y2="150" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    <line x1="130" y1="150" x2="170" y2="150" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Credit card -->
+    <rect class="accent" x="80" y="40" width="40" height="25" rx="3" />
+    <line x1="85" y1="50" x2="115" y2="50" stroke="#fff" stroke-width="2" stroke-opacity="0.7" />
+    <line x1="85" y1="55" x2="105" y2="55" stroke="#fff" stroke-width="2" stroke-opacity="0.7" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Eyes (wide and alert) -->
+  <ellipse class="eyes" cx="75" cy="100" rx="18" ry="18" />
+  <ellipse class="eyes" cx="125" cy="100" rx="18" ry="18" />
+  
+  <!-- Pupils (dilated) -->
+  <circle fill="#000" cx="75" cy="100" r="10" />
+  <circle fill="#000" cx="125" cy="100" r="10" />
+  
+  <!-- White powder on nose -->
+  <path class="powder" d="M95,115 Q100,120 105,115" />
+  
+  <!-- Eyebrows (raised high) -->
+  <path d="M60,70 Q75,60 90,70" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M110,70 Q125,60 140,70" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (talking rapidly) -->
+  <path class="mouth" d="M85,130 Q100,140 115,130 Q100,135 85,130 Z" />
+  
+  <!-- Red effects (cocaine energy) -->
+  <g class="effects" opacity="0.3">
+    <circle cx="65" cy="100" r="30" />
+    <circle cx="135" cy="100" r="30" />
+    <circle cx="100" cy="135" r="25" />
+  </g>
+  
+  <!-- Heart rate (fast) -->
+  <g stroke="#dc3545" stroke-width="2" fill="none" class="glow">
+    <path d="M30,100 L40,100 L45,85 L50,115 L55,85 L60,100 L70,100" />
+    <path d="M130,100 L140,100 L145,85 L150,115 L155,85 L160,100 L170,100" />
+  </g>
+</svg>

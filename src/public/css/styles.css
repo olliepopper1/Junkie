@@ -2,14 +2,85 @@
 :root {
   --primary-purple: #6f42c1;
   --secondary-green: #20c997;
+  --warning-yellow: #ffc107;
+  --danger-red: #dc3545;
+  --info-blue: #0dcaf0;
   --dark-bg: #1e1e1e;
   --card-bg: #2a2a2a;
   --text-muted: #6c757d;
   --glow-color: rgba(111, 66, 193, 0.5);
+  --green-glow: rgba(32, 201, 151, 0.5);
+  --yellow-glow: rgba(255, 193, 7, 0.5);
+  --red-glow: rgba(220, 53, 69, 0.5);
+  --blue-glow: rgba(13, 202, 240, 0.5);
 }
 
 body {
   background-color: var(--dark-bg);
+  position: relative;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--primary-purple);
+  color: white;
+}
+
+/* Glowing Text Effect */
+.drug-glow {
+  text-shadow: 0 0 10px var(--primary-purple), 
+               0 0 20px var(--primary-purple), 
+               0 0 30px var(--glow-color);
+  animation: text-pulse 4s infinite;
+}
+
+@keyframes text-pulse {
+  0% {
+    text-shadow: 0 0 10px var(--primary-purple), 0 0 20px var(--glow-color);
+  }
+  50% {
+    text-shadow: 0 0 15px var(--primary-purple), 0 0 30px var(--glow-color), 0 0 40px var(--glow-color);
+  }
+  100% {
+    text-shadow: 0 0 10px var(--primary-purple), 0 0 20px var(--glow-color);
+  }
+}
+
+/* Floating Elements */
+.float-element {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Pulsating Button Animation */
+.pulsate {
+  animation: pulsate 2s ease-in-out infinite;
+}
+
+@keyframes pulsate {
+  0% {
+    box-shadow: 0 0 0 0 rgba(111, 66, 193, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(111, 66, 193, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(111, 66, 193, 0);
+    transform: scale(1);
+  }
 }
 
 /* Hero Section */
@@ -31,6 +102,112 @@ body {
   background-size: 40px 40px;
   opacity: 0.15;
   pointer-events: none;
+  animation: pulse-background 8s ease-in-out infinite;
+}
+
+@keyframes pulse-background {
+  0% {
+    opacity: 0.1;
+    background-size: 40px 40px;
+  }
+  50% {
+    opacity: 0.2;
+    background-size: 45px 45px;
+  }
+  100% {
+    opacity: 0.1;
+    background-size: 40px 40px;
+  }
+}
+
+/* Floating particles animation */
+.floating-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.floating-particles::before,
+.floating-particles::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--glow-color);
+  opacity: 0.5;
+  z-index: -1;
+}
+
+.floating-particles::before {
+  animation: float-particle-1 15s ease-in-out infinite;
+  box-shadow: 0 0 20px 2px var(--primary-purple);
+}
+
+.floating-particles::after {
+  animation: float-particle-2 20s ease-in-out infinite;
+  animation-delay: 2s;
+  box-shadow: 0 0 15px 2px var(--secondary-green);
+}
+
+@keyframes float-particle-1 {
+  0% {
+    top: 20%;
+    left: 10%;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    top: 40%;
+    left: 45%;
+    transform: translate(0, 0) scale(1.5);
+  }
+  50% {
+    top: 60%;
+    left: 20%;
+    transform: translate(0, 0) scale(1);
+  }
+  75% {
+    top: 40%;
+    left: 65%;
+    transform: translate(0, 0) scale(1.8);
+  }
+  100% {
+    top: 20%;
+    left: 10%;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes float-particle-2 {
+  0% {
+    top: 70%;
+    left: 80%;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    top: 30%;
+    left: 20%;
+    transform: translate(0, 0) scale(1.4);
+  }
+  50% {
+    top: 10%;
+    left: 80%;
+    transform: translate(0, 0) scale(1);
+  }
+  75% {
+    top: 50%;
+    left: 10%;
+    transform: translate(0, 0) scale(1.7);
+  }
+  100% {
+    top: 70%;
+    left: 80%;
+    transform: translate(0, 0) scale(1);
+  }
 }
 
 /* Agent Cards */
@@ -42,6 +219,85 @@ body {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  background-color: var(--dark-bg);
+}
+
+.agent-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.agent-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  border-radius: 6px;
+  transition: opacity 0.3s ease;
+}
+
+.agent-card:hover .agent-glow {
+  opacity: 1;
+}
+
+/* Agent backgrounds and glows */
+.heroin-harry-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--yellow-glow);
+}
+
+.meth-mandy-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--blue-glow);
+}
+
+.xanny-xan-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--green-glow);
+}
+
+.cokehead-carl-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--red-glow);
+}
+
+.shroomy-sal-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--primary-purple);
+}
+
+.crypto-craig-bg .agent-glow {
+  box-shadow: inset 0 0 20px 5px var(--green-glow);
+}
+
+/* Agent Portrait */
+.agent-portrait {
+  border-radius: 50%;
+  border: 3px solid var(--primary-purple);
+  padding: 5px;
+  background-color: var(--dark-bg);
+  box-shadow: 0 0 15px var(--glow-color);
+}
+
+.agent-quote {
+  position: relative;
+  font-style: italic;
+  margin-top: 15px;
+}
+
+.agent-quote::before,
+.agent-quote::after {
+  content: '"';
+  font-size: 1.5em;
+  font-family: Georgia, serif;
+  color: var(--primary-purple);
+}
+
+.code-block {
+  font-family: 'Courier New', monospace;
   background-color: var(--dark-bg);
 }
 
@@ -58,6 +314,20 @@ body {
   font-size: 1.5rem;
   font-weight: bold;
   margin: 0 auto;
+}
+
+.step-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto;
+  color: white;
+  box-shadow: 0 0 15px rgba(111, 66, 193, 0.5);
 }
 
 /* Service Icons */
@@ -81,6 +351,141 @@ body {
   color: white;
 }
 
+/* Referral System */
+.ref-card-glow {
+  position: relative;
+  box-shadow: 0 0 20px var(--glow-color);
+  animation: glow 3s infinite;
+  overflow: hidden;
+}
+
+.referral-code-display {
+  border: 2px dashed var(--primary-purple);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(111, 66, 193, 0.1);
+}
+
+.monospace {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+}
+
+.dealer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--dark-bg);
+  font-size: 1.2rem;
+}
+
+.top-dealer {
+  background-color: rgba(111, 66, 193, 0.1);
+}
+
+/* Roadmap */
+.roadmap-timeline {
+  position: relative;
+}
+
+.roadmap-timeline::before {
+  content: '';
+  position: absolute;
+  left: 33.5%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary-purple);
+  background: linear-gradient(to bottom, 
+                             var(--primary-purple) 0%, 
+                             var(--primary-purple) 20%, 
+                             var(--secondary-green) 20%, 
+                             var(--secondary-green) 40%,
+                             var(--info-blue) 40%,
+                             var(--info-blue) 60%,
+                             var(--warning-yellow) 60%,
+                             var(--warning-yellow) 80%,
+                             var(--danger-red) 80%,
+                             var(--danger-red) 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.roadmap-phase {
+  position: relative;
+  margin-bottom: 60px;
+}
+
+.phase-marker {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 20px;
+}
+
+.phase-dot {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--primary-purple);
+  z-index: 2;
+  transform: translateX(-60%);
+  box-shadow: 0 0 0 4px var(--dark-bg), 0 0 0 8px rgba(111, 66, 193, 0.3);
+}
+
+.roadmap-phase.completed .phase-dot {
+  background-color: var(--secondary-green);
+}
+
+.roadmap-phase.current .phase-dot {
+  background-color: var(--primary-purple);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 4px var(--dark-bg), 0 0 0 8px rgba(111, 66, 193, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--dark-bg), 0 0 0 12px rgba(111, 66, 193, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 4px var(--dark-bg), 0 0 0 8px rgba(111, 66, 193, 0.3);
+  }
+}
+
+.phase-title {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.phase-date {
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.feature-item {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.feature-vote-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px 0;
+}
+
+.feature-vote-item:last-child {
+  border-bottom: none;
+}
+
 /* Animations */
 @keyframes glow {
   0% {
@@ -96,4 +501,77 @@ body {
 
 .glow-effect {
   animation: glow 2s infinite;
+}
+
+/* Custom animated background */
+.psychedelic-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -999;
+  opacity: 0.05;
+  background: linear-gradient(125deg, #ff00cc, #3333cc, #00ccff, #33cc33, #ccff00, #ff0000);
+  background-size: 400% 400%;
+  animation: psychedelic 30s ease infinite;
+}
+
+@keyframes psychedelic {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
+/* Animations for agent preview images */
+.agent-preview {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--dark-bg);
+}
+
+.agent-preview-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: wobble 5s ease-in-out infinite;
+}
+
+@keyframes wobble {
+  0%, 100% {
+    transform: rotate(-3deg) scale(0.95);
+  }
+  50% {
+    transform: rotate(3deg) scale(1);
+  }
+}
+
+/* Navigation hover effects */
+.navbar-nav .nav-link {
+  position: relative;
+  transition: color 0.3s;
+}
+
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--primary-purple);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover::after,
+.navbar-nav .nav-link.active::after {
+  width: 100%;
+  box-shadow: 0 0 8px var(--glow-color);
 }

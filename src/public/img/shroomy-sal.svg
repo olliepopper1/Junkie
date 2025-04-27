@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #6f42c1; }
+    .eyes { fill: #6f42c1; }
+    .mouth { fill: #444; }
+    .shroom { fill: #6f42c1; }
+    .shroom-dots { fill: #fff; }
+    .effects { fill: rgba(111, 66, 193, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #6f42c1); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Mushrooms -->
+  <g class="glow">
+    <!-- Left mushroom -->
+    <path class="shroom" d="M40,60 C20,60 25,30 40,30 C55,30 60,60 40,60 Z" />
+    <rect class="shroom" x="37" y="60" width="6" height="15" />
+    
+    <!-- Right mushroom -->
+    <path class="shroom" d="M160,60 C140,60 145,30 160,30 C175,30 180,60 160,60 Z" />
+    <rect class="shroom" x="157" y="60" width="6" height="15" />
+    
+    <!-- Bottom mushroom -->
+    <path class="shroom" d="M100,160 C80,160 85,130 100,130 C115,130 120,160 100,160 Z" />
+    <rect class="shroom" x="97" y="160" width="6" height="15" />
+    
+    <!-- Mushroom dots -->
+    <circle class="shroom-dots" cx="30" cy="45" r="2" />
+    <circle class="shroom-dots" cx="40" cy="40" r="2" />
+    <circle class="shroom-dots" cx="50" cy="45" r="2" />
+    <circle class="shroom-dots" cx="35" cy="50" r="2" />
+    <circle class="shroom-dots" cx="45" cy="50" r="2" />
+    
+    <circle class="shroom-dots" cx="150" cy="45" r="2" />
+    <circle class="shroom-dots" cx="160" cy="40" r="2" />
+    <circle class="shroom-dots" cx="170" cy="45" r="2" />
+    <circle class="shroom-dots" cx="155" cy="50" r="2" />
+    <circle class="shroom-dots" cx="165" cy="50" r="2" />
+    
+    <circle class="shroom-dots" cx="90" cy="145" r="2" />
+    <circle class="shroom-dots" cx="100" cy="140" r="2" />
+    <circle class="shroom-dots" cx="110" cy="145" r="2" />
+    <circle class="shroom-dots" cx="95" cy="150" r="2" />
+    <circle class="shroom-dots" cx="105" cy="150" r="2" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Eyes (wide, dilated, seeing visions) -->
+  <ellipse class="eyes" cx="75" cy="100" rx="20" ry="20" />
+  <ellipse class="eyes" cx="125" cy="100" rx="20" ry="20" />
+  
+  <!-- Pupils (very dilated, spiraling) -->
+  <g transform="translate(75, 100)">
+    <circle fill="#000" r="12" />
+    <path fill="none" stroke="#6f42c1" stroke-width="1" d="M0,0 A1,1 0 0,1 5,5 A5,5 0 0,1 -5,-5 A3,3 0 0,1 7,-3" />
+  </g>
+  <g transform="translate(125, 100)">
+    <circle fill="#000" r="12" />
+    <path fill="none" stroke="#6f42c1" stroke-width="1" d="M0,0 A1,1 0 0,1 5,5 A5,5 0 0,1 -5,-5 A3,3 0 0,1 7,-3" />
+  </g>
+  
+  <!-- Eyebrows (wonderment) -->
+  <path d="M55,80 Q75,70 95,85" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M105,85 Q125,70 145,80" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (gentle awe) -->
+  <path class="mouth" d="M80,130 Q100,140 120,130" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Purple effects (psychedelic visions) -->
+  <g class="effects" opacity="0.2">
+    <circle cx="65" cy="100" r="35" />
+    <circle cx="135" cy="100" r="35" />
+    <circle cx="100" cy="135" r="30" />
+  </g>
+  
+  <!-- Hallucinatory patterns -->
+  <g stroke="#6f42c1" stroke-width="1" fill="none" opacity="0.5">
+    <path d="M20,40 C40,20 60,60 80,40" />
+    <path d="M120,40 C140,20 160,60 180,40" />
+    <path d="M30,160 C50,140 70,180 90,160" />
+    <path d="M110,160 C130,140 150,180 170,160" />
+  </g>
+</svg>

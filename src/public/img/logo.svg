@@ -1,22 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <style>
-    .skull { fill: #6f42c1; }
-    .skull-detail { fill: #20c997; }
+    .base { fill: #2a2a2a; }
+    .skull { fill: #3a3a3a; }
+    .accent { fill: #6f42c1; }
+    .eye { fill: #6f42c1; }
     .glow { filter: drop-shadow(0 0 5px #6f42c1); }
   </style>
-  <g class="glow">
-    <!-- Skull base -->
-    <path class="skull" d="M50,10 C30,10 15,25 15,45 C15,60 25,70 35,75 L35,85 C35,90 40,95 50,95 C60,95 65,90 65,85 L65,75 C75,70 85,60 85,45 C85,25 70,10 50,10 Z"/>
+  
+  <!-- Background -->
+  <circle class="base" cx="50" cy="50" r="48"/>
+  
+  <!-- Skull -->
+  <g class="skull glow">
+    <!-- Skull shape -->
+    <path d="M30,40 C30,30 70,30 70,40 L70,65 C70,75 30,75 30,65 Z" />
     
-    <!-- Eye sockets -->
-    <circle class="skull-detail" cx="35" cy="45" r="10"/>
-    <circle class="skull-detail" cx="65" cy="45" r="10"/>
+    <!-- Eyes -->
+    <ellipse class="eye" cx="40" cy="50" rx="8" ry="10" />
+    <ellipse class="eye" cx="60" cy="50" rx="8" ry="10" />
     
     <!-- Nose -->
-    <path class="skull-detail" d="M50,55 L45,65 L55,65 Z"/>
+    <path fill="#222" d="M50,58 L45,65 L55,65 Z" />
+    
+    <!-- Jaw -->
+    <path fill="#333" d="M35,65 C35,75 65,75 65,65 L65,68 C65,80 35,80 35,68 Z" />
     
     <!-- Teeth -->
-    <path class="skull-detail" d="M40,75 L40,85 L45,80 L50,85 L55,80 L60,85 L60,75 Z"/>
+    <rect fill="#eee" x="38" y="65" width="4" height="5" />
+    <rect fill="#eee" x="44" y="65" width="4" height="5" />
+    <rect fill="#eee" x="50" y="65" width="4" height="5" />
+    <rect fill="#eee" x="56" y="65" width="4" height="5" />
+  </g>
+  
+  <!-- Syringe -->
+  <g class="glow" transform="rotate(45, 50, 50)">
+    <rect class="accent" x="30" y="48" width="40" height="4" rx="2" />
+    <rect fill="#eee" x="30" y="48" width="25" height="4" rx="2" opacity="0.5" />
+    <rect class="accent" x="25" y="46" width="5" height="8" rx="2" />
+    <rect fill="#ccc" x="70" y="48" width="10" height="4" />
+    <path fill="#ccc" d="M80,46 L85,50 L80,54 Z" />
+    
+    <!-- Liquid -->
+    <rect class="accent" x="30" y="48" width="12" height="4" rx="0" opacity="0.7" />
+  </g>
+  
+  <!-- TJ Text -->
+  <g fill="#fff" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">
+    <text x="50" y="22" font-size="12">TRIAL</text>
+    <text x="50" y="92" font-size="12">JUNKIE</text>
   </g>
 </svg>
