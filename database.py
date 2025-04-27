@@ -793,3 +793,36 @@ class Database:
             conn.rollback()
             conn.close()
             return False
+            
+    def link_accounts(self, discord_id, web_user_id):
+        """Link a Discord user account to a web user account"""
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        try:
+            # Update web_users table with Discord ID
+            cursor.execute(
+                "UPDATE web_users SET discord_id = %s WHERE id = %s",
+                (discord_id, web_user_id)
+            )
+            
+            # Also create an entry in our mappings table if it exists
+            try:
+                cursor.execute(
+                    "INSERT INTO account_mappings (discord_id, web_user_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    (discord_id, web_user_id)
+                )
+            except:
+                # Mappings table might not exist, which is fine
+                pass
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"Linked Discord ID {discord_id} to web user ID {web_user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error linking accounts: {e}")
+            conn.rollback()
+            conn.close()
+            return False
