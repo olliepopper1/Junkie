@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="640" height="160" viewBox="0 0 640 160" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg { fill: #1e1e1e; }
+    .accent1 { fill: #6f42c1; }
+    .accent2 { fill: #20c997; }
+    .accent3 { fill: #ffc107; }
+    .text { fill: #fff; font-family: Arial, sans-serif; }
+    .title { font-size: 28px; font-weight: bold; }
+    .subtitle { font-size: 14px; }
+    .glow1 { filter: drop-shadow(0 0 5px #6f42c1); }
+    .glow2 { filter: drop-shadow(0 0 5px #20c997); }
+    .glow3 { filter: drop-shadow(0 0 5px #ffc107); }
+  </style>
+  
+  <!-- Background -->
+  <rect class="bg" x="0" y="0" width="640" height="160" rx="5" />
+  
+  <!-- Gradient Overlay -->
+  <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#6f42c1" stop-opacity="0.1" />
+    <stop offset="50%" stop-color="#20c997" stop-opacity="0.1" />
+    <stop offset="100%" stop-color="#ffc107" stop-opacity="0.1" />
+  </linearGradient>
+  <rect fill="url(#grad)" x="0" y="0" width="640" height="160" rx="5" />
+  
+  <!-- Agent Icons -->
+  <g transform="translate(60, 80)">
+    <!-- Heroin Harry -->
+    <g class="glow1">
+      <circle class="bg" cx="0" cy="0" r="30" />
+      <circle class="accent1" cx="-10" cy="-5" r="8" opacity="0.8" />
+      <circle class="accent1" cx="10" cy="-5" r="8" opacity="0.8" />
+      <path class="accent1" d="M-15,-25 L15,-5" stroke="#6f42c1" stroke-width="2" fill="none" />
+    </g>
+    
+    <!-- Meth Mandy -->
+    <g transform="translate(100, 0)" class="glow2">
+      <circle class="bg" cx="0" cy="0" r="30" />
+      <polygon class="accent2" points="0,-20 15,-10 15,10 0,20 -15,10 -15,-10" opacity="0.7" />
+    </g>
+    
+    <!-- Xanny Xan -->
+    <g transform="translate(200, 0)" class="glow3">
+      <circle class="bg" cx="0" cy="0" r="30" />
+      <rect class="accent3" x="-15" y="-5" width="30" height="10" rx="3" opacity="0.7" />
+    </g>
+  </g>
+  
+  <!-- Main Text -->
+  <g transform="translate(320, 50)">
+    <text class="text title" x="0" y="0" text-anchor="middle">TRIAL JUNKIE</text>
+    <text class="text subtitle" x="0" y="25" text-anchor="middle">Your Prescription for Premium Digital Experiences</text>
+  </g>
+  
+  <!-- Stats -->
+  <g transform="translate(400, 90)" font-size="12" class="text">
+    <text x="0" y="0" text-anchor="middle">50+ SERVICES</text>
+    <text x="100" y="0" text-anchor="middle">24/7 SUPPORT</text>
+    <text x="200" y="0" text-anchor="middle">15% COMMISSION</text>
+  </g>
+  
+  <!-- CTA Button -->
+  <g transform="translate(500, 130)">
+    <rect class="accent1 glow1" x="-80" y="-15" width="160" height="30" rx="15" />
+    <text class="text" x="0" y="5" text-anchor="middle" font-weight="bold">JOIN THE DISCORD</text>
+  </g>
+  
+  <!-- Code Badge -->
+  <g transform="translate(180, 130)">
+    <rect class="bg" x="-60" y="-15" width="120" height="30" rx="5" stroke="#6f42c1" stroke-width="2" fill="black" />
+    <text class="text" x="0" y="5" text-anchor="middle" font-size="12">REFERRAL: FORUM25</text>
+  </g>
+  
+  <!-- Floating Particles -->
+  <circle class="accent1" cx="40" cy="40" r="3" opacity="0.7" />
+  <circle class="accent2" cx="580" cy="40" r="3" opacity="0.7" />
+  <circle class="accent3" cx="600" cy="120" r="3" opacity="0.7" />
+  <circle class="accent1" cx="120" cy="140" r="3" opacity="0.7" />
+  <circle class="accent2" cx="320" cy="20" r="3" opacity="0.7" />
+  <circle class="accent3" cx="400" cy="140" r="3" opacity="0.7" />
+</svg>

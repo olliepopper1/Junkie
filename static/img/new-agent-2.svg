@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #007bff; }
+    .eyes { fill: #007bff; }
+    .mouth { fill: #444; }
+    .k-hole { fill: #007bff; opacity: 0.5; }
+    .effects { fill: rgba(0, 123, 255, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #007bff); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- K-hole visuals -->
+  <g class="glow">
+    <ellipse class="k-hole" cx="100" cy="100" rx="80" ry="30" />
+    <ellipse class="k-hole" cx="100" cy="100" rx="30" ry="80" />
+    <ellipse class="k-hole" cx="100" cy="100" rx="60" ry="20" transform="rotate(45, 100, 100)" />
+    <ellipse class="k-hole" cx="100" cy="100" rx="20" ry="60" transform="rotate(45, 100, 100)" />
+    <ellipse class="k-hole" cx="100" cy="100" rx="60" ry="20" transform="rotate(-45, 100, 100)" />
+    <ellipse class="k-hole" cx="100" cy="100" rx="20" ry="60" transform="rotate(-45, 100, 100)" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Ketamine powder -->
+  <g fill="#fff" opacity="0.9">
+    <ellipse cx="60" cy="60" rx="15" ry="5" />
+    <ellipse cx="140" cy="60" rx="15" ry="5" />
+    <ellipse cx="70" cy="150" rx="15" ry="5" />
+    <ellipse cx="130" cy="150" rx="15" ry="5" />
+  </g>
+  
+  <!-- Medical mask look (referencing medical use) -->
+  <path fill="#555" d="M60,110 C60,90 140,90 140,110 L135,125 C135,140 65,140 65,125 Z" />
+  
+  <!-- Eyes (dissociated) -->
+  <ellipse class="eyes" cx="75" cy="105" rx="10" ry="5" transform="rotate(10, 75, 105)" />
+  <ellipse class="eyes" cx="125" cy="105" rx="10" ry="5" transform="rotate(-10, 125, 105)" />
+  
+  <!-- Pupils (unfocused) -->
+  <ellipse fill="#000" cx="72" cy="105" rx="3" ry="2" transform="rotate(10, 72, 105)" />
+  <ellipse fill="#000" cx="128" cy="105" rx="3" ry="2" transform="rotate(-10, 128, 105)" />
+  
+  <!-- Eyebrows (flat, neutral) -->
+  <path d="M65,90 L85,90" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M115,90 L135,90" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (neutral) -->
+  <path class="mouth" d="M85,125 L115,125" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Blue effects (ketamine dissociation) -->
+  <g class="effects" opacity="0.15">
+    <circle cx="75" cy="105" r="40" />
+    <circle cx="125" cy="105" r="40" />
+  </g>
+  
+  <!-- VPN connections -->
+  <g stroke="#007bff" stroke-width="1" fill="none" opacity="0.7">
+    <path d="M50,20 C80,50 120,50 150,20" />
+    <path d="M20,50 C50,80 50,120 20,150" />
+    <path d="M180,50 C150,80 150,120 180,150" />
+    <path d="M50,180 C80,150 120,150 150,180" />
+    
+    <circle cx="50" cy="20" r="3" fill="#007bff" />
+    <circle cx="150" cy="20" r="3" fill="#007bff" />
+    <circle cx="20" cy="50" r="3" fill="#007bff" />
+    <circle cx="180" cy="50" r="3" fill="#007bff" />
+    <circle cx="20" cy="150" r="3" fill="#007bff" />
+    <circle cx="180" cy="150" r="3" fill="#007bff" />
+    <circle cx="50" cy="180" r="3" fill="#007bff" />
+    <circle cx="150" cy="180" r="3" fill="#007bff" />
+  </g>
+</svg>

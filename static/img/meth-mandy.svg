@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #0dcaf0; }
+    .eyes { fill: #6f42c1; }
+    .mouth { fill: #444; }
+    .hair { fill: #555; }
+    .crystal { fill: #0dcaf0; opacity: 0.8; }
+    .effects { fill: rgba(13, 202, 240, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #0dcaf0); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Crystals (meth) -->
+  <g class="glow">
+    <polygon class="crystal" points="30,60 40,40 50,60" />
+    <polygon class="crystal" points="150,60 170,30 180,65" />
+    <polygon class="crystal" points="100,30 110,10 120,30" />
+    <polygon class="crystal" points="40,130 30,150 50,150" />
+    <polygon class="crystal" points="170,130 150,150 180,150" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Hair (spiky and wild) -->
+  <path class="hair" d="M60,80 L40,50 L50,80 L30,40 L60,70 L55,30 L70,60 L75,20 L85,50 L100,10 L110,50 L125,20 L130,60 L145,30 L140,70 L170,40 L150,80 L160,50 L140,85" />
+  
+  <!-- Wide, alert eyes -->
+  <ellipse class="eyes" cx="75" cy="100" rx="15" ry="15" />
+  <ellipse class="eyes" cx="125" cy="100" rx="15" ry="15" />
+  
+  <!-- Pupils (dilated) -->
+  <circle fill="#000" cx="75" cy="100" r="8" />
+  <circle fill="#000" cx="125" cy="100" r="8" />
+  
+  <!-- Eyebrows (raised) -->
+  <path d="M60,75 Q75,65 90,75" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M110,75 Q125,65 140,75" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (talking/excited) -->
+  <path class="mouth" d="M80,130 Q100,145 120,130" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Blue effects (meth energy) -->
+  <g class="effects" opacity="0.3">
+    <circle cx="65" cy="100" r="25" />
+    <circle cx="135" cy="100" r="25" />
+    <circle cx="100" cy="140" r="20" />
+  </g>
+  
+  <!-- Speed lines (hyperactivity) -->
+  <g stroke="#0dcaf0" stroke-width="1" opacity="0.5">
+    <line x1="20" y1="20" x2="30" y2="30" />
+    <line x1="170" y1="20" x2="160" y2="30" />
+    <line x1="20" y1="170" x2="30" y2="160" />
+    <line x1="170" y1="170" x2="160" y2="160" />
+  </g>
+</svg>

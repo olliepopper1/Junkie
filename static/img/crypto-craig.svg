@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #20c997; }
+    .eyes { fill: #6f42c1; }
+    .mouth { fill: #444; }
+    .crypto { fill: #20c997; }
+    .effects { fill: rgba(32, 201, 151, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #20c997); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Crypto Symbols -->
+  <g class="glow">
+    <!-- Solana Symbol -->
+    <path class="crypto" d="M30,50 L40,40 L60,40 L70,50 L60,60 L40,60 Z" />
+    <line x1="40" y1="50" x2="60" y2="50" stroke="#fff" stroke-width="2" />
+    
+    <!-- Bitcoin Symbol -->
+    <circle class="crypto" cx="160" cy="50" r="15" />
+    <text x="153" y="55" fill="#fff" font-size="15" font-weight="bold">₿</text>
+    
+    <!-- Ethereum Symbol -->
+    <path class="crypto" d="M100,170 L85,150 L100,157 L115,150 Z" />
+    <path class="crypto" d="M100,165 L85,145 L100,137 L115,145 Z" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Hood/Privacy Mask -->
+  <path fill="#222" d="M40,100 C40,60 160,60 160,100 L160,140 C160,180 40,180 40,140 Z" />
+  
+  <!-- Eyes (paranoid, suspicious) -->
+  <ellipse class="eyes" cx="75" cy="100" rx="12" ry="8" />
+  <ellipse class="eyes" cx="125" cy="100" rx="12" ry="8" />
+  
+  <!-- Pupils (constantly moving) -->
+  <circle fill="#000" cx="72" cy="100" r="4" />
+  <circle fill="#000" cx="122" cy="100" r="4" />
+  
+  <!-- Eyebrows (furrowed) -->
+  <path d="M63,87 Q75,80 87,87" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M113,87 Q125,80 137,87" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (tight, paranoid) -->
+  <path class="mouth" d="M90,125 Q100,128 110,125" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Green effects (crypto glow) -->
+  <g class="effects" opacity="0.2">
+    <circle cx="70" cy="100" r="25" />
+    <circle cx="130" cy="100" r="25" />
+    <circle cx="100" cy="125" r="20" />
+  </g>
+  
+  <!-- Binary/Code pattern -->
+  <g fill="#20c997" opacity="0.3" font-family="monospace" font-size="8">
+    <text x="20" y="20">01001</text>
+    <text x="150" y="20">10110</text>
+    <text x="20" y="180">10010</text>
+    <text x="150" y="180">01101</text>
+  </g>
+  
+  <!-- Blockchain connections -->
+  <g stroke="#20c997" stroke-width="1" opacity="0.4" fill="none">
+    <path d="M30,30 L45,45" />
+    <path d="M170,30 L155,45" />
+    <path d="M30,170 L45,155" />
+    <path d="M170,170 L155,155" />
+    <circle cx="45" cy="45" r="3" />
+    <circle cx="155" cy="45" r="3" />
+    <circle cx="45" cy="155" r="3" />
+    <circle cx="155" cy="155" r="3" />
+  </g>
+</svg>

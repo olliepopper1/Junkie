@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #6f42c1; }
+    .eyes { fill: #ffc107; }
+    .mouth { fill: #444; }
+    .acid { fill: #ffc107; }
+    .effects { fill: rgba(255, 193, 7, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #ffc107); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Acid blotter -->
+  <g class="glow">
+    <rect class="acid" x="40" y="40" width="40" height="40" rx="2" />
+    <rect class="acid" x="120" y="40" width="40" height="40" rx="2" />
+    <rect class="acid" x="40" y="120" width="40" height="40" rx="2" />
+    <rect class="acid" x="120" y="120" width="40" height="40" rx="2" />
+    
+    <!-- Blotter divisions -->
+    <line x1="40" y1="50" x2="80" y2="50" stroke="#333" stroke-width="1" />
+    <line x1="40" y1="60" x2="80" y2="60" stroke="#333" stroke-width="1" />
+    <line x1="40" y1="70" x2="80" y2="70" stroke="#333" stroke-width="1" />
+    <line x1="50" y1="40" x2="50" y2="80" stroke="#333" stroke-width="1" />
+    <line x1="60" y1="40" x2="60" y2="80" stroke="#333" stroke-width="1" />
+    <line x1="70" y1="40" x2="70" y2="80" stroke="#333" stroke-width="1" />
+    
+    <line x1="120" y1="50" x2="160" y2="50" stroke="#333" stroke-width="1" />
+    <line x1="120" y1="60" x2="160" y2="60" stroke="#333" stroke-width="1" />
+    <line x1="120" y1="70" x2="160" y2="70" stroke="#333" stroke-width="1" />
+    <line x1="130" y1="40" x2="130" y2="80" stroke="#333" stroke-width="1" />
+    <line x1="140" y1="40" x2="140" y2="80" stroke="#333" stroke-width="1" />
+    <line x1="150" y1="40" x2="150" y2="80" stroke="#333" stroke-width="1" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="100" r="60" />
+  
+  <!-- Hair (wild with colors) -->
+  <g fill="#6f42c1">
+    <path d="M60,70 C40,50 45,30 60,40 C75,30 80,50 60,70 Z" />
+    <path d="M140,70 C160,50 155,30 140,40 C125,30 120,50 140,70 Z" />
+    <path d="M90,40 C70,20 75,10 90,15 C105,10 110,20 90,40 Z" />
+    <path d="M110,40 C130,20 125,10 110,15 C95,10 90,20 110,40 Z" />
+  </g>
+  
+  <!-- Eyes (kaleidoscopic) -->
+  <ellipse class="eyes" cx="75" cy="100" rx="15" ry="15" />
+  <ellipse class="eyes" cx="125" cy="100" rx="15" ry="15" />
+  
+  <!-- Pupils (fractal) -->
+  <g class="glow">
+    <g transform="translate(75,100)">
+      <circle fill="#000" r="7" />
+      <path stroke="#ffc107" stroke-width="1" fill="none" 
+            d="M-5,0 A5,5 0 0,1 5,0 A5,5 0 0,1 -5,0 Z" />
+      <path stroke="#ff00ff" stroke-width="1" fill="none" 
+            d="M0,-5 A5,5 0 0,1 0,5 A5,5 0 0,1 0,-5 Z" />
+    </g>
+    <g transform="translate(125,100)">
+      <circle fill="#000" r="7" />
+      <path stroke="#ffc107" stroke-width="1" fill="none" 
+            d="M-5,0 A5,5 0 0,1 5,0 A5,5 0 0,1 -5,0 Z" />
+      <path stroke="#ff00ff" stroke-width="1" fill="none" 
+            d="M0,-5 A5,5 0 0,1 0,5 A5,5 0 0,1 0,-5 Z" />
+    </g>
+  </g>
+  
+  <!-- Mouth (amazed) -->
+  <path class="mouth" d="M80,130 Q100,150 120,130" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Yellow effects (acid trip) -->
+  <g class="effects" opacity="0.2">
+    <circle cx="70" cy="100" r="30" />
+    <circle cx="130" cy="100" r="30" />
+    <circle cx="100" cy="130" r="25" />
+  </g>
+  
+  <!-- Fractal patterns -->
+  <g stroke="#ffc107" stroke-width="1" fill="none" opacity="0.7" class="glow">
+    <path d="M20,20 C40,40 60,20 80,40 C100,20 120,40 140,20 C160,40 180,20 180,20" />
+    <path d="M20,180 C40,160 60,180 80,160 C100,180 120,160 140,180 C160,160 180,180 180,180" />
+  </g>
+</svg>

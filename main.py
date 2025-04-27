@@ -9,13 +9,13 @@ import random
 import time
 import asyncio
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from bot import setup_bot
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 app.secret_key = os.environ.get("SESSION_SECRET", os.urandom(24))
 
 # Configure SQLAlchemy
@@ -55,18 +55,49 @@ class WebUser(db.Model):
 with app.app_context():
     db.create_all()
 
-# Web routes
+# Web routes for static pages
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_from_directory('static', 'index.html')
 
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
-        flash('Please log in to access the dashboard', 'warning')
-        return redirect(url_for('login'))
-    return render_template('dashboard.html')
+        return redirect('/login')
+    return send_from_directory('static', 'dashboard.html')
 
+@app.route('/agents')
+def agents():
+    return send_from_directory('src/public', 'agents.html')
+
+@app.route('/referrals')
+def referrals():
+    return send_from_directory('src/public', 'referrals.html')
+
+@app.route('/roadmap')
+def roadmap():
+    return send_from_directory('src/public', 'roadmap.html')
+
+@app.route('/trials')
+def trials():
+    if 'user_id' not in session:
+        return redirect('/login')
+    return send_from_directory('static', 'trials.html')
+
+# Static assets routes
+@app.route('/css/<path:filename>')
+def css_files(filename):
+    return send_from_directory('src/public/css', filename)
+
+@app.route('/js/<path:filename>')
+def js_files(filename):
+    return send_from_directory('src/public/js', filename)
+
+@app.route('/img/<path:filename>')
+def img_files(filename):
+    return send_from_directory('src/public/img', filename)
+
+# Authentication routes
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -79,7 +110,7 @@ def register():
         existing_user = WebUser.query.filter((WebUser.username == username) | (WebUser.email == email)).first()
         if existing_user:
             flash('Username or email already exists', 'danger')
-            return render_template('register.html')
+            return send_from_directory('static', 'register.html')
         
         # Create new user
         user = WebUser(username=username, email=email, discord_id=discord_id)
@@ -88,10 +119,9 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
+        return redirect('/login')
     
-    return render_template('register.html')
+    return send_from_directory('static', 'register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -104,19 +134,18 @@ def login():
         if user and user.check_password(password):
             session['user_id'] = user.id
             session['username'] = user.username
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect('/dashboard')
         else:
-            flash('Invalid username or password', 'danger')
+            return redirect('/login?error=invalid_credentials')
     
-    return render_template('login.html')
+    return send_from_directory('static', 'login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been logged out', 'info')
-    return redirect(url_for('index'))
+    return redirect('/')
 
+# API routes
 @app.route('/api/trials', methods=['GET'])
 def get_trials():
     if 'user_id' not in session:

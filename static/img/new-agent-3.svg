@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #ff00cc; }
+    .eyes { fill: #ff00cc; }
+    .mouth { fill: #444; }
+    .dmt { fill: #ff00cc; opacity: 0.7; }
+    .effects { fill: rgba(255, 0, 204, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #ff00cc); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- DMT visuals -->
+  <g class="glow">
+    <!-- Sacred geometry -->
+    <g opacity="0.5">
+      <!-- Merkaba -->
+      <path class="dmt" d="M100,40 L60,100 L140,100 Z" />
+      <path class="dmt" d="M100,160 L60,100 L140,100 Z" />
+      
+      <!-- Flower of life circles -->
+      <circle class="dmt" cx="70" cy="70" r="15" opacity="0.3" />
+      <circle class="dmt" cx="100" cy="70" r="15" opacity="0.3" />
+      <circle class="dmt" cx="130" cy="70" r="15" opacity="0.3" />
+      <circle class="dmt" cx="70" cy="100" r="15" opacity="0.3" />
+      <circle class="dmt" cx="100" cy="100" r="15" opacity="0.3" />
+      <circle class="dmt" cx="130" cy="100" r="15" opacity="0.3" />
+      <circle class="dmt" cx="70" cy="130" r="15" opacity="0.3" />
+      <circle class="dmt" cx="100" cy="130" r="15" opacity="0.3" />
+      <circle class="dmt" cx="130" cy="130" r="15" opacity="0.3" />
+    </g>
+    
+    <!-- DMT molecule simplified -->
+    <g fill="none" stroke="#ff00cc" stroke-width="2">
+      <circle cx="40" cy="50" r="10" />
+      <line x1="50" y1="50" x2="70" y2="40" />
+      <circle cx="80" cy="40" r="10" />
+      <line x1="90" y1="40" x2="110" y2="40" />
+      <circle cx="120" cy="40" r="10" />
+      <line x1="120" y1="50" x2="120" y2="70" />
+      <circle cx="120" cy="80" r="10" />
+    </g>
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Third eye -->
+  <circle class="eyes" cx="100" cy="85" r="10" />
+  
+  <!-- Eyes (enlightened) -->
+  <ellipse class="eyes" cx="75" cy="105" rx="15" ry="15" />
+  <ellipse class="eyes" cx="125" cy="105" rx="15" ry="15" />
+  
+  <!-- Pupils (staring into the beyond) -->
+  <g transform="translate(75, 105)">
+    <circle fill="#000" r="8" />
+    <circle fill="#ff00cc" r="4" opacity="0.5" />
+    <circle fill="#fff" r="2" opacity="0.8" />
+  </g>
+  <g transform="translate(125, 105)">
+    <circle fill="#000" r="8" />
+    <circle fill="#ff00cc" r="4" opacity="0.5" />
+    <circle fill="#fff" r="2" opacity="0.8" />
+  </g>
+  <g transform="translate(100, 85)">
+    <circle fill="#000" r="5" />
+    <circle fill="#fff" r="2" opacity="0.8" />
+  </g>
+  
+  <!-- Eyebrows (raised in awareness) -->
+  <path d="M60,85 Q75,75 90,85" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M110,85 Q125,75 140,85" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (small, serene smile) -->
+  <path class="mouth" d="M90,135 Q100,140 110,135" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- DMT effects (enlightenment) -->
+  <g class="effects" opacity="0.2">
+    <circle cx="100" cy="110" r="70" />
+  </g>
+  
+  <!-- Entity connections -->
+  <g stroke="#ff00cc" stroke-width="1" fill="none" opacity="0.7" class="glow">
+    <path d="M30,30 C50,10 150,10 170,30" />
+    <path d="M30,170 C50,190 150,190 170,170" />
+    <path d="M30,30 C10,50 10,150 30,170" />
+    <path d="M170,30 C190,50 190,150 170,170" />
+    
+    <!-- Connection nodes -->
+    <circle cx="30" cy="30" r="3" fill="#ff00cc" />
+    <circle cx="170" cy="30" r="3" fill="#ff00cc" />
+    <circle cx="30" cy="170" r="3" fill="#ff00cc" />
+    <circle cx="170" cy="170" r="3" fill="#ff00cc" />
+    
+    <!-- Energy emanating from third eye -->
+    <path d="M100,80 C80,60 60,80 40,70" stroke-dasharray="2,2" />
+    <path d="M100,80 C120,60 140,80 160,70" stroke-dasharray="2,2" />
+  </g>
+</svg>

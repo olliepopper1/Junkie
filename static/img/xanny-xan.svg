@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .base { fill: #2a2a2a; }
+    .face { fill: #3a3a3a; }
+    .accent { fill: #20c997; }
+    .eyes { fill: #6f42c1; }
+    .mouth { fill: #444; }
+    .pill { fill: #20c997; }
+    .effects { fill: rgba(32, 201, 151, 0.7); }
+    .glow { filter: drop-shadow(0 0 8px #20c997); }
+  </style>
+  
+  <!-- Background -->
+  <circle class="base" cx="100" cy="100" r="95"/>
+  
+  <!-- Pills (xanax bars) -->
+  <g class="glow">
+    <rect class="pill" x="30" y="50" width="30" height="10" rx="3" />
+    <rect class="pill" x="140" y="50" width="30" height="10" rx="3" />
+    <rect class="pill" x="50" y="140" width="30" height="10" rx="3" />
+    <rect class="pill" x="120" y="140" width="30" height="10" rx="3" />
+    
+    <!-- Pill lines -->
+    <line x1="37" y1="55" x2="40" y2="55" stroke="#fff" stroke-width="1" />
+    <line x1="45" y1="55" x2="48" y2="55" stroke="#fff" stroke-width="1" />
+    <line x1="53" y1="55" x2="56" y2="55" stroke="#fff" stroke-width="1" />
+    
+    <line x1="147" y1="55" x2="150" y2="55" stroke="#fff" stroke-width="1" />
+    <line x1="155" y1="55" x2="158" y2="55" stroke="#fff" stroke-width="1" />
+    <line x1="163" y1="55" x2="166" y2="55" stroke="#fff" stroke-width="1" />
+  </g>
+  
+  <!-- Face -->
+  <circle class="face" cx="100" cy="110" r="60" />
+  
+  <!-- Eyes (super relaxed, nearly closed) -->
+  <ellipse class="eyes" cx="75" cy="100" rx="15" ry="3" />
+  <ellipse class="eyes" cx="125" cy="100" rx="15" ry="3" />
+  
+  <!-- Eyebrows (very relaxed) -->
+  <path d="M60,90 Q75,87 90,90" stroke="#555" stroke-width="3" fill="none" />
+  <path d="M110,90 Q125,87 140,90" stroke="#555" stroke-width="3" fill="none" />
+  
+  <!-- Mouth (chill smile) -->
+  <path class="mouth" d="M80,130 Q100,138 120,130" stroke="#555" stroke-width="2" fill="none" />
+  
+  <!-- Green effects (xanax chill) -->
+  <g class="effects" opacity="0.2">
+    <circle cx="70" cy="100" r="30" />
+    <circle cx="130" cy="100" r="30" />
+    <circle cx="100" cy="125" r="35" />
+  </g>
+  
+  <!-- Slow motion trail -->
+  <g opacity="0.3">
+    <circle class="accent" cx="100" cy="110" r="65" opacity="0.1" />
+    <circle class="accent" cx="100" cy="110" r="70" opacity="0.07" />
+    <circle class="accent" cx="100" cy="110" r="75" opacity="0.05" />
+  </g>
+</svg>
