@@ -1,45 +1,464 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trial Junkies - No Rehab, Just Free Trials</title>
-    <meta name="description" content="Get hooked on the ultimate subscription hack. Our AI-powered bots automate free trials across hundreds of services so you never pay again.">
-    
-    <!-- Bootstrap CSS with Replit dark theme -->
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&family=Roboto+Mono&display=swap">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/referral-community.css">
-    
-    <!-- React -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trial Junkie - Your Digital Fix</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div id="root"></div>
-    
-    <!-- Component Scripts -->
-    <script type="text/babel" src="/static/js/react/src/AgentSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/DiscordSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/ReferralSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/RoadmapSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/ComicsSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/MeetTheBotsSection.js"></script>
-    <script type="text/babel" src="/static/js/react/src/App.js"></script>
-    
-    <!-- Initialize app -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("Trial Junkie Dashboard Initialized");
-        });
-    </script>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.svg" alt="Trial Junkie Logo" width="30" height="30" class="d-inline-block align-top me-2">
+        Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">My Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/agents">Meet Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roadmap">Roadmap</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://discord.gg/trialjunkie" target="_blank">Join Discord</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container text-center py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <h1 class="display-3 fw-bold mb-4 drug-glow">GET YOUR DIGITAL FIX</h1>
+          <p class="lead mb-4">Trial Junkie is your premium source for streaming trials and digital services. Our specialized agents work 24/7 to keep you hooked up.</p>
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="/dashboard" class="btn btn-primary btn-lg px-4 gap-3 pulsate">Start Now</a>
+            <a href="#how-it-works" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Cards -->
+  <section class="py-5 bg-dark-subtle">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-person-fill-check display-4 text-primary"></i>
+              </div>
+              <h3 class="h4">Premium Identities</h3>
+              <p>Heroin Harry crafts premium identities that pass all verification checks for trial signups.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-credit-card-fill display-4 text-info"></i>
+              </div>
+              <h3 class="h4">Virtual Cards</h3>
+              <p>Meth Mandy generates virtual cards that authorize but never charge, keeping your trials flowing.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-robot display-4 text-success"></i>
+              </div>
+              <h3 class="h4">Automated Signups</h3>
+              <p>Shroomy Sal automates the entire trial signup process with AI-powered browser technology.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5 drug-glow">How It Works</h2>
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="card h-100 border-0 bg-dark-subtle">
+            <div class="card-body text-center p-4">
+              <div class="step-number mb-3">1</div>
+              <h3 class="h4">Join our Discord</h3>
+              <p>Connect with our community and access the Trial Junkie bot.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card h-100 border-0 bg-dark-subtle">
+            <div class="card-body text-center p-4">
+              <div class="step-number mb-3">2</div>
+              <h3 class="h4">Choose Your Dose</h3>
+              <p>Select a service or enter a custom URL for trial generation.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card h-100 border-0 bg-dark-subtle">
+            <div class="card-body text-center p-4">
+              <div class="step-number mb-3">3</div>
+              <h3 class="h4">Let Agents Work</h3>
+              <p>Our specialized agents create credentials and automate signup.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card h-100 border-0 bg-dark-subtle">
+            <div class="card-body text-center p-4">
+              <div class="step-number mb-3">4</div>
+              <h3 class="h4">Enjoy Your Trial</h3>
+              <p>Access your new trial account with generated credentials.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meet the Agents Section -->
+  <section class="py-5 bg-dark">
+    <div class="container">
+      <h2 class="text-center mb-5 drug-glow">Meet the Agents</h2>
+      <div class="row g-4">
+        <!-- Heroin Harry -->
+        <div class="col-md-4">
+          <div class="card h-100 border-0 agent-card" data-agent="heroin-harry">
+            <div class="agent-image heroin-harry-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/heroin-harry.svg" class="card-img-top" alt="Heroin Harry">
+            </div>
+            <div class="card-body text-center">
+              <h3 class="card-title">Heroin Harry</h3>
+              <p class="card-text">Identity specialist crafting perfect personas with needle-point precision.</p>
+              <div class="d-grid">
+                <a href="/agents#heroin-harry" class="btn btn-sm btn-outline-primary">Learn More</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Meth Mandy -->
+        <div class="col-md-4">
+          <div class="card h-100 border-0 agent-card" data-agent="meth-mandy">
+            <div class="agent-image meth-mandy-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/meth-mandy.svg" class="card-img-top" alt="Meth Mandy">
+            </div>
+            <div class="card-body text-center">
+              <h3 class="card-title">Meth Mandy</h3>
+              <p class="card-text">Hyperactive card generator creating clean, validated payment methods at lightning speed.</p>
+              <div class="d-grid">
+                <a href="/agents#meth-mandy" class="btn btn-sm btn-outline-primary">Learn More</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Shroomy Sal -->
+        <div class="col-md-4">
+          <div class="card h-100 border-0 agent-card" data-agent="shroomy-sal">
+            <div class="agent-image shroomy-sal-bg">
+              <div class="agent-glow"></div>
+              <img src="/img/shroomy-sal.svg" class="card-img-top" alt="Shroomy Sal">
+            </div>
+            <div class="card-body text-center">
+              <h3 class="card-title">Shroomy Sal</h3>
+              <p class="card-text">Browser automation specialist who sees patterns in website flows that others miss.</p>
+              <div class="d-grid">
+                <a href="/agents#shroomy-sal" class="btn btn-sm btn-outline-primary">Learn More</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="/agents" class="btn btn-primary">Meet All Agents</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5 drug-glow">Supported Services</h2>
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-4 justify-content-center">
+        <!-- Service Items -->
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-netflix display-6 text-danger"></i>
+          </div>
+          <h5>Netflix</h5>
+        </div>
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-hulu display-6 text-success"></i>
+          </div>
+          <h5>Hulu</h5>
+        </div>
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-disney-plus display-6 text-primary"></i>
+          </div>
+          <h5>Disney+</h5>
+        </div>
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-spotify display-6 text-success"></i>
+          </div>
+          <h5>Spotify</h5>
+        </div>
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-youtube display-6 text-danger"></i>
+          </div>
+          <h5>YouTube</h5>
+        </div>
+        <div class="col text-center">
+          <div class="p-3 service-icon rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+            <i class="bi bi-plus-circle-fill display-6 text-muted"></i>
+          </div>
+          <h5>40+ More</h5>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Discord CTA Section -->
+  <section class="py-5 bg-dark">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-7">
+          <h2 class="mb-3 drug-glow">Join Our Discord</h2>
+          <p class="lead mb-4">Get instant access to Trial Junkie bot and generate trials on demand with a simple command.</p>
+          <div class="code-block bg-dark-subtle p-3 rounded mb-4">
+            <code class="text-light">!hit netflix</code>
+          </div>
+          <p>Our community of digital junkies is waiting for you!</p>
+          <a href="https://discord.gg/trialjunkie" class="btn btn-primary btn-lg mt-2 pulsate">Join Discord</a>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="/img/discord-preview.svg" alt="Discord Preview" class="img-fluid rounded float-element" style="max-width: 80%;">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5 drug-glow">Choose Your Fix</h2>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100 border-0">
+            <div class="card-header text-center bg-primary text-white py-3">
+              <h3 class="h4 mb-0">Basic Dose</h3>
+            </div>
+            <div class="card-body p-4">
+              <div class="display-5 text-center mb-4">$5</div>
+              <ul class="list-unstyled">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> 3 trial generations/day</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Identity generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Card generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Email verification</li>
+                <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i> Phone verification</li>
+                <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i> Custom website support</li>
+              </ul>
+              <div class="d-grid mt-4">
+                <a href="https://discord.gg/trialjunkie" class="btn btn-outline-primary">Get Started</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow">
+            <div class="card-header text-center bg-danger text-white py-3">
+              <h3 class="h4 mb-0">Premium Rush</h3>
+              <div class="badge bg-warning text-dark mt-2">Most Popular</div>
+            </div>
+            <div class="card-body p-4">
+              <div class="display-5 text-center mb-4">$15</div>
+              <ul class="list-unstyled">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> 10 trial generations/day</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Identity generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Card generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Email verification</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Phone verification</li>
+                <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i> Custom website support</li>
+              </ul>
+              <div class="d-grid mt-4">
+                <a href="https://discord.gg/trialjunkie" class="btn btn-danger">Get Started</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0">
+            <div class="card-header text-center bg-dark text-white py-3">
+              <h3 class="h4 mb-0">Dealer's Choice</h3>
+            </div>
+            <div class="card-body p-4">
+              <div class="display-5 text-center mb-4">$30</div>
+              <ul class="list-unstyled">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Unlimited generations</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Identity generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Card generation</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Email verification</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Phone verification</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Custom website support</li>
+              </ul>
+              <div class="d-grid mt-4">
+                <a href="https://discord.gg/trialjunkie" class="btn btn-outline-light">Get Started</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referral Program Section -->
+  <section class="py-5 bg-dark-subtle">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h2 class="mb-3 drug-glow">Become a Dealer</h2>
+          <p class="lead">Share Trial Junkie with your friends and earn commission on every subscription they purchase.</p>
+          <ul class="list-unstyled">
+            <li class="mb-3"><i class="bi bi-cash-coin text-success me-2"></i> Earn 15% lifetime commission</li>
+            <li class="mb-3"><i class="bi bi-person-plus text-success me-2"></i> Get bonuses for high referral counts</li>
+            <li class="mb-3"><i class="bi bi-wallet2 text-success me-2"></i> Withdraw earnings to your crypto wallet</li>
+          </ul>
+          <a href="/referrals" class="btn btn-primary mt-3">Start Referring</a>
+        </div>
+        <div class="col-md-6 text-center">
+          <div class="card ref-card-glow border-0 p-4 position-relative overflow-hidden">
+            <div class="floating-particles"></div>
+            <h3 class="h4 mb-3">Your Referral Code</h3>
+            <div class="display-6 mb-3 monospace">TJ2025</div>
+            <p class="mb-0">Join Discord and type <code>!referral</code> to get your own code</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Coming Soon / Roadmap Preview Section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5 drug-glow">Coming Soon</h2>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-phone-fill display-4 text-primary"></i>
+              </div>
+              <h3 class="h4">Mobile App</h3>
+              <p>Access your trials on the go with our upcoming iOS and Android applications.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-browser-chrome display-4 text-primary"></i>
+              </div>
+              <h3 class="h4">Browser Extension</h3>
+              <p>Generate trials with one click directly from your browser.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 float-element">
+            <div class="card-body text-center p-4">
+              <div class="icon-wrapper mb-3">
+                <i class="bi bi-robot display-4 text-primary"></i>
+              </div>
+              <h3 class="h4">AI-Powered Agents</h3>
+              <p>New intelligent agents with enhanced capabilities coming to the network.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="/roadmap" class="btn btn-outline-primary">View Full Roadmap</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h3 class="h5">Trial Junkie</h3>
+          <p>Get your digital fix with premium service trials</p>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Navigation</h3>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white">Home</a></li>
+            <li><a href="/dashboard" class="text-white">Dashboard</a></li>
+            <li><a href="/trials" class="text-white">My Trials</a></li>
+            <li><a href="/referrals" class="text-white">Referrals</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h3 class="h5">Connect</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white">Discord</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white">Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/psychedelic-bg.js"></script>
 </body>
 </html>
