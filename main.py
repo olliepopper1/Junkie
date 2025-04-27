@@ -617,7 +617,7 @@ def withdraw_commission():
     
     if not amount or not wallet_address:
         return jsonify({'error': 'Amount and wallet address are required'}), 400
-    
+        
     try:
         # In a real implementation, this would process the withdrawal
         # and transfer SOL to the user's wallet
@@ -631,6 +631,12 @@ def withdraw_commission():
     except Exception as e:
         logger.error(f"Error processing withdrawal: {str(e)}")
         return jsonify({'error': str(e)}), 500
+        
+@app.route('/api/discord-client-id', methods=['GET'])
+def discord_client_id():
+    """Return the Discord client ID for use in frontend templates"""
+    client_id = os.environ.get('DISCORD_CLIENT_ID', '')
+    return jsonify({'client_id': client_id})
 
 if __name__ == "__main__":
     # Load environment variables
