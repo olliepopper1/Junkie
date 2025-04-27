@@ -8,150 +8,129 @@ import sys
 import json
 import argparse
 import logging
-from database import Database
-from datetime import datetime
+from bot import setup_bot
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
+        logging.FileHandler("execute_bot_command.log"),
         logging.StreamHandler()
     ]
 )
 
 logger = logging.getLogger(__name__)
 
+class MockContext:
+    """Mock Discord context for executing commands"""
+    def __init__(self, user_id, username, command, args):
+        self.author = MockUser(user_id, username)
+        self.command = command
+        self.args = args
+        self.message = MockMessage(user_id, username, command, args)
+        self.bot = None
+        self.sent_messages = []
+    
+    async def send(self, content=None, embed=None, file=None):
+        """Mock send method to capture responses"""
+        self.sent_messages.append({
+            "content": content,
+            "embed": embed.to_dict() if embed else None,
+        })
+        return MockMessage(None, "bot", content, "")
+    
+    async def reply(self, content=None, embed=None, file=None):
+        """Mock reply method"""
+        return await self.send(content, embed, file)
+
+class MockUser:
+    """Mock Discord user"""
+    def __init__(self, user_id, username):
+        self.id = user_id
+        self.name = username
+        self.display_name = username
+        self.bot = False
+        self.discriminator = "0000"
+
+class MockMessage:
+    """Mock Discord message"""
+    def __init__(self, user_id, username, content, args):
+        self.author = MockUser(user_id, username)
+        self.content = content
+        self.args = args
+        self.channel = MockChannel()
+        
+    async def add_reaction(self, emoji):
+        """Mock add_reaction method"""
+        return True
+
+class MockChannel:
+    """Mock Discord channel"""
+    def __init__(self):
+        self.id = 123456789
+        self.name = "web-command"
+        
+    async def send(self, content=None, embed=None, file=None):
+        """Mock send method"""
+        return MockMessage(None, "bot", content, "")
+
+async def execute_command(user_id, username, command_name, args):
+    """Execute a bot command with the given arguments"""
+    try:
+        # Set up the bot
+        bot = setup_bot()
+        
+        # Find the command
+        command = bot.get_command(command_name)
+        if not command:
+            return {
+                "success": False,
+                "error": f"Command '{command_name}' not found"
+            }
+        
+        # Create a mock context
+        ctx = MockContext(user_id, username, command_name, args)
+        ctx.bot = bot
+        
+        # Execute the command
+        await command(ctx, *args)
+        
+        # Return the command output
+        return {
+            "success": True,
+            "responses": ctx.sent_messages
+        }
+    except Exception as e:
+        logger.error(f"Error executing command: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 def main():
-    # Set up argument parser
-    parser = argparse.ArgumentParser(description='Execute a Discord bot command')
-    parser.add_argument('--command', required=True, help='Command to execute')
-    parser.add_argument('--user_id', required=True, help='Discord user ID')
-    parser.add_argument('--username', required=True, help='Discord username')
-    parser.add_argument('--params', required=False, default='{}', help='JSON string of command parameters')
+    """Main function"""
+    parser = argparse.ArgumentParser(description='Execute a bot command')
+    parser.add_argument('--user_id', required=True, help='User ID')
+    parser.add_argument('--username', required=True, help='Username')
+    parser.add_argument('--command', required=True, help='Command name')
+    parser.add_argument('--args', required=False, default="[]", help='Command arguments (JSON array)')
     
     args = parser.parse_args()
     
+    # Parse the command arguments
     try:
-        # Parse parameters
-        params = json.loads(args.params)
-        
-        # Connect to the database
-        db = Database()
-        
-        # Log the command
-        logger.info(f"Executing command: {args.command} for user {args.username} ({args.user_id})")
-        
-        # Convert user_id to integer if it's numeric
-        try:
-            user_id = int(args.user_id)
-        except ValueError:
-            user_id = args.user_id
-            
-        # Execute the command
-        if args.command == 'get_user_data':
-            # Check if user exists, create if not
-            if not db.user_exists(user_id):
-                db.create_user(user_id, args.username)
-            
-            # Get user stats
-            stats = db.get_user_stats(user_id)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'username': args.username,
-                'stats': stats
-            }))
-            
-        elif args.command == 'get_credentials':
-            service = params.get('service')
-            
-            # Get user credentials
-            credentials = db.get_user_credentials(user_id, service)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'service': service,
-                'credentials': credentials
-            }))
-            
-        elif args.command == 'clear_user_data':
-            # Clear user data
-            db.clear_user_data(user_id)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'message': 'User data cleared successfully'
-            }))
-            
-        elif args.command == 'get_payments':
-            status = params.get('status')
-            
-            # Get user payments
-            payments = db.get_user_payments(user_id, status)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'payments': payments
-            }))
-            
-        elif args.command == 'get_tier':
-            # Get user tier
-            tier = db.get_user_tier(user_id)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'tier': tier
-            }))
-            
-        elif args.command == 'get_referrals':
-            # Get referral code
-            referral_code = db.get_referral_code(user_id)
-            
-            # Get referred users
-            referrals = db.get_user_referrals(user_id)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'referral_code': referral_code,
-                'referrals': referrals
-            }))
-            
-        elif args.command == 'get_commissions':
-            status = params.get('status')
-            
-            # Get commissions
-            commissions = db.get_user_commissions(user_id, status)
-            total = db.get_total_commission(user_id)
-            
-            print(json.dumps({
-                'success': True,
-                'user_id': user_id,
-                'commissions': commissions,
-                'total_commission': total
-            }))
-            
-        else:
-            # Unknown command
-            print(json.dumps({
-                'success': False,
-                'error': f'Unknown command: {args.command}'
-            }))
-            sys.exit(1)
-            
-    except Exception as e:
-        logger.error(f"Error executing command: {str(e)}")
-        print(json.dumps({
-            'success': False,
-            'error': str(e)
-        }))
-        sys.exit(1)
+        command_args = json.loads(args.args)
+    except json.JSONDecodeError:
+        command_args = []
+    
+    # Execute the command and handle asyncio
+    import asyncio
+    result = asyncio.run(execute_command(args.user_id, args.username, args.command, command_args))
+    
+    # Output as JSON
+    print(json.dumps(result))
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import path from 'path';
 
 const execPromise = promisify(exec);
 
@@ -85,50 +84,6 @@ router.post('/stop', (req: Request, res: Response) => {
   }
 });
 
-// Restart the bot
-router.post('/restart', (req: Request, res: Response) => {
-  try {
-    if (botProcess) {
-      botProcess.kill();
-      botProcess = null;
-    }
-    
-    botProcess = exec('python run_discord_bot.py');
-    botStatus.running = true;
-    botStatus.startedAt = new Date();
-    delete botStatus.error;
-
-    botProcess.stdout.on('data', (data: Buffer) => {
-      console.log(`Bot stdout: ${data}`);
-    });
-
-    botProcess.stderr.on('data', (data: Buffer) => {
-      console.error(`Bot stderr: ${data}`);
-      if (!botStatus.error) {
-        botStatus.error = '';
-      }
-      botStatus.error += data.toString();
-    });
-
-    botProcess.on('exit', (code: number) => {
-      console.log(`Bot process exited with code ${code}`);
-      botStatus.running = false;
-      if (code !== 0) {
-        if (!botStatus.error) {
-          botStatus.error = '';
-        }
-        botStatus.error += `Process exited with code ${code}`;
-      }
-    });
-
-    res.json({ message: 'Bot restarted successfully', status: botStatus });
-  } catch (error) {
-    botStatus.running = false;
-    botStatus.error = error.message;
-    res.status(500).json({ error: 'Failed to restart bot', details: error.message });
-  }
-});
-
 // Execute a bot command
 router.post('/command', async (req: Request, res: Response) => {
   try {
@@ -160,42 +115,6 @@ router.post('/command', async (req: Request, res: Response) => {
   } catch (error) {
     console.error(`Command execution error: ${error.message}`);
     res.status(500).json({ error: 'Command execution error', details: error.message });
-  }
-});
-
-// Get trials for a user
-router.get('/trials/:userId', (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing user ID' });
-    }
-
-    // Execute the Python script to get trials
-    exec(`python get_bot_trials.py --user_id "${userId}"`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Get trials error: ${error.message}`);
-        return res.status(500).json({ error: 'Failed to get trials', details: error.message });
-      }
-
-      if (stderr) {
-        console.error(`Get trials stderr: ${stderr}`);
-        return res.status(500).json({ error: 'Failed to get trials', details: stderr });
-      }
-
-      // Parse the output
-      try {
-        const result = JSON.parse(stdout);
-        res.json(result);
-      } catch (e) {
-        console.error(`Failed to parse trials output: ${e.message}`);
-        res.status(500).json({ error: 'Invalid trials output', details: e.message, output: stdout });
-      }
-    });
-  } catch (error) {
-    console.error(`Get trials error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to get trials', details: error.message });
   }
 });
 
