@@ -1,0 +1,99 @@
+/* Global Styles */
+:root {
+  --primary-purple: #6f42c1;
+  --secondary-green: #20c997;
+  --dark-bg: #1e1e1e;
+  --card-bg: #2a2a2a;
+  --text-muted: #6c757d;
+  --glow-color: rgba(111, 66, 193, 0.5);
+}
+
+body {
+  background-color: var(--dark-bg);
+}
+
+/* Hero Section */
+.hero {
+  padding: 6rem 0;
+  background: linear-gradient(to bottom right, #2a2a2a, #1a1a1a);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle, var(--glow-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Agent Cards */
+.icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  background-color: var(--dark-bg);
+}
+
+/* How It Works */
+.step-number {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-purple);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto;
+}
+
+/* Service Icons */
+.service-icon {
+  background-color: var(--card-bg);
+}
+
+/* Dashboard */
+.avatar-container {
+  font-size: 1.5rem;
+}
+
+/* Trials Page */
+.trial-card:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+
+.copy-btn:hover {
+  background-color: var(--primary-purple);
+  color: white;
+}
+
+/* Animations */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px var(--glow-color);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--glow-color);
+  }
+  100% {
+    box-shadow: 0 0 5px var(--glow-color);
+  }
+}
+
+.glow-effect {
+  animation: glow 2s infinite;
+}
