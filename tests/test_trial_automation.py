@@ -38,13 +38,13 @@ class TestTrialGeneration(unittest.TestCase):
         card = generate_card()
         
         # Check card has all required fields
-        self.assertIn("card_number", card)
+        self.assertIn("number", card)  # Field is called 'number' not 'card_number'
         self.assertIn("expiry", card)
         self.assertIn("cvv", card)
         self.assertIn("holder", card)
         
         # Check card number length
-        self.assertTrue(len(card["card_number"].replace(" ", "")) in [15, 16])
+        self.assertTrue(len(card["number"].replace(" ", "")) in [15, 16])
         
         # Check expiry format (MM/YY)
         self.assertRegex(card["expiry"], r"\d{2}/\d{2}")
