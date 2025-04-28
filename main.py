@@ -207,15 +207,30 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        logger.info(f"Login attempt for username: {username}")
+        
         user = WebUser.query.filter_by(username=username).first()
         
-        if user and user.check_password(password):
-            login_user(user)
-            session['user_id'] = user.id
-            session['username'] = user.username
-            return redirect('/dashboard')
-        else:
+        if not user:
+            logger.warning(f"Login failed: User {username} not found")
             return redirect('/login?error=invalid_credentials')
+            
+        if not user.check_password(password):
+            logger.warning(f"Login failed: Invalid password for {username}")
+            return redirect('/login?error=invalid_credentials')
+            
+        # Valid credentials
+        logger.info(f"User {username} logged in successfully")
+        login_user(user)
+        session['user_id'] = user.id
+        session['username'] = user.username
+        return redirect('/dashboard')
+    else:
+        # Show any error messages
+        error = request.args.get('error')
+        if error:
+            logger.info(f"Login page displayed with error: {error}")
+        return send_from_directory('static', 'login.html')
     
     return send_from_directory('static', 'login.html')
 
