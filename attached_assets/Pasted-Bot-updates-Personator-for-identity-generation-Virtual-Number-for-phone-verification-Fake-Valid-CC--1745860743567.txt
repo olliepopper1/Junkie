@@ -1,0 +1,27 @@
+Bot updates 
+Personator for identity generation
+Virtual Number for phone verification
+Fake Valid CC Data Generator for card generation
+Free-trial Virtual Card Issuing for payment methods
+Fast & Reliable Disposable & MX Email Checker for email generation
+Create new secret sessions tokens and database url passwords 
+Add discord api  MTM1Njk5MDU2ODczOTExMDkyMg.GU74Rz.FTB9VFhddDGJfUEISvsa2ofnEwnfgMssjGAMqo
+Add rapid api d42dbed423mshd69f27217e2311bp11bd5cjsnc2b55ca495da
+Temp Mail as backup for email verification
+continue connecting these APIs to the appropriate agents to ensure the trial generation works correctly.
+Fix trial subscription names on site to match bot and make sure wallet connect works in bot if not update discord bot with new payment scheme connect wallet can bring them to our website to connect it then they choose a plan with the bot if that's route chosen create a functional phantom wallet sign in button 
+Delete duplicate files and discord bot commands make sure bot commands are drugged theme 
+Make sure discord app loads on separate server or fix bot start workflow delete duplicate files not needed 
+Add admin commands to do things like refund user gift trial memberships change referalls percentage payoit referrers etc
+
+
+Website updates 
+Login says wrong auth fix that 
+Delete duplicate section that says add to server instead add a saving section that shows how much users can save with our bot 
+Make sure creating a trial for any site with url for trial generation works as well with required commands on bot 
+Add admin commands to do things like refund user gift trial memberships change referalls percentage payoit referrers etc
+Fix missing agent pages and page not found in entire website 
+Fix missing referral pages says login first 
+Make sure get your digital fix doesn't cut off in the hero section parts of the sentence cut off and start on a new line fix
+Make sure database is configured properly for entire project 
+Test everything make sure complete all is functional and ready to deploy 
