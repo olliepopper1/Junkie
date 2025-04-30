@@ -26,8 +26,10 @@ def main():
     
     try:
         # Import our pure Discord bot without importing any Flask dependencies
-        # Set environment variable to prevent Flask import
+        # Set environment variables to prevent Flask conflicts
         os.environ['NO_FLASK'] = '1'
+        os.environ['FLASK_PORT'] = '5001'  # Use a different port if Flask is used
+        os.environ['PORT'] = '5001'  # For applications that check PORT directly
         
         # Run the Discord bot directly
         logger.info("Executing pure Discord bot implementation...")
