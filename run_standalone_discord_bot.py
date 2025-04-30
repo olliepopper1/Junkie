@@ -1,14 +1,12 @@
+#!/usr/bin/env python3
 """
-Run Standalone Discord Bot
-This script runs the Discord bot independently from the web app
+Standalone Discord Bot Runner
+This script runs the Discord bot without using Flask
 """
 import os
 import sys
 import logging
-import discord
-from discord.ext import commands
 from dotenv import load_dotenv
-from discord_bot_standalone import main as discord_bot_main
 
 # Configure logging
 logging.basicConfig(
@@ -21,20 +19,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger("discord_bot_runner")
 
-# Load environment variables
-load_dotenv()
-
-# Verify Discord token is available
-DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-if not DISCORD_BOT_TOKEN:
-    logger.error("DISCORD_BOT_TOKEN not found in environment variables")
-    sys.exit(1)
-
 if __name__ == "__main__":
-    logger.info("Starting standalone Discord bot...")
+    # Load environment variables
+    load_dotenv()
+    
+    logger.info("Starting Discord Bot in standalone mode...")
     try:
-        # Run the bot's main function from discord_bot_standalone.py
-        discord_bot_main()
+        # Import and run the Discord bot directly
+        import discord_bot
+        # The bot will run in the imported module
     except Exception as e:
-        logger.error(f"Failed to start Discord bot: {e}")
+        logger.error(f"Error running Discord bot: {e}")
         sys.exit(1)
