@@ -154,15 +154,15 @@ def catch_all(path):
 # Static assets routes
 @app.route('/css/<path:filename>')
 def css_files(filename):
-    return send_from_directory('src/public/css', filename)
+    return send_from_directory('static/css', filename)
 
 @app.route('/js/<path:filename>')
 def js_files(filename):
-    return send_from_directory('src/public/js', filename)
+    return send_from_directory('static/js', filename)
 
 @app.route('/img/<path:filename>')
 def img_files(filename):
-    return send_from_directory('src/public/img', filename)
+    return send_from_directory('static/img', filename)
 
 # Authentication routes
 @app.route('/register', methods=['GET', 'POST'])
