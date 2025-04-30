@@ -1,4 +1,8 @@
 #!/bin/bash
-# Shell script to run the Discord bot
-echo "Starting Discord Bot..."
-python pure_discord_bot.py
+# Run the standalone Discord bot without Flask dependencies
+
+# Enable debug output
+set -x
+
+# Run the Discord bot
+python discord_bot_main.py
