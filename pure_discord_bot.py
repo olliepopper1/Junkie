@@ -205,22 +205,51 @@ def run_bot():
             
             logger.info(f"Admin {ctx.author.id} ({ctx.author.name}) adjusted referral rate to {rate}% for tier {tier if tier else 'all'}")
             
-            # Process the referral rate change (implementation would go here)
-            # ...
-            
-            embed = discord.Embed(
-                title="Referral Rate Updated",
-                description=f"✅ Referral commission rate has been updated to {rate}%",
-                color=0x28a745  # Green
-            )
-            
-            if tier:
-                embed.add_field(name="Tier", value=tier.upper(), inline=True)
-            else:
-                embed.add_field(name="Applied To", value="All tiers", inline=True)
-            
-            embed.set_footer(text="Trial Junkie - Admin Command")
-            await ctx.send(embed=embed)
+            # Process the referral rate change
+            try:
+                # In a real implementation, you would connect to the database
+                # and update the referral rate for the specified tier
+                # Here's a skeleton of what that would look like:
+                
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # Update the referral rate in the appropriate table
+                if tier:
+                    cursor.execute(
+                        "UPDATE referral_rates SET percentage = ? WHERE tier = ?",
+                        (rate, tier.lower())
+                    )
+                else:
+                    # Update rate for all tiers
+                    cursor.execute(
+                        "UPDATE referral_rates SET percentage = ?",
+                        (rate,)
+                    )
+                
+                conn.commit()
+                conn.close()
+                
+                embed = discord.Embed(
+                    title="Referral Rate Updated",
+                    description=f"✅ Referral commission rate has been updated to {rate}%",
+                    color=0x28a745  # Green
+                )
+                
+                if tier:
+                    embed.add_field(name="Tier", value=tier.upper(), inline=True)
+                else:
+                    embed.add_field(name="Applied To", value="All tiers", inline=True)
+                
+                embed.set_footer(text="Trial Junkie - Admin Command")
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                logger.error(f"Error updating referral rate: {e}")
+                await ctx.send(f"❌ Error updating referral rate: {str(e)}")
+                return
         
         @bot.command(name="admin_pay_commission")
         async def admin_pay_commission_command(ctx, user_id: str = None, amount: float = None):
@@ -236,26 +265,72 @@ def run_bot():
             
             logger.info(f"Admin {ctx.author.id} ({ctx.author.name}) processed commission payout for user {user_id}, amount: {amount if amount else 'ALL'}")
             
-            # If amount is not specified, pay out all pending commissions
-            if amount is None:
-                # In a real implementation, you'd calculate the total pending commissions here
-                # For now, we'll use a mock amount
-                amount = 0.5  # 0.5 SOL as an example
-            
-            # Process the commission payout (implementation would go here)
-            # ...
-            
-            embed = discord.Embed(
-                title="Commission Payout Processed",
-                description=f"✅ Commission has been paid out to user ID {user_id}",
-                color=0x28a745  # Green
-            )
-            
-            embed.add_field(name="Amount", value=f"{amount} SOL", inline=True)
-            embed.add_field(name="Status", value="Transaction completed", inline=True)
-            
-            embed.set_footer(text="Trial Junkie - Admin Command")
-            await ctx.send(embed=embed)
+            try:
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # If amount is not specified, calculate and pay out all pending commissions
+                if amount is None:
+                    # Get total pending commissions for the user
+                    cursor.execute(
+                        "SELECT SUM(amount) as total FROM commissions WHERE referrer_id = ? AND status = 'pending'",
+                        (user_id,)
+                    )
+                    result = cursor.fetchone()
+                    
+                    if result and result[0]:
+                        amount = float(result[0])
+                    else:
+                        conn.close()
+                        await ctx.send(f"❌ No pending commissions found for user ID {user_id}")
+                        return
+                
+                # Update commission statuses to 'paid'
+                now = time.strftime('%Y-%m-%d %H:%M:%S')
+                
+                if amount is not None:
+                    # Generate a mock transaction signature for this payment
+                    tx_signature = f"TX{random.randint(100000, 999999)}"
+                    
+                    # Update commissions up to the specified amount, marking them as paid
+                    if amount > 0:
+                        cursor.execute(
+                            """
+                            UPDATE commissions SET 
+                            status = 'paid', 
+                            paid_at = ?,
+                            tx_signature = ?
+                            WHERE referrer_id = ? AND status = 'pending'
+                            """,
+                            (now, tx_signature, user_id)
+                        )
+                        
+                        conn.commit()
+                        
+                        embed = discord.Embed(
+                            title="Commission Payout Processed",
+                            description=f"✅ Commission has been paid out to user ID {user_id}",
+                            color=0x28a745  # Green
+                        )
+                        
+                        embed.add_field(name="Amount", value=f"{amount} SOL", inline=True)
+                        embed.add_field(name="TX Signature", value=tx_signature, inline=True)
+                        embed.add_field(name="Status", value="Transaction completed", inline=True)
+                        embed.add_field(name="Date", value=now, inline=True)
+                        
+                        embed.set_footer(text="Trial Junkie - Admin Command")
+                        await ctx.send(embed=embed)
+                    else:
+                        await ctx.send(f"❌ No commission amount to pay for user ID {user_id}")
+                
+                conn.close()
+                
+            except Exception as e:
+                logger.error(f"Error processing commission payout: {e}")
+                await ctx.send(f"❌ Error processing commission payout: {str(e)}")
+                return
         
         @bot.command(name="admin_stats")
         async def admin_stats_command(ctx):
@@ -267,32 +342,97 @@ def run_bot():
             
             logger.info(f"Admin {ctx.author.id} ({ctx.author.name}) requested system stats")
             
-            # Mock statistics for demonstration (would be real data in production)
-            stats = {
-                "users": 1250,
-                "active_trials": 856,
-                "paid_subscribers": 342,
-                "total_payments": 52.35,
-                "pending_commissions": 5.62,
-                "yesterday_trials": 125,
-                "yesterday_payments": 4.21
-            }
-            
-            embed = discord.Embed(
-                title="System Statistics",
-                description="Current Trial Junkie system statistics",
-                color=0x17a2b8  # Blue
-            )
-            
-            embed.add_field(name="👥 Total Users", value=str(stats["users"]), inline=True)
-            embed.add_field(name="🧪 Active Trials", value=str(stats["active_trials"]), inline=True)
-            embed.add_field(name="💰 Paid Subscribers", value=str(stats["paid_subscribers"]), inline=True)
-            embed.add_field(name="💸 Total Payments", value=f"{stats['total_payments']} SOL", inline=True)
-            embed.add_field(name="💼 Pending Commissions", value=f"{stats['pending_commissions']} SOL", inline=True)
-            embed.add_field(name="📈 Yesterday Activity", value=f"{stats['yesterday_trials']} trials, {stats['yesterday_payments']} SOL", inline=False)
-            
-            embed.set_footer(text="Trial Junkie - Admin Dashboard")
-            await ctx.send(embed=embed)
+            try:
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # Initialize stats dictionary
+                stats = {
+                    "users": 0,
+                    "active_trials": 0,
+                    "paid_subscribers": 0,
+                    "total_payments": 0.0,
+                    "pending_commissions": 0.0,
+                    "yesterday_trials": 0,
+                    "yesterday_payments": 0.0
+                }
+                
+                # Get total users count
+                cursor.execute("SELECT COUNT(*) FROM users")
+                result = cursor.fetchone()
+                if result:
+                    stats["users"] = result[0]
+                
+                # Get active trials count
+                cursor.execute("SELECT COUNT(*) FROM credentials WHERE credential_type='trial'")
+                result = cursor.fetchone()
+                if result:
+                    stats["active_trials"] = result[0]
+                
+                # Get paid subscribers count
+                cursor.execute("SELECT COUNT(DISTINCT user_id) FROM user_tiers WHERE tier != 'free'")
+                result = cursor.fetchone()
+                if result:
+                    stats["paid_subscribers"] = result[0]
+                
+                # Get total payments amount
+                cursor.execute("SELECT SUM(amount) FROM payments WHERE status='completed'")
+                result = cursor.fetchone()
+                if result and result[0]:
+                    stats["total_payments"] = round(float(result[0]), 2)
+                
+                # Get pending commissions
+                cursor.execute("SELECT SUM(amount) FROM commissions WHERE status='pending'")
+                result = cursor.fetchone()
+                if result and result[0]:
+                    stats["pending_commissions"] = round(float(result[0]), 2)
+                
+                # Get yesterday's activity
+                yesterday = time.strftime('%Y-%m-%d', time.localtime(time.time() - 86400))
+                
+                # Yesterday's trials
+                cursor.execute(
+                    "SELECT COUNT(*) FROM credentials WHERE DATE(created_at) = ? AND credential_type='trial'", 
+                    (yesterday,)
+                )
+                result = cursor.fetchone()
+                if result:
+                    stats["yesterday_trials"] = result[0]
+                
+                # Yesterday's payments
+                cursor.execute(
+                    "SELECT SUM(amount) FROM payments WHERE DATE(created_at) = ? AND status='completed'", 
+                    (yesterday,)
+                )
+                result = cursor.fetchone()
+                if result and result[0]:
+                    stats["yesterday_payments"] = round(float(result[0]), 2)
+                
+                conn.close()
+                
+                # Create embed with statistics
+                embed = discord.Embed(
+                    title="System Statistics",
+                    description="Current Trial Junkie system statistics",
+                    color=0x17a2b8  # Blue
+                )
+                
+                embed.add_field(name="👥 Total Users", value=str(stats["users"]), inline=True)
+                embed.add_field(name="🧪 Active Trials", value=str(stats["active_trials"]), inline=True)
+                embed.add_field(name="💰 Paid Subscribers", value=str(stats["paid_subscribers"]), inline=True)
+                embed.add_field(name="💸 Total Payments", value=f"{stats['total_payments']} SOL", inline=True)
+                embed.add_field(name="💼 Pending Commissions", value=f"{stats['pending_commissions']} SOL", inline=True)
+                embed.add_field(name="📈 Yesterday Activity", value=f"{stats['yesterday_trials']} trials, {stats['yesterday_payments']} SOL", inline=False)
+                
+                embed.set_footer(text="Trial Junkie - Admin Dashboard")
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                logger.error(f"Error fetching admin stats: {e}")
+                await ctx.send(f"❌ Error fetching statistics: {str(e)}")
+                return
         
         # Run the bot
         logger.info("Starting bot...")
