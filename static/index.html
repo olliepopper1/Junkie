@@ -507,42 +507,79 @@
     </div>
   </section>
 
-  <!-- Add to Discord Section -->
+  <!-- Savings Calculator Section -->
   <section class="py-5 bg-dark text-white">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-6">
-          <h2 class="mb-4 drug-glow">Add Trial Junkie to Your Server</h2>
-          <p class="lead">Bring the power of trial generation to your own Discord community. Our bot provides everything you need to create and manage free trials.</p>
-          <ul class="list-unstyled mt-4">
-            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Easy installation process</li>
-            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Full command documentation</li>
-            <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Server-wide subscription benefits</li>
-          </ul>
-          <a href="https://discord.com/oauth2/authorize?client_id=1356990568739110922&permissions=8&scope=bot%20applications.commands" class="btn btn-primary mt-3">
-            <i class="bi bi-discord me-2"></i>Add to Discord
-          </a>
-          <a href="https://discord.gg/f5Dqz69ZNt" class="btn btn-outline-light mt-3 ms-2">
-            <i class="bi bi-book me-2"></i>Bot Documentation
-          </a>
+          <h2 class="mb-4 drug-glow">See How Much You Save</h2>
+          <p class="lead">Trial Junkie helps you save money by providing access to premium services without the subscription costs.</p>
+          <div class="card bg-dark-subtle p-3 border-0 mt-4">
+            <h4 class="text-center mb-3">Savings Calculator</h4>
+            <div class="savings-calculator">
+              <div class="mb-3">
+                <label for="serviceSelect" class="form-label">Select Service</label>
+                <select class="form-select" id="serviceSelect">
+                  <option value="netflix">Netflix</option>
+                  <option value="hulu">Hulu</option>
+                  <option value="disney">Disney+</option>
+                  <option value="spotify">Spotify</option>
+                  <option value="youtube">YouTube Premium</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="trialCount" class="form-label">Number of Trials</label>
+                <input type="range" class="form-range" min="1" max="12" value="3" id="trialCount">
+                <div class="d-flex justify-content-between">
+                  <small>1</small>
+                  <small id="trialCountValue">3</small>
+                  <small>12</small>
+                </div>
+              </div>
+              <div class="savings-result p-3 bg-success-subtle text-center rounded">
+                <h5>Your Estimated Savings</h5>
+                <div class="savings-amount display-5 my-2">$<span id="savingsAmount">44.97</span></div>
+                <p class="mb-0">That's <span id="savingsPercent">100</span>% off regular price!</p>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="col-md-6 text-center">
-          <div class="card bg-dark border-primary border-2 rounded-4 p-4 mx-auto" style="max-width: 400px;">
-            <div class="d-flex align-items-center mb-3">
-              <img src="/img/discord-logo.svg" alt="Discord" width="30" class="me-2">
-              <h5 class="mb-0">Trial Junkie Bot</h5>
-              <span class="badge bg-success ms-auto">Online</span>
+          <div class="card bg-dark-subtle p-4 border-0 rounded-4 mx-auto" style="max-width: 400px;">
+            <h4 class="mb-3">Popular Services Savings</h4>
+            <div class="service-savings-list">
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
+                <div class="d-flex align-items-center">
+                  <img src="/img/netflix-icon.svg" alt="Netflix" width="30" height="30" class="me-2">
+                  <span>Netflix</span>
+                </div>
+                <div class="savings-badge bg-success px-2 py-1 rounded">Save $14.99/mo</div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
+                <div class="d-flex align-items-center">
+                  <img src="/img/hulu-icon.svg" alt="Hulu" width="30" height="30" class="me-2">
+                  <span>Hulu</span>
+                </div>
+                <div class="savings-badge bg-success px-2 py-1 rounded">Save $11.99/mo</div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
+                <div class="d-flex align-items-center">
+                  <img src="/img/disney-icon.svg" alt="Disney+" width="30" height="30" class="me-2">
+                  <span>Disney+</span>
+                </div>
+                <div class="savings-badge bg-success px-2 py-1 rounded">Save $7.99/mo</div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
+                <div class="d-flex align-items-center">
+                  <img src="/img/spotify-icon.svg" alt="Spotify" width="30" height="30" class="me-2">
+                  <span>Spotify</span>
+                </div>
+                <div class="savings-badge bg-success px-2 py-1 rounded">Save $9.99/mo</div>
+              </div>
+              <div class="text-center mt-3">
+                <a href="/dashboard" class="btn btn-primary">Start Saving Today</a>
+              </div>
             </div>
-            <div class="card text-dark bg-light p-3 mb-3">
-              <p class="mb-1">🔮 <strong>Bot Commands</strong></p>
-              <code class="d-block mt-2">!hit netflix</code>
-              <small class="text-muted">Generate a Netflix trial</small>
-              <code class="d-block mt-2">!dose identity</code>
-              <small class="text-muted">Generate just an identity</small>
-              <code class="d-block mt-2">!trip youtube</code>
-              <small class="text-muted">Run automation for YouTube</small>
-            </div>
-            <p class="small text-muted mb-0">Serving over 5,000 users in 120+ servers</p>
           </div>
         </div>
       </div>
