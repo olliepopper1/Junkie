@@ -31,9 +31,173 @@ if not DISCORD_BOT_TOKEN:
     logger.error("DISCORD_BOT_TOKEN not found in environment variables")
     sys.exit(1)
 
+def initialize_database():
+    """Initialize database and create necessary tables if they don't exist"""
+    logger.info("Initializing database...")
+    
+    try:
+        import sqlite3
+        conn = sqlite3.connect("trial_junkie.db")
+        cursor = conn.cursor()
+        
+        # Create users table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            discriminator TEXT,
+            avatar TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
+        # Create credentials table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS credentials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            service TEXT NOT NULL,
+            credential_type TEXT NOT NULL,
+            credential_value TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create trials table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS trials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            service TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create payments table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            amount REAL NOT NULL,
+            service_type TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            reference TEXT UNIQUE NOT NULL,
+            tx_signature TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create user_tiers table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_tiers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT UNIQUE NOT NULL,
+            tier TEXT DEFAULT 'free',
+            expires_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create usage_limits table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usage_limits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            command TEXT NOT NULL,
+            count INTEGER DEFAULT 1,
+            date DATE DEFAULT CURRENT_DATE,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(user_id, command, date)
+        )
+        """)
+        
+        # Create referral_codes table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS referral_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT UNIQUE NOT NULL,
+            code TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create referrals table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id TEXT NOT NULL,
+            referred_id TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referred_id) REFERENCES users(id)
+        )
+        """)
+        
+        # Create commissions table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS commissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id TEXT NOT NULL,
+            referred_id TEXT NOT NULL,
+            payment_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            paid_at TIMESTAMP,
+            tx_signature TEXT,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referred_id) REFERENCES users(id),
+            FOREIGN KEY (payment_id) REFERENCES payments(id)
+        )
+        """)
+        
+        # Create referral_rates table if it doesn't exist
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS referral_rates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tier TEXT UNIQUE NOT NULL,
+            percentage REAL NOT NULL DEFAULT 10.0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
+        # Insert default referral rates if table is empty
+        cursor.execute("SELECT COUNT(*) FROM referral_rates")
+        count = cursor.fetchone()[0]
+        
+        if count == 0:
+            tiers = [("free", 5.0), ("basic", 10.0), ("premium", 15.0), ("enterprise", 20.0)]
+            cursor.executemany(
+                "INSERT INTO referral_rates (tier, percentage) VALUES (?, ?)",
+                tiers
+            )
+        
+        conn.commit()
+        conn.close()
+        logger.info("Database initialized successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+        return False
+
 def run_bot():
     """Main function to run the Discord bot"""
     logger.info("Starting Pure Discord Bot...")
+    
+    # Initialize the database first
+    initialize_database()
     
     try:
         # Import discord module here to avoid potential circular imports
