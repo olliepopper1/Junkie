@@ -1,12 +1,12 @@
 #!/bin/bash
-# Improved runner for completely independent Discord bot
+# Run script for the completely fixed Discord bot
+# This script ensures the bot runs without Flask and avoids port conflicts
 
-echo "Starting fixed standalone Discord bot..."
-
-# Set essential environment variables
+echo "Starting fixed Discord Bot..."
 export NO_FLASK=1
 export NO_WEB_APP=1
+export DISCORD_BOT_ONLY=1
 export PYTHONUNBUFFERED=1
 
-# Run the fixed standalone bot runner
-python run_discord_bot_standalone_fixed.py
+# Run the standalone bot directly
+python fixed_discord_bot.py

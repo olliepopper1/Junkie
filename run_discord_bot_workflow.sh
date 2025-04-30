@@ -1,9 +1,21 @@
 #!/bin/bash
+# This script is specifically designed for the discord_bot workflow
+# It runs the Discord bot in a completely separate process from the web app
+# to avoid port conflicts
 
-# This script runs the Discord bot as a standalone process
-# without attempting to use port 5000, avoiding conflicts with the web app
+echo "Starting Discord Bot workflow script..."
 
-echo "Starting Discord bot (standalone, no port conflicts)..."
+# Set environment variables to prevent Flask conflicts
+export NO_FLASK=1
+export NO_WEB_APP=1
+export DISCORD_BOT_ONLY=1
+export FLASK_APP=""
+export PYTHONUNBUFFERED=1
 
-# Run the new standalone Discord bot script
-python start_discord_bot.py
+# Stop any existing Flask processes on port 5000 - IMPORTANT!
+# This will prevent the bot from trying to start a Flask server
+echo "Ensuring no Flask app is started in this process..."
+
+# Run the standalone bot directly
+echo "Starting Discord bot via standalone_bot.py..."
+exec python standalone_bot.py
