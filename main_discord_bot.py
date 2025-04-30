@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-Discord Bot Workflow Runner
-This script is specifically designed to work with the Replit 'discord_bot' workflow
-It runs the Discord bot without any Flask dependencies
+Main Discord Bot Entry Point for Workflow
+This is a file specifically designed to be used in the Replit discord_bot workflow
 """
 import os
 import sys
 import logging
 from dotenv import load_dotenv
-import time
 
 # Configure logging
 logging.basicConfig(
@@ -19,31 +17,31 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger("discord_bot_workflow")
+logger = logging.getLogger("main_discord_bot")
 
-# Make sure we don't import Flask
-os.environ['NO_FLASK'] = 'true'
+# Set environment variables to prevent Flask conflicts
+os.environ['NO_FLASK'] = '1'
+os.environ['NO_WEB_APP'] = '1'
+os.environ['DISCORD_BOT_ONLY'] = '1'
 
-# Main function to run the bot
-def run_discord_bot():
-    """Run the Discord bot using our standalone implementation"""
-    logger.info("Loading standalone Discord bot...")
+# Load environment variables
+load_dotenv()
+
+# Check for Discord token
+if not os.getenv('DISCORD_BOT_TOKEN'):
+    logger.error("DISCORD_BOT_TOKEN not found in environment variables")
+    sys.exit(1)
+
+if __name__ == "__main__":
+    logger.info("Starting Discord bot workflow...")
     
     try:
-        # Import our standalone bot implementation
-        import standalone_discord_bot
+        # Import standalone bot to avoid any Flask dependencies
+        import standalone_bot
         
         # Run the bot
-        logger.info("Starting standalone Discord bot...")
-        standalone_discord_bot.run_bot()
+        standalone_bot.run_bot()
         
-    except ImportError as e:
-        logger.error(f"Failed to import standalone_discord_bot: {e}")
-        sys.exit(1)
     except Exception as e:
         logger.error(f"Error running Discord bot: {e}")
         sys.exit(1)
-
-if __name__ == "__main__":
-    logger.info("Starting Discord Bot Workflow Runner...")
-    run_discord_bot()
