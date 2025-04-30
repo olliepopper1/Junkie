@@ -279,6 +279,13 @@ def run_bot():
                 inline=True
             )
             
+            # Add referral section
+            embed.add_field(
+                name="🔗 Referral Commands",
+                value="`!referral` - Get your referral code\n`!refer <code>` - Enter someone's referral code\n`!commissions` - View your referral earnings",
+                inline=False
+            )
+            
             embed.set_footer(text="Trial Junkie | The Last Free Trial You'll Ever Need")
             await ctx.send(embed=embed)
         
@@ -596,6 +603,303 @@ def run_bot():
             except Exception as e:
                 logger.error(f"Error fetching admin stats: {e}")
                 await ctx.send(f"❌ Error fetching statistics: {str(e)}")
+                return
+        
+        # Add user referral commands
+        @bot.command(name="referral")
+        async def referral_command(ctx):
+            """Get your referral code or see your referral stats"""
+            user_id = str(ctx.author.id)
+            
+            try:
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # Create the user if they don't exist yet
+                cursor.execute(
+                    "INSERT OR IGNORE INTO users (id, username) VALUES (?, ?)",
+                    (user_id, ctx.author.name)
+                )
+                
+                # Get or generate referral code
+                cursor.execute(
+                    "SELECT code FROM referral_codes WHERE user_id = ?",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                
+                referral_code = None
+                if not result:
+                    # Generate a new referral code
+                    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+                    code = "".join(random.choice(chars) for _ in range(8))
+                    
+                    # Insert into database
+                    cursor.execute(
+                        "INSERT INTO referral_codes (user_id, code) VALUES (?, ?)",
+                        (user_id, code)
+                    )
+                    conn.commit()
+                    referral_code = code
+                else:
+                    referral_code = result[0]
+                
+                # Get referral counts and earnings
+                cursor.execute(
+                    "SELECT COUNT(*) FROM referrals WHERE referrer_id = ?",
+                    (user_id,)
+                )
+                referral_count = cursor.fetchone()[0]
+                
+                cursor.execute(
+                    "SELECT SUM(amount) FROM commissions WHERE referrer_id = ?",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                total_earnings = result[0] if result and result[0] else 0
+                
+                cursor.execute(
+                    "SELECT SUM(amount) FROM commissions WHERE referrer_id = ? AND status = 'pending'",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                pending_earnings = result[0] if result and result[0] else 0
+                
+                # Get current tier referral rate
+                cursor.execute(
+                    """
+                    SELECT r.percentage
+                    FROM referral_rates r
+                    JOIN user_tiers u ON r.tier = u.tier
+                    WHERE u.user_id = ?
+                    """,
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                
+                # Default to free tier if not found
+                if result:
+                    current_rate = result[0]
+                else:
+                    cursor.execute(
+                        "SELECT percentage FROM referral_rates WHERE tier = 'free'"
+                    )
+                    result = cursor.fetchone()
+                    current_rate = result[0] if result else 5.0  # Default fallback
+                
+                conn.close()
+                
+                embed = discord.Embed(
+                    title="Your Referral Program",
+                    description=f"Share Trial Junkie and earn SOL for every referral payment",
+                    color=0x6f42c1
+                )
+                
+                embed.add_field(
+                    name="💰 Your Referral Code",
+                    value=f"`{referral_code}`",
+                    inline=False
+                )
+                
+                embed.add_field(
+                    name="📊 Referral Stats",
+                    value=f"Total Referrals: **{referral_count}**\nCommission Rate: **{current_rate}%**\nLifetime Earnings: **{total_earnings} SOL**\nPending Earnings: **{pending_earnings} SOL**",
+                    inline=False
+                )
+                
+                embed.add_field(
+                    name="🔗 How to Share",
+                    value=f"Ask your friends to use your code with `!refer {referral_code}`",
+                    inline=False
+                )
+                
+                embed.set_footer(text="Trial Junkie | Refer friends, earn SOL")
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                logger.error(f"Error processing referral command: {e}")
+                await ctx.send(f"❌ Error retrieving referral information: {str(e)}")
+                return
+        
+        @bot.command(name="refer")
+        async def refer_command(ctx, code: str = None):
+            """Register a referral code from another user"""
+            if not code:
+                await ctx.send("❌ Please provide a referral code. Usage: `!refer <code>`")
+                return
+            
+            user_id = str(ctx.author.id)
+            
+            try:
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # Create the user if they don't exist
+                cursor.execute(
+                    "INSERT OR IGNORE INTO users (id, username) VALUES (?, ?)",
+                    (user_id, ctx.author.name)
+                )
+                
+                # Check if code exists
+                cursor.execute(
+                    "SELECT user_id FROM referral_codes WHERE code = ?",
+                    (code.upper(),)
+                )
+                result = cursor.fetchone()
+                
+                if not result:
+                    await ctx.send(f"❌ Invalid referral code. Please check the code and try again.")
+                    conn.close()
+                    return
+                
+                referrer_id = result[0]
+                
+                # Make sure user isn't referring themselves
+                if referrer_id == user_id:
+                    await ctx.send("❌ You cannot refer yourself.")
+                    conn.close()
+                    return
+                
+                # Check if the user has already been referred
+                cursor.execute(
+                    "SELECT referrer_id FROM referrals WHERE referred_id = ?",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                
+                if result:
+                    await ctx.send("❌ You've already been referred by someone else.")
+                    conn.close()
+                    return
+                
+                # Register the referral
+                cursor.execute(
+                    "INSERT INTO referrals (referrer_id, referred_id) VALUES (?, ?)",
+                    (referrer_id, user_id)
+                )
+                
+                conn.commit()
+                conn.close()
+                
+                # Success message
+                embed = discord.Embed(
+                    title="Referral Successfully Applied",
+                    description=f"✅ You've been successfully referred!",
+                    color=0x28a745
+                )
+                
+                embed.add_field(
+                    name="💰 Benefits",
+                    value="Your referrer will receive commission on your payments. Thanks for using a referral code!",
+                    inline=False
+                )
+                
+                embed.set_footer(text="Trial Junkie | The Last Free Trial You'll Ever Need")
+                await ctx.send(embed=embed)
+                
+            except Exception as e:
+                logger.error(f"Error processing refer command: {e}")
+                await ctx.send(f"❌ Error processing referral code: {str(e)}")
+                return
+        
+        @bot.command(name="commissions")
+        async def commissions_command(ctx):
+            """View your commission earnings from referrals"""
+            user_id = str(ctx.author.id)
+            
+            try:
+                # Connect to database
+                import sqlite3
+                conn = sqlite3.connect("trial_junkie.db")
+                cursor = conn.cursor()
+                
+                # Get total earnings
+                cursor.execute(
+                    "SELECT SUM(amount) FROM commissions WHERE referrer_id = ?",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                total_earnings = result[0] if result and result[0] else 0
+                
+                # Get pending earnings
+                cursor.execute(
+                    "SELECT SUM(amount) FROM commissions WHERE referrer_id = ? AND status = 'pending'",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                pending_earnings = result[0] if result and result[0] else 0
+                
+                # Get paid earnings
+                cursor.execute(
+                    "SELECT SUM(amount) FROM commissions WHERE referrer_id = ? AND status = 'paid'",
+                    (user_id,)
+                )
+                result = cursor.fetchone()
+                paid_earnings = result[0] if result and result[0] else 0
+                
+                # Get recent commission history
+                cursor.execute(
+                    """
+                    SELECT amount, status, created_at, paid_at, tx_signature 
+                    FROM commissions 
+                    WHERE referrer_id = ? 
+                    ORDER BY created_at DESC LIMIT 5
+                    """,
+                    (user_id,)
+                )
+                
+                commission_history = cursor.fetchall()
+                
+                # Check if there are any commissions
+                if total_earnings == 0 and not commission_history:
+                    await ctx.send("❌ You don't have any commission earnings yet. Share your referral code with `!referral`")
+                    conn.close()
+                    return
+                
+                # Create the report embed
+                embed = discord.Embed(
+                    title="Your Commission Earnings",
+                    description=f"Summary of your referral commissions",
+                    color=0xf7c94b
+                )
+                
+                embed.add_field(
+                    name="💰 Totals",
+                    value=f"Total Earnings: **{total_earnings} SOL**\nPending: **{pending_earnings} SOL**\nPaid: **{paid_earnings} SOL**",
+                    inline=False
+                )
+                
+                if commission_history:
+                    history_text = ""
+                    for amount, status, created_at, paid_at, tx_signature in commission_history:
+                        date = created_at.split()[0] if created_at else "Unknown"
+                        status_emoji = "✅" if status == "paid" else "⏳"
+                        history_text += f"{status_emoji} **{amount} SOL** - {date} - {status.upper()}\n"
+                    
+                    embed.add_field(
+                        name="📜 Recent Commissions",
+                        value=history_text,
+                        inline=False
+                    )
+                
+                embed.add_field(
+                    name="ℹ️ How to Get Paid",
+                    value="Commission payouts occur automatically when they reach a threshold or when processed by an admin.",
+                    inline=False
+                )
+                
+                embed.set_footer(text="Trial Junkie | Refer friends, earn SOL")
+                await ctx.send(embed=embed)
+                
+                conn.close()
+                
+            except Exception as e:
+                logger.error(f"Error processing commissions command: {e}")
+                await ctx.send(f"❌ Error retrieving commission information: {str(e)}")
                 return
         
         # Run the bot

@@ -1,214 +1,145 @@
 #!/usr/bin/env python3
 """
-API Verification Script for Trial Junkie
-Tests all external API integrations to ensure they are working correctly
+Verify API Integrations for Trial Junkie
+Tests all API connections and outputs results
 """
-import os
-import sys
-import json
-import asyncio
+import time
 import logging
-import requests
-from dotenv import load_dotenv
+from api_integrations import APIIntegrations
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+logger = logging.getLogger("verify_apis")
 
-logger = logging.getLogger("api_verification")
-
-# Load environment variables
-load_dotenv()
-
-# Check required environment variables
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-SOLANA_WALLET_ADDRESS = os.getenv("SOLANA_WALLET_ADDRESS", "J5ufWogRFSNYuULDC3EHTAcWYFASnbCo1kVS81eqnwyt")
-
-if not RAPIDAPI_KEY:
-    logger.error("RAPIDAPI_KEY not found in environment variables!")
-    logger.info("Please set RAPIDAPI_KEY in the .env file")
-    sys.exit(1)
-
-if not DISCORD_BOT_TOKEN:
-    logger.error("DISCORD_BOT_TOKEN not found in environment variables!")
-    logger.info("Please set DISCORD_BOT_TOKEN in the .env file")
-    sys.exit(1)
-
-
-# Test API Endpoints
-async def test_identity_api():
-    """Test the random user API for identity generation"""
-    logger.info("Testing identity generation API...")
-    
-    url = "https://random-user-generator.p.rapidapi.com/api"
-    
-    headers = {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "random-user-generator.p.rapidapi.com"
-    }
-    
+def test_identity_generation():
+    """Test the identity generation API"""
+    logger.info("Testing identity generation...")
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Check if the response contains expected fields
-        if "results" in data and len(data["results"]) > 0:
-            user = data["results"][0]
-            if "name" in user and "location" in user and "dob" in user:
-                logger.info("✅ Identity API working!")
-                logger.info(f"Sample identity: {user['name']['first']} {user['name']['last']}, {user['dob']['age']} years old")
-                return True
-            else:
-                logger.error("❌ Identity API response missing expected fields")
-                return False
-        else:
-            logger.error("❌ Identity API response format unexpected")
-            return False
-    except Exception as e:
-        logger.error(f"❌ Identity API test failed: {str(e)}")
-        return False
-
-
-async def test_card_api():
-    """Test the credit card generator API"""
-    logger.info("Testing card generation API...")
-    
-    url = "https://fake-credit-card-generator.p.rapidapi.com/api/fake-credit-card-generator"
-    
-    headers = {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "fake-credit-card-generator.p.rapidapi.com"
-    }
-    
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Check if the response contains expected fields
-        if "card" in data and "number" in data["card"] and "expires" in data["card"]:
-            logger.info("✅ Card API working!")
-            logger.info(f"Sample card: {data['card']['number'][:4]}...{data['card']['number'][-4:]}, Expires: {data['card']['expires']}")
+        identity = APIIntegrations.generate_identity()
+        if identity and identity.get("first_name") and identity.get("last_name"):
+            logger.info(f"✅ Successfully generated identity: {identity['first_name']} {identity['last_name']}")
             return True
         else:
-            logger.error("❌ Card API response missing expected fields")
+            logger.error("❌ Generated identity data is incomplete")
             return False
     except Exception as e:
-        logger.error(f"❌ Card API test failed: {str(e)}")
+        logger.error(f"❌ Error generating identity: {e}")
         return False
 
-
-async def test_phone_api():
-    """Test the phone number generator API"""
-    logger.info("Testing phone generation API...")
-    
-    url = "https://random-phone-number.p.rapidapi.com/api/phone/random"
-    
-    querystring = {"country":"US"}
-    
-    headers = {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "random-phone-number.p.rapidapi.com"
-    }
-    
+def test_virtual_number():
+    """Test the virtual number API"""
+    logger.info("Testing virtual number generation...")
     try:
-        response = requests.get(url, headers=headers, params=querystring)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Check if the response contains expected fields
-        if "phone" in data:
-            logger.info("✅ Phone API working!")
-            logger.info(f"Sample phone: {data['phone']}")
+        phone = APIIntegrations.generate_virtual_number()
+        if phone and phone.get("phone_number") and phone.get("verification_code"):
+            logger.info(f"✅ Successfully generated virtual number: {phone['phone_number']}")
             return True
         else:
-            logger.error("❌ Phone API response missing expected fields")
+            logger.error("❌ Generated phone data is incomplete")
             return False
     except Exception as e:
-        logger.error(f"❌ Phone API test failed: {str(e)}")
+        logger.error(f"❌ Error generating virtual number: {e}")
         return False
 
-
-async def test_discord_api():
-    """Test the Discord bot token"""
-    logger.info("Testing Discord API connection...")
-    
-    url = "https://discord.com/api/v10/users/@me"
-    
-    headers = {
-        "Authorization": f"Bot {DISCORD_BOT_TOKEN}"
-    }
-    
+def test_card_generation():
+    """Test the card generation API"""
+    logger.info("Testing card generation...")
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Check if the response contains expected fields
-        if "id" in data and "username" in data:
-            logger.info("✅ Discord API working!")
-            logger.info(f"Bot connected as: {data['username']}#{data.get('discriminator', '0000')}")
+        card = APIIntegrations.generate_card()
+        if card and card.get("card_number") and card.get("cvv"):
+            logger.info(f"✅ Successfully generated card: {card['card_type']} ending with {card['card_number'][-4:]}")
             return True
         else:
-            logger.error("❌ Discord API response missing expected fields")
+            logger.error("❌ Generated card data is incomplete")
             return False
     except Exception as e:
-        logger.error(f"❌ Discord API test failed: {str(e)}")
+        logger.error(f"❌ Error generating card: {e}")
         return False
 
-
-async def test_solana_address():
-    """Verify the Solana wallet address is valid"""
-    logger.info("Verifying Solana wallet address...")
-    
-    # Basic format check for Solana address (should be base58 encoded, ~44 chars)
-    if SOLANA_WALLET_ADDRESS and len(SOLANA_WALLET_ADDRESS) >= 43 and len(SOLANA_WALLET_ADDRESS) <= 45:
-        # This is a very basic check - for a real implementation we'd verify it's valid on-chain
-        logger.info("✅ Solana wallet address format is valid!")
-        logger.info(f"Using wallet address: {SOLANA_WALLET_ADDRESS}")
-        return True
-    else:
-        logger.error("❌ Solana wallet address format appears invalid")
-        logger.error(f"Address provided: {SOLANA_WALLET_ADDRESS}")
+def test_virtual_card():
+    """Test the virtual card API"""
+    logger.info("Testing virtual card generation...")
+    try:
+        card = APIIntegrations.generate_virtual_card(amount=1.00)
+        if card and card.get("card_number") and card.get("cvv"):
+            logger.info(f"✅ Successfully generated virtual card with ${card.get('amount', 0)} limit")
+            return True
+        else:
+            logger.error("❌ Generated virtual card data is incomplete")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Error generating virtual card: {e}")
         return False
 
+def test_email_generation():
+    """Test the email generation API"""
+    logger.info("Testing email generation...")
+    try:
+        email = APIIntegrations.generate_email()
+        if email and email.get("email") and email.get("password"):
+            logger.info(f"✅ Successfully generated email: {email['email']}")
+            return True
+        else:
+            logger.error("❌ Generated email data is incomplete")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Error generating email: {e}")
+        return False
 
-async def main():
-    """Run all API tests"""
-    logger.info("Starting API verification for Trial Junkie...")
+def test_complete_trial_data():
+    """Test the complete trial data generation"""
+    logger.info("Testing complete trial data generation...")
+    try:
+        data = APIIntegrations.generate_complete_trial_data("netflix")
+        if (data and data.get("user_info") and data.get("payment_info") and 
+            data["user_info"].get("email") and data["payment_info"].get("card_number")):
+            logger.info(f"✅ Successfully generated complete trial data for Netflix")
+            return True
+        else:
+            logger.error("❌ Generated trial data is incomplete")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Error generating complete trial data: {e}")
+        return False
+
+def run_all_tests():
+    """Run all API tests and output results"""
+    logger.info("🔍 STARTING API VERIFICATION")
+    logger.info("===========================")
     
-    # Track test results
     results = {
-        "identity_api": await test_identity_api(),
-        "card_api": await test_card_api(),
-        "phone_api": await test_phone_api(),
-        "discord_api": await test_discord_api(),
-        "solana_address": await test_solana_address()
+        "Identity Generation": test_identity_generation(),
+        "Virtual Number": test_virtual_number(),
+        "Card Generation": test_card_generation(),
+        "Virtual Card": test_virtual_card(),
+        "Email Generation": test_email_generation(),
+        "Complete Trial Data": test_complete_trial_data()
     }
     
-    # Summary
-    logger.info("\n--- API Verification Summary ---")
-    all_passed = True
-    for test, passed in results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        logger.info(f"{test}: {status}")
-        if not passed:
-            all_passed = False
+    logger.info("\n📊 TEST RESULTS SUMMARY")
+    logger.info("===========================")
+    success_count = 0
     
-    if all_passed:
-        logger.info("\n🎯 All API tests passed! Trial Junkie is ready for action.")
-        sys.exit(0)
+    for test_name, result in results.items():
+        status = "✅ PASSED" if result else "❌ FAILED"
+        if result:
+            success_count += 1
+        logger.info(f"{test_name}: {status}")
+    
+    success_percentage = (success_count / len(results)) * 100
+    logger.info(f"\nOverall Success Rate: {success_percentage:.1f}%")
+    
+    if success_percentage == 100:
+        logger.info("🎉 All API integrations are working correctly!")
+    elif success_percentage >= 50:
+        logger.info("⚠️ Some API integrations are working, but others need attention.")
     else:
-        logger.error("\n❌ Some API tests failed. Please check the logs above and fix the issues.")
-        sys.exit(1)
-
+        logger.info("❌ Most API integrations are not working correctly. Please check your API keys.")
+    
+    return results
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_all_tests()
