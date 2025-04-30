@@ -19,6 +19,7 @@ class WebUser(UserMixin, db.Model):
     discord_access_token = db.Column(db.String(256), nullable=True)
     discord_refresh_token = db.Column(db.String(256), nullable=True)
     discord_token_expires_at = db.Column(db.DateTime, nullable=True)
+    wallet_address = db.Column(db.String(256), nullable=True)  # Phantom wallet address
     referral_code = db.Column(db.String(20), unique=True, nullable=True)
     referred_by_id = db.Column(db.Integer, db.ForeignKey('web_user.id'), nullable=True)
     referral_count = db.Column(db.Integer, default=0)

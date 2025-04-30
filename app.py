@@ -61,6 +61,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Wallet session storage for Phantom Wallet integration
+wallet_sessions = {}
+
 # Import models (must be imported after db is initialized)
 from models import WebUser, Trial, Payment, Referral, Commission, UserTier
 
@@ -537,6 +540,105 @@ def verify_payment():
             })
     except Exception as e:
         logger.error(f"Error verifying payment: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Phantom Wallet API Endpoints
+@app.route('/api/wallet/connect', methods=['POST'])
+def connect_wallet():
+    """Connect a Phantom wallet"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.json
+        wallet_address = data.get('address')
+        
+        if not wallet_address:
+            return jsonify({'error': 'Wallet address is required'}), 400
+        
+        # Store wallet connection in session
+        user_id = session['user_id']
+        wallet_sessions[user_id] = {
+            'wallet_address': wallet_address,
+            'connected_at': time.time()
+        }
+        
+        # Update user record in database if we want to persist this
+        user = WebUser.query.get(user_id)
+        if user:
+            user.wallet_address = wallet_address
+            db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Wallet connected successfully',
+            'address': wallet_address
+        })
+    except Exception as e:
+        logger.error(f"Error connecting wallet: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/wallet/disconnect', methods=['POST'])
+def disconnect_wallet():
+    """Disconnect a Phantom wallet"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Remove wallet connection from session
+        if user_id in wallet_sessions:
+            del wallet_sessions[user_id]
+        
+        # Update user record in database if needed
+        user = WebUser.query.get(user_id)
+        if user and hasattr(user, 'wallet_address') and user.wallet_address:
+            user.wallet_address = None
+            db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Wallet disconnected successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error disconnecting wallet: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/wallet/status', methods=['GET'])
+def wallet_status():
+    """Get wallet connection status"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Check if wallet is connected in session
+        wallet_info = wallet_sessions.get(user_id)
+        
+        # If not in session, check database
+        if not wallet_info:
+            user = WebUser.query.get(user_id)
+            if user and hasattr(user, 'wallet_address') and user.wallet_address:
+                wallet_info = {
+                    'wallet_address': user.wallet_address,
+                    'connected_at': None  # We don't have this info from DB
+                }
+        
+        if wallet_info:
+            return jsonify({
+                'status': 'success',
+                'connected': True,
+                'address': wallet_info['wallet_address']
+            })
+        else:
+            return jsonify({
+                'status': 'success',
+                'connected': False
+            })
+    except Exception as e:
+        logger.error(f"Error getting wallet status: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
