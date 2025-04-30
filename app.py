@@ -16,17 +16,31 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from requests_oauthlib import OAuth2Session
+from sqlalchemy.orm import DeclarativeBase
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Load environment variables
 load_dotenv()
 
+# Define SQLAlchemy base class for models
+class Base(DeclarativeBase):
+    pass
+
+# Initialize database with the base class
+db = SQLAlchemy(model_class=Base)
+
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', static_url_path='')
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 app.secret_key = os.environ.get("SESSION_SECRET", os.urandom(24))
 
 # Configure SQLAlchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
 
 # Configure logging
 logging.basicConfig(
@@ -39,40 +53,16 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Initialize database
-db = SQLAlchemy(app)
+# Initialize the app with the extension
+db.init_app(app)
 
 # Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Define models
-class WebUser(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=True)  # Nullable for Discord login
-    discord_id = db.Column(db.String(64), unique=True, nullable=True)
-    discord_username = db.Column(db.String(80), nullable=True)
-    discord_discriminator = db.Column(db.String(10), nullable=True)
-    discord_avatar = db.Column(db.String(256), nullable=True)
-    discord_access_token = db.Column(db.String(256), nullable=True)
-    discord_refresh_token = db.Column(db.String(256), nullable=True)
-    discord_token_expires_at = db.Column(db.DateTime, nullable=True)
-    referral_code = db.Column(db.String(20), unique=True, nullable=True)
-    referred_by_id = db.Column(db.Integer, db.ForeignKey('web_user.id'), nullable=True)
-    referral_count = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
-    # Self-referential relationship for referrals
-    referred_by = db.relationship('WebUser', remote_side=[id], backref=db.backref('referrals', lazy='dynamic'))
-    
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-        
-    def check_password(self, password):
-        return self.password_hash and check_password_hash(self.password_hash, password)
+# Import models (must be imported after db is initialized)
+from models import WebUser, Trial, Payment, Referral, Commission, UserTier
 
 @login_manager.user_loader
 def load_user(user_id):

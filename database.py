@@ -22,8 +22,20 @@ class Database:
     
     def _get_connection(self):
         """Get a database connection"""
-        conn = psycopg2.connect(self.db_url)
-        return conn
+        try:
+            # First try with SSL mode require
+            conn = psycopg2.connect(self.db_url, sslmode='require')
+            return conn
+        except psycopg2.OperationalError:
+            # If that fails, try with SSL mode prefer
+            try:
+                conn = psycopg2.connect(self.db_url, sslmode='prefer')
+                return conn
+            except psycopg2.OperationalError:
+                # If that fails too, try with SSL mode disable
+                logger.info("Retrying database connection with sslmode=disable")
+                conn = psycopg2.connect(self.db_url, sslmode='disable')
+                return conn
     
     def _get_cursor(self, conn):
         """Get a database cursor that returns dictionaries"""
@@ -31,113 +43,124 @@ class Database:
     
     def _initialize_db(self):
         """Initialize the database with necessary tables"""
-        conn = self._get_connection()
-        cursor = self._get_cursor(conn)
-        
-        # Create users table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id TEXT PRIMARY KEY,
-            username TEXT,
-            created_at TEXT,
-            last_active TEXT,
-            tier TEXT DEFAULT 'free',
-            membership_expires TEXT
-        )
-        ''')
-        
-        # Create credentials table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS credentials (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT,
-            service TEXT,
-            credential_type TEXT,
-            credential_value TEXT,
-            created_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        # Create commands table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS commands (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT,
-            command TEXT,
-            parameters TEXT,
-            executed_at TEXT,
-            status TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        # Create payments table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT,
-            reference TEXT UNIQUE,
-            amount REAL,
-            service_type TEXT,
-            status TEXT DEFAULT 'pending',
-            tx_signature TEXT,
-            created_at TEXT,
-            completed_at TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        # Create usage_limits table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS usage_limits (
-            id SERIAL PRIMARY KEY,
-            user_id TEXT,
-            command TEXT,
-            date TEXT,
-            count INTEGER DEFAULT 0,
-            UNIQUE(user_id, command, date),
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        # Create referrals table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS referrals (
-            id SERIAL PRIMARY KEY,
-            referrer_id TEXT,
-            referred_id TEXT,
-            referral_code TEXT UNIQUE,
-            status TEXT DEFAULT 'pending',
-            created_at TEXT,
-            confirmed_at TEXT,
-            FOREIGN KEY (referrer_id) REFERENCES users (user_id),
-            FOREIGN KEY (referred_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        # Create commissions table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS commissions (
-            id SERIAL PRIMARY KEY,
-            referrer_id TEXT,
-            referred_id TEXT,
-            payment_id INTEGER,
-            amount REAL,
-            percentage REAL,
-            status TEXT DEFAULT 'pending',
-            created_at TEXT,
-            paid_at TEXT,
-            FOREIGN KEY (referrer_id) REFERENCES users (user_id),
-            FOREIGN KEY (referred_id) REFERENCES users (user_id),
-            FOREIGN KEY (payment_id) REFERENCES payments (id)
-        )
-        ''')
-        
-        conn.commit()
-        conn.close()
-        
-        logger.info("Database initialized successfully")
+        try:
+            conn = self._get_connection()
+            cursor = self._get_cursor(conn)
+            
+            # Create users table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id TEXT PRIMARY KEY,
+                username TEXT,
+                created_at TEXT,
+                last_active TEXT,
+                tier TEXT DEFAULT 'free',
+                membership_expires TEXT
+            )
+            ''')
+            
+            # Create credentials table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS credentials (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT,
+                service TEXT,
+                credential_type TEXT,
+                credential_value TEXT,
+                created_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+            ''')
+            
+            # Create commands table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS commands (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT,
+                command TEXT,
+                parameters TEXT,
+                executed_at TEXT,
+                status TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+            ''')
+            
+            # Create payments table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT,
+                reference TEXT UNIQUE,
+                amount REAL,
+                service_type TEXT,
+                status TEXT DEFAULT 'pending',
+                tx_signature TEXT,
+                created_at TEXT,
+                completed_at TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+            ''')
+            
+            # Create usage_limits table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS usage_limits (
+                id SERIAL PRIMARY KEY,
+                user_id TEXT,
+                command TEXT,
+                date TEXT,
+                count INTEGER DEFAULT 0,
+                UNIQUE(user_id, command, date),
+                FOREIGN KEY (user_id) REFERENCES users (user_id)
+            )
+            ''')
+            
+            # Create referrals table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS referrals (
+                id SERIAL PRIMARY KEY,
+                referrer_id TEXT,
+                referred_id TEXT,
+                referral_code TEXT UNIQUE,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT,
+                confirmed_at TEXT,
+                FOREIGN KEY (referrer_id) REFERENCES users (user_id),
+                FOREIGN KEY (referred_id) REFERENCES users (user_id)
+            )
+            ''')
+            
+            # Create commissions table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS commissions (
+                id SERIAL PRIMARY KEY,
+                referrer_id TEXT,
+                referred_id TEXT,
+                payment_id INTEGER,
+                amount REAL,
+                percentage REAL,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT,
+                paid_at TEXT,
+                FOREIGN KEY (referrer_id) REFERENCES users (user_id),
+                FOREIGN KEY (referred_id) REFERENCES users (user_id),
+                FOREIGN KEY (payment_id) REFERENCES payments (id)
+            )
+            ''')
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing database: {e}")
+            # Attempt to close connection if it exists
+            try:
+                if conn:
+                    conn.close()
+            except:
+                pass
+            # Re-raise the exception for higher-level handling
+            raise
 
     def user_exists(self, user_id):
         """Check if a user exists in the database"""
