@@ -1,4 +1,12 @@
 #!/bin/bash
-# Run the fixed standalone Discord bot implementation
-echo "Starting fixed Discord bot (no port conflicts or duplicate commands)..."
-python fixed_discord_bot.py
+# Improved runner for completely independent Discord bot
+
+echo "Starting fixed standalone Discord bot..."
+
+# Set essential environment variables
+export NO_FLASK=1
+export NO_WEB_APP=1
+export PYTHONUNBUFFERED=1
+
+# Run the fixed standalone bot runner
+python run_discord_bot_standalone_fixed.py
