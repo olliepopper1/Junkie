@@ -1,3 +1,4 @@
 #!/bin/bash
-echo "Starting Discord Bot (no port conflict)..."
-python discord_workflow.py
+# Shell script to run the Discord bot
+echo "Starting Discord Bot..."
+python pure_discord_bot.py
