@@ -157,28 +157,29 @@
     <!-- Wallet Connection Section -->
     <div class="row mb-5">
       <div class="col-12">
-        <div class="card border-0 bg-dark shadow">
+        <div class="card border-0 bg-dark shadow" id="wallet-section">
           <div class="card-header bg-dark border-0">
             <h2 class="h4 mb-0">Connect Your Wallet</h2>
           </div>
           <div class="card-body p-4">
             <div class="row align-items-center">
               <div class="col-md-3 text-center mb-4 mb-md-0">
-                <img src="/img/phantom-logo.png" alt="Phantom Wallet" class="img-fluid" style="max-width: 120px;">
+                <img src="/img/phantom-logo.svg" alt="Phantom Wallet" class="img-fluid" style="max-width: 120px;" id="phantom-logo">
               </div>
               <div class="col-md-6">
                 <h5 class="mb-3">Phantom Wallet Integration</h5>
                 <p>Connect your Phantom Wallet to access premium features, manage your subscription, and make secure payments.</p>
-                <div id="wallet-status" class="d-flex align-items-center mt-3">
-                  <span id="connection-indicator" class="badge bg-danger me-2">Disconnected</span>
+                <div class="d-flex align-items-center mt-3">
+                  <span id="wallet-status" class="badge bg-secondary me-2">Disconnected</span>
                   <span id="wallet-address" class="small text-muted">Not connected</span>
                 </div>
+                <div class="mt-2" id="wallet-balance"></div>
               </div>
               <div class="col-md-3 text-md-end mt-4 mt-md-0">
                 <button id="connect-wallet-btn" class="btn btn-primary">
                   <i class="bi bi-wallet2"></i> Connect Wallet
                 </button>
-                <button id="disconnect-wallet-btn" class="btn btn-outline-danger d-none">
+                <button id="disconnect-wallet-btn" class="btn btn-outline-danger" style="display: none;">
                   <i class="bi bi-box-arrow-right"></i> Disconnect
                 </button>
               </div>
