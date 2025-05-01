@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Plans - Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+  <script src="/js/phantom-wallet.js"></script>
+  <script src="/js/wallet-header.js"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    .navbar-brand, .display-3, .display-4, .display-5, h1, h2, h3 {
+      font-family: 'Audiowide', cursive;
+    }
+    .subscription-card {
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      height: 100%;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .subscription-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+    .subscription-header {
+      padding: 20px;
+      text-align: center;
+      color: white;
+    }
+    .subscription-price {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .subscription-period {
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+    .subscription-body {
+      padding: 20px;
+      background-color: #17181C;
+    }
+    .subscription-feature {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+    }
+    .subscription-feature i {
+      margin-right: 10px;
+      margin-top: 3px;
+    }
+    .subscription-cta {
+      padding: 20px;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    .trial-junkie-btn {
+      padding: 12px 25px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .trial-junkie-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    .trial-junkie-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .standard-plan {
+      background: linear-gradient(135deg, #1e88e5, #0d47a1);
+    }
+    .premium-plan {
+      background: linear-gradient(135deg, #8b5cf6, #4f46e5);
+    }
+    .dealers-plan {
+      background: linear-gradient(135deg, #ef4444, #9f1239);
+    }
+    .badge-pill {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      z-index: 10;
+      padding: 8px 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 20px;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+      transform: rotate(15deg);
+    }
+    .badge-popular {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+    }
+    .wallet-section {
+      background: linear-gradient(135deg, #1f2937, #111827);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .phantom-logo {
+      background-color: #534BB1;
+      padding: 15px;
+      border-radius: 15px;
+      display: inline-block;
+    }
+    .wallet-status {
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary-purple);
+      transition: width 0.3s ease, left 0.3s ease;
+    }
+    .nav-link:hover::before, .nav-link.active::before {
+      width: 100%;
+      left: 0;
+      box-shadow: 0 0 10px var(--primary-purple);
+    }
+    .savings-calculator {
+      background: linear-gradient(135deg, #0d9488, #065f46);
+      border-radius: 12px;
+      padding: 30px;
+      margin-top: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .savings-result {
+      font-size: 3rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+    .checkout-modal .modal-content {
+      background: linear-gradient(135deg, #1f2937, #111827);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .checkout-info {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .payment-step {
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left: 4px solid #8b5cf6;
+    }
+    .step-active {
+      background-color: rgba(139, 92, 246, 0.2);
+      border-left-color: #8b5cf6;
+    }
+    .step-completed {
+      background-color: rgba(16, 185, 129, 0.2);
+      border-left-color: #10b981;
+    }
+    .subscription-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .payment-success {
+      padding: 20px;
+      text-align: center;
+      background-color: rgba(16, 185, 129, 0.2);
+      border-radius: 10px;
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.svg" alt="Trial Junkie Logo" width="30" height="30" class="d-inline-block align-top me-2">
+        Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">My Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/agents">Meet Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/subscriptions">Subscriptions</a>
+          </li>
+        </ul>
+        <div class="d-flex align-items-center">
+          <div class="user-profile d-flex align-items-center">
+            <div id="wallet-icon" class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-gradient" style="width: 32px; height: 32px; display: none;">
+              <i class="bi bi-wallet2 text-white"></i>
+            </div>
+            <span id="wallet-username" class="me-3 d-none d-md-inline">Not connected</span>
+          </div>
+          <button id="nav-connect-wallet-btn" class="btn btn-primary btn-sm me-2">
+            <i class="bi bi-wallet2"></i> Connect Wallet
+          </button>
+          <button id="nav-disconnect-wallet-btn" class="btn btn-outline-light btn-sm" style="display: none;">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+    <div class="row mb-5">
+      <div class="col-12 text-center">
+        <h1 class="mb-3 drug-glow">Choose Your Subscription</h1>
+        <p class="lead mb-0">Get access to premium features and increased trial generation limits</p>
+      </div>
+    </div>
+
+    <!-- Wallet Connection Section -->
+    <div class="wallet-section mb-5">
+      <div class="row align-items-center">
+        <div class="col-md-2 text-center mb-3 mb-md-0">
+          <div class="phantom-logo">
+            <svg width="60" height="60" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M110.584 64.9142C109.841 61.4594 107.628 58.6464 104.593 57.0389C106.573 53.489 106.111 48.9485 103.476 45.883C100.842 42.8175 96.421 42.0369 92.9537 43.6444C91.3516 40.1897 88.2929 37.7041 84.5359 37.1187C80.779 36.5334 77.0221 38.2359 74.8492 41.3014C71.9986 38.6307 67.8126 37.8501 64.1859 39.4576C60.5592 41.0651 58.1782 44.716 58.0478 48.7533C54.4211 48.7533 51.0624 50.9438 49.4603 54.3986C47.8581 57.8533 48.6013 61.8983 51.193 64.5986C48.6013 67.2693 47.8581 71.314 49.4603 74.7687C51.0624 78.2235 54.4211 80.414 58.0478 80.414C58.0478 84.4516 60.4289 88.1025 64.0556 89.71C67.6822 91.3175 71.8683 90.5369 74.7189 87.8662C76.8919 90.9317 80.6488 92.6342 84.4057 92.0488C88.1626 91.4635 91.2214 88.9779 92.8235 85.5231C96.2908 87.1307 100.712 86.35 103.346 83.2845C105.981 80.219 106.443 75.6786 104.463 72.1287C107.498 70.5212 109.711 67.7082 110.454 64.2534C110.584 64.3486 110.584 64.819 110.584 64.9142Z" fill="white"/>
+              <path d="M48.6013 64.6239C48.6013 70.5586 51.3236 76.0509 55.9412 79.5056C61.0414 83.4555 67.9329 83.9457 73.5535 81.0375C73.8141 80.9423 74.3356 80.6472 74.5962 80.5521C75.8972 79.8666 77.0677 79.0859 78.1079 78.1101C78.3685 77.9198 78.6291 77.6247 78.8897 77.4344C79.5416 76.8491 80.1935 76.2637 80.7151 75.5782C80.7151 75.3879 80.9757 75.0928 80.9757 74.9025C81.9972 73.2473 82.6747 71.4324 83.0922 69.4829C83.5225 67.1927 83.3744 64.7887 82.7352 62.59H83.2221C86.0551 62.59 88.1831 60.4646 88.1831 57.8264C88.1831 55.1881 86.0551 53.0628 83.4094 53.0628H78.0339C78.0339 53.0628 78.0339 53.0628 78.0339 52.9676C77.2907 50.9229 76.5476 49.068 72.9765 46.9797C69.4055 44.8914 68.1402 43.4744 66.2193 40.9889C66.2193 40.9889 63.1605 45.1647 67.7781 48.5243C67.1318 48.5243 63.1734 48.5243 59.9851 51.6661C56.797 54.8079 56.5364 58.2627 56.5364 58.2627C56.5364 58.2627 53.2284 59.3814 51.0624 62.3997C48.8965 65.418 48.6013 64.6239 48.6013 64.6239Z" fill="#534BB1"/>
+            </svg>
+          </div>
+        </div>
+        <div class="col-md-7">
+          <h4 class="mb-3">Connect Your Phantom Wallet</h4>
+          <p class="mb-3">Select a subscription below and pay with Solana (SOL) using your Phantom wallet.</p>
+          <div class="d-flex align-items-center">
+            <div class="wallet-status me-3">
+              <span id="wallet-status-text" class="badge bg-secondary">Not Connected</span>
+              <span id="wallet-address" class="ms-2 small text-muted font-monospace"></span>
+            </div>
+            <div id="wallet-balance" class="small text-muted"></div>
+          </div>
+        </div>
+        <div class="col-md-3 text-md-end mt-3 mt-md-0">
+          <button id="connect-wallet-btn" class="btn btn-primary">
+            <i class="bi bi-wallet2"></i> Connect Wallet
+          </button>
+          <button id="disconnect-wallet-btn" class="btn btn-outline-danger" style="display: none;">
+            <i class="bi bi-box-arrow-right"></i> Disconnect
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscription Plans -->
+    <div class="row">
+      <!-- Standard Plan -->
+      <div class="col-md-4 mb-4">
+        <div class="subscription-card">
+          <div class="subscription-header standard-plan">
+            <span class="subscription-badge bg-light text-dark">STANDARD</span>
+            <div class="subscription-price">$9.99</div>
+            <div class="subscription-period">per month</div>
+          </div>
+          <div class="subscription-body">
+            <h4 class="mb-3">Standard Access</h4>
+            <p class="mb-4">Perfect for casual users who need reliable trial generation without limitations.</p>
+            
+            <h5 class="mb-3">Features</h5>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-info"></i>
+              <div>10 trial generations per day</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-info"></i>
+              <div>Access to all basic trial services</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-info"></i>
+              <div>Identity generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-info"></i>
+              <div>Card generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-info"></i>
+              <div>Email verification</div>
+            </div>
+            <div class="subscription-feature text-muted">
+              <i class="bi bi-x-circle-fill"></i>
+              <div>Premium trial sites</div>
+            </div>
+            <div class="subscription-feature text-muted">
+              <i class="bi bi-x-circle-fill"></i>
+              <div>Phone verification</div>
+            </div>
+          </div>
+          <div class="subscription-cta">
+            <button class="btn btn-primary trial-junkie-btn subscribe-btn" data-plan="standard" data-price="9.99" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+              Subscribe Now
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Premium Plan -->
+      <div class="col-md-4 mb-4">
+        <div class="subscription-card">
+          <span class="badge-pill badge-popular">MOST POPULAR</span>
+          <div class="subscription-header premium-plan">
+            <span class="subscription-badge bg-light text-dark">PREMIUM</span>
+            <div class="subscription-price">$19.99</div>
+            <div class="subscription-period">per month</div>
+          </div>
+          <div class="subscription-body">
+            <h4 class="mb-3">Premium Access</h4>
+            <p class="mb-4">Our most popular option with enhanced features and higher generation limits.</p>
+            
+            <h5 class="mb-3">Features</h5>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>25 trial generations per day</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>Access to all basic & premium trial services</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>Identity generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>Card generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>Email verification</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-primary"></i>
+              <div>Premium trial sites</div>
+            </div>
+            <div class="subscription-feature text-muted">
+              <i class="bi bi-x-circle-fill"></i>
+              <div>Phone verification</div>
+            </div>
+          </div>
+          <div class="subscription-cta">
+            <button class="btn btn-primary trial-junkie-btn subscribe-btn" data-plan="premium" data-price="19.99" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+              Subscribe Now
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dealer's Choice Plan -->
+      <div class="col-md-4 mb-4">
+        <div class="subscription-card">
+          <div class="subscription-header dealers-plan">
+            <span class="subscription-badge bg-light text-dark">DEALER'S CHOICE</span>
+            <div class="subscription-price">$29.99</div>
+            <div class="subscription-period">per month</div>
+          </div>
+          <div class="subscription-body">
+            <h4 class="mb-3">Ultimate Access</h4>
+            <p class="mb-4">The ultimate package for power users who need unlimited access to all features.</p>
+            
+            <h5 class="mb-3">Features</h5>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>50 trial generations per day</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Access to ALL trial services</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Identity generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Card generation</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Email verification</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Premium trial sites</div>
+            </div>
+            <div class="subscription-feature">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <div>Phone verification</div>
+            </div>
+          </div>
+          <div class="subscription-cta">
+            <button class="btn btn-danger trial-junkie-btn subscribe-btn" data-plan="dealers_choice" data-price="29.99" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+              Subscribe Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Savings Calculator -->
+    <div class="savings-calculator">
+      <div class="row align-items-center">
+        <div class="col-md-7">
+          <h2 class="mb-4">Calculate Your Savings</h2>
+          <p class="mb-4">See how much you can save by using Trial Junkie compared to paying for subscriptions directly.</p>
+          
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="service-count" class="form-label">Number of Services</label>
+                <input type="number" class="form-control" id="service-count" min="1" max="20" value="5">
+                <div class="form-text">How many subscription services do you use?</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="avg-price" class="form-label">Average Monthly Cost ($)</label>
+                <input type="number" class="form-control" id="avg-price" min="1" max="100" value="12">
+                <div class="form-text">Average monthly cost per service</div>
+              </div>
+            </div>
+          </div>
+          
+          <button id="calculate-btn" class="btn btn-light px-4 py-2">Calculate My Savings</button>
+        </div>
+        <div class="col-md-5 text-center">
+          <div>
+            <h3>Annual Savings</h3>
+            <div class="savings-result mt-3" id="savings-result">$0</div>
+            <div class="mt-2" id="savings-percent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content checkout-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="checkoutModalLabel">Complete Your Subscription</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="checkout-info">
+            <div class="row">
+              <div class="col-6">
+                <div class="mb-2">Plan:</div>
+                <h5 id="checkout-plan">Premium</h5>
+              </div>
+              <div class="col-6 text-end">
+                <div class="mb-2">Price:</div>
+                <h5 id="checkout-price">$19.99</h5>
+              </div>
+            </div>
+          </div>
+          
+          <div id="payment-step-1" class="payment-step step-active">
+            <h5 class="mb-3"><i class="bi bi-1-circle-fill me-2"></i> Connect Your Wallet</h5>
+            <p class="mb-0 small">First, connect your Phantom wallet to proceed with payment.</p>
+            
+            <div id="wallet-not-connected" class="mt-3">
+              <button id="modal-connect-wallet-btn" class="btn btn-primary btn-sm">
+                <i class="bi bi-wallet2"></i> Connect Wallet
+              </button>
+            </div>
+            
+            <div id="wallet-is-connected" class="mt-3" style="display: none;">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-success me-2">Connected</span>
+                <span id="modal-wallet-address" class="small font-monospace"></span>
+              </div>
+              <div id="modal-wallet-balance" class="small text-muted mt-1"></div>
+            </div>
+          </div>
+          
+          <div id="payment-step-2" class="payment-step">
+            <h5 class="mb-3"><i class="bi bi-2-circle me-2"></i> Confirm Payment</h5>
+            <p class="mb-0 small">Review your subscription details and confirm the payment.</p>
+            
+            <div class="mt-3">
+              <button id="confirm-payment-btn" class="btn btn-primary btn-sm" disabled>
+                <i class="bi bi-credit-card"></i> Pay with Phantom
+              </button>
+              <div class="small text-muted mt-2">You'll be prompted to approve the transaction in your Phantom wallet.</div>
+            </div>
+          </div>
+          
+          <div id="payment-success" class="payment-success">
+            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+            <h4 class="mt-3">Payment Successful!</h4>
+            <p>Your subscription has been activated.</p>
+            <a href="/dashboard" class="btn btn-success mt-2">Go to Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-5 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h3 class="h5">Trial Junkie</h3>
+          <p>Get your digital fix with premium service trials</p>
+          <div class="social-icons mt-3">
+            <a href="https://solana.com" class="me-3" target="_blank">
+              <i class="bi bi-wallet2 fs-3 text-white social-icon solana-icon"></i>
+            </a>
+            <a href="https://discord.gg/trialjunkie" class="me-3" target="_blank">
+              <i class="bi bi-discord fs-3 text-white social-icon discord-icon"></i>
+            </a>
+            <a href="https://t.me/trialjunkie" class="me-3" target="_blank">
+              <i class="bi bi-telegram fs-3 text-white social-icon telegram-icon"></i>
+            </a>
+            <a href="https://trialjunkie.gitbook.io/docs" class="me-3" target="_blank">
+              <i class="bi bi-book fs-3 text-white social-icon gitbook-icon"></i>
+            </a>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h3 class="h5">Navigation</h3>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white footer-link"><i class="bi bi-house-door me-2"></i>Home</a></li>
+            <li><a href="/dashboard" class="text-white footer-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a href="/trials" class="text-white footer-link"><i class="bi bi-collection me-2"></i>My Trials</a></li>
+            <li><a href="/referrals" class="text-white footer-link"><i class="bi bi-people me-2"></i>Referrals</a></li>
+            <li><a href="/subscriptions" class="text-white footer-link"><i class="bi bi-credit-card me-2"></i>Subscriptions</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h3 class="h5">Resources</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white footer-link"><i class="bi bi-discord me-2"></i>Join Discord</a></li>
+            <li><a href="https://trialjunkie.gitbook.io/docs" class="text-white footer-link"><i class="bi bi-book me-2"></i>Documentation</a></li>
+            <li><a href="https://t.me/trialjunkie" class="text-white footer-link"><i class="bi bi-telegram me-2"></i>Telegram Group</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white footer-link"><i class="bi bi-envelope me-2"></i>Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4 footer-divider">
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents <span class="drug-glow">24/7/365</span></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .footer-link {
+      display: inline-block;
+      margin-bottom: 8px;
+      transition: transform 0.3s ease, color 0.3s ease;
+      opacity: 0.8;
+    }
+    
+    .footer-link:hover {
+      transform: translateX(5px);
+      color: var(--primary-purple) !important;
+      opacity: 1;
+    }
+    
+    .footer-divider {
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 10px rgba(111, 66, 193, 0.3);
+    }
+    
+    .social-icon {
+      transition: all 0.3s ease;
+      opacity: 0.8;
+    }
+    
+    .social-icon:hover {
+      transform: translateY(-5px);
+      opacity: 1;
+    }
+    
+    .solana-icon:hover {
+      color: #534BB1 !important;
+      text-shadow: 0 0 10px #534BB1;
+    }
+    
+    .discord-icon:hover {
+      color: #5865F2 !important;
+      text-shadow: 0 0 10px #5865F2;
+    }
+    
+    .telegram-icon:hover {
+      color: #0088cc !important;
+      text-shadow: 0 0 10px #0088cc;
+    }
+    
+    .gitbook-icon:hover {
+      color: #3884FF !important;
+      text-shadow: 0 0 10px #3884FF;
+    }
+    
+    .twitter-icon:hover {
+      color: #1DA1F2 !important;
+      text-shadow: 0 0 10px #1DA1F2;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Solana Web3 -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <!-- Phantom Wallet Integration -->
+  <script src="/js/phantom-wallet.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wallet elements
+      const connectWalletBtn = document.getElementById('connect-wallet-btn');
+      const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+      const walletStatusText = document.getElementById('wallet-status-text');
+      const walletAddress = document.getElementById('wallet-address');
+      const walletBalance = document.getElementById('wallet-balance');
+      
+      // Modal wallet elements
+      const modalConnectBtn = document.getElementById('modal-connect-wallet-btn');
+      const walletNotConnected = document.getElementById('wallet-not-connected');
+      const walletIsConnected = document.getElementById('wallet-is-connected');
+      const modalWalletAddress = document.getElementById('modal-wallet-address');
+      const modalWalletBalance = document.getElementById('modal-wallet-balance');
+      const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+      
+      // Payment steps
+      const paymentStep1 = document.getElementById('payment-step-1');
+      const paymentStep2 = document.getElementById('payment-step-2');
+      const paymentSuccess = document.getElementById('payment-success');
+      
+      // Checkout elements
+      const checkoutPlan = document.getElementById('checkout-plan');
+      const checkoutPrice = document.getElementById('checkout-price');
+      
+      // Subscription buttons
+      const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+      
+      // Nav wallet elements
+      const navConnectBtn = document.getElementById('nav-connect-wallet-btn');
+      const navDisconnectBtn = document.getElementById('nav-disconnect-wallet-btn');
+      const walletIcon = document.getElementById('wallet-icon');
+      const walletUsername = document.getElementById('wallet-username');
+      
+      // Savings calculator
+      const calculateBtn = document.getElementById('calculate-btn');
+      const serviceCount = document.getElementById('service-count');
+      const avgPrice = document.getElementById('avg-price');
+      const savingsResult = document.getElementById('savings-result');
+      const savingsPercent = document.getElementById('savings-percent');
+      
+      let selectedPlan = '';
+      let selectedPrice = 0;
+      
+      // Connect wallet button event
+      connectWalletBtn.addEventListener('click', async () => {
+        await connectPhantomWallet();
+      });
+      
+      modalConnectBtn.addEventListener('click', async () => {
+        await connectPhantomWallet();
+      });
+      
+      navConnectBtn.addEventListener('click', async () => {
+        await connectPhantomWallet();
+      });
+      
+      // Disconnect wallet button event
+      disconnectWalletBtn.addEventListener('click', async () => {
+        await disconnectPhantomWallet();
+      });
+      
+      navDisconnectBtn.addEventListener('click', async () => {
+        await disconnectPhantomWallet();
+      });
+      
+      // Connect to Phantom wallet
+      async function connectPhantomWallet() {
+        try {
+          if (!window.phantomWallet) {
+            console.error('Phantom wallet integration not available');
+            alert('Phantom wallet not available. Please make sure you have the Phantom browser extension installed.');
+            return;
+          }
+          
+          const result = await window.phantomWallet.connect();
+          
+          if (result.success) {
+            updateUIForConnectedWallet(result.address, result.balance);
+            
+            // Also register the connection with the backend
+            await fetch('/api/wallet/connect', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                wallet_address: result.address
+              })
+            });
+          } else {
+            console.error('Failed to connect wallet:', result.message);
+          }
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
+        }
+      }
+      
+      // Disconnect from Phantom wallet
+      async function disconnectPhantomWallet() {
+        try {
+          if (!window.phantomWallet) {
+            console.error('Phantom wallet integration not available');
+            return;
+          }
+          
+          const result = await window.phantomWallet.disconnect();
+          updateUIForDisconnectedWallet();
+          
+          // Also register the disconnection with the backend
+          await fetch('/api/wallet/disconnect', {
+            method: 'POST'
+          });
+        } catch (error) {
+          console.error('Error disconnecting wallet:', error);
+        }
+      }
+      
+      // Update UI when wallet is connected
+      function updateUIForConnectedWallet(address, balance = null) {
+        // Update main wallet UI
+        walletStatusText.textContent = 'Connected';
+        walletStatusText.classList.remove('bg-secondary');
+        walletStatusText.classList.add('bg-success');
+        walletAddress.textContent = window.phantomWallet.shortenAddress(address);
+        
+        if (balance !== null) {
+          walletBalance.textContent = `Balance: ${balance.toFixed(4)} SOL`;
+        }
+        
+        connectWalletBtn.style.display = 'none';
+        disconnectWalletBtn.style.display = 'inline-block';
+        
+        // Update modal wallet UI
+        walletNotConnected.style.display = 'none';
+        walletIsConnected.style.display = 'block';
+        modalWalletAddress.textContent = window.phantomWallet.shortenAddress(address);
+        
+        if (balance !== null) {
+          modalWalletBalance.textContent = `Balance: ${balance.toFixed(4)} SOL`;
+        }
+        
+        // Update payment steps
+        paymentStep1.classList.remove('step-active');
+        paymentStep1.classList.add('step-completed');
+        paymentStep2.classList.add('step-active');
+        confirmPaymentBtn.disabled = false;
+        
+        // Update nav wallet UI
+        navConnectBtn.style.display = 'none';
+        navDisconnectBtn.style.display = 'block';
+        walletIcon.style.display = 'flex';
+        walletIcon.style.background = 'linear-gradient(135deg, #534BB1, #8b5cf6)';
+        walletUsername.textContent = window.phantomWallet.shortenAddress(address);
+      }
+      
+      // Update UI when wallet is disconnected
+      function updateUIForDisconnectedWallet() {
+        // Update main wallet UI
+        walletStatusText.textContent = 'Not Connected';
+        walletStatusText.classList.remove('bg-success');
+        walletStatusText.classList.add('bg-secondary');
+        walletAddress.textContent = '';
+        walletBalance.textContent = '';
+        
+        connectWalletBtn.style.display = 'inline-block';
+        disconnectWalletBtn.style.display = 'none';
+        
+        // Update modal wallet UI
+        walletNotConnected.style.display = 'block';
+        walletIsConnected.style.display = 'none';
+        modalWalletAddress.textContent = '';
+        modalWalletBalance.textContent = '';
+        
+        // Update payment steps
+        paymentStep1.classList.add('step-active');
+        paymentStep1.classList.remove('step-completed');
+        paymentStep2.classList.remove('step-active');
+        confirmPaymentBtn.disabled = true;
+        
+        // Update nav wallet UI
+        navConnectBtn.style.display = 'block';
+        navDisconnectBtn.style.display = 'none';
+        walletIcon.style.display = 'none';
+        walletUsername.textContent = 'Not connected';
+      }
+      
+      // Set up subscription buttons
+      subscribeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          selectedPlan = button.getAttribute('data-plan');
+          selectedPrice = parseFloat(button.getAttribute('data-price'));
+          
+          let planName = selectedPlan;
+          if (selectedPlan === 'standard') planName = 'Standard Plan';
+          else if (selectedPlan === 'premium') planName = 'Premium Plan';
+          else if (selectedPlan === 'dealers_choice') planName = "Dealer's Choice Plan";
+          
+          checkoutPlan.textContent = planName;
+          checkoutPrice.textContent = `$${selectedPrice.toFixed(2)}`;
+          
+          // Reset payment steps
+          if (paymentSuccess) {
+            paymentSuccess.style.display = 'none';
+          }
+          paymentStep2.classList.remove('step-completed');
+          
+          // Check wallet connection
+          checkWalletConnection();
+        });
+      });
+      
+      // Confirm payment button event
+      confirmPaymentBtn.addEventListener('click', async () => {
+        try {
+          const loadingElement = document.createElement('span');
+          loadingElement.className = 'spinner-border spinner-border-sm ms-2';
+          loadingElement.setAttribute('role', 'status');
+          loadingElement.setAttribute('aria-hidden', 'true');
+          confirmPaymentBtn.appendChild(loadingElement);
+          confirmPaymentBtn.disabled = true;
+          
+          // First, create a payment request in our system
+          const paymentResponse = await fetch('/api/create-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              plan_id: selectedPlan,
+              amount: selectedPrice
+            })
+          });
+          
+          const paymentData = await paymentResponse.json();
+          
+          if (!paymentData.success) {
+            throw new Error(paymentData.message || 'Failed to create payment request');
+          }
+          
+          // Now send the transaction using Phantom wallet
+          const recipientAddress = paymentData.recipient_address;
+          const solAmount = paymentData.sol_amount;
+          const paymentReference = paymentData.reference;
+          
+          if (!window.phantomWallet) {
+            throw new Error('Phantom wallet integration not available');
+          }
+          
+          const transactionResult = await window.phantomWallet.sendTransaction(
+            recipientAddress,
+            solAmount
+          );
+          
+          if (!transactionResult.success) {
+            throw new Error(transactionResult.message || 'Transaction failed');
+          }
+          
+          // Verify the payment with our backend
+          const verificationResponse = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              reference: paymentReference,
+              signature: transactionResult.signature
+            })
+          });
+          
+          const verificationData = await verificationResponse.json();
+          
+          if (!verificationData.success) {
+            throw new Error(verificationData.message || 'Payment verification failed');
+          }
+          
+          // Update UI for successful payment
+          paymentStep2.classList.remove('step-active');
+          paymentStep2.classList.add('step-completed');
+          
+          if (paymentSuccess) {
+            paymentSuccess.style.display = 'block';
+          }
+          
+          // Remove loading spinner
+          confirmPaymentBtn.removeChild(loadingElement);
+          confirmPaymentBtn.disabled = true;
+          
+        } catch (error) {
+          console.error('Error processing payment:', error);
+          alert('Payment Error: ' + (error.message || 'There was an error processing your payment. Please try again.'));
+          
+          // Remove loading spinner if it exists
+          const loadingElement = confirmPaymentBtn.querySelector('.spinner-border');
+          if (loadingElement) {
+            confirmPaymentBtn.removeChild(loadingElement);
+          }
+          
+          confirmPaymentBtn.disabled = false;
+        }
+      });
+      
+      // Check wallet connection on page load
+      async function checkWalletConnection() {
+        try {
+          const response = await fetch('/api/wallet/status');
+          const data = await response.json();
+          
+          if (data.connected) {
+            updateUIForConnectedWallet(data.address, data.balance);
+          } else {
+            // If backend says not connected, let's also check with the wallet directly
+            if (window.phantomWallet) {
+              const phantomStatus = await window.phantomWallet.checkConnection();
+              if (phantomStatus.connected) {
+                updateUIForConnectedWallet(phantomStatus.address);
+              } else {
+                updateUIForDisconnectedWallet();
+              }
+            } else {
+              updateUIForDisconnectedWallet();
+            }
+          }
+        } catch (error) {
+          console.error('Error checking wallet status:', error);
+          updateUIForDisconnectedWallet();
+        }
+      }
+      
+      // Calculate savings
+      calculateBtn.addEventListener('click', () => {
+        const services = parseInt(serviceCount.value) || 0;
+        const price = parseFloat(avgPrice.value) || 0;
+        
+        // Calculate annual cost of direct subscriptions
+        const annualCost = services * price * 12;
+        
+        // Calculate annual cost with Trial Junkie (just our premium subscription)
+        const trialJunkieCost = 19.99 * 12;
+        
+        // Calculate savings
+        const savings = annualCost - trialJunkieCost;
+        const savingsPercentValue = (savings / annualCost) * 100;
+        
+        // Update UI
+        savingsResult.textContent = `$${savings.toFixed(2)}`;
+        savingsPercent.textContent = `That's a ${savingsPercentValue.toFixed(0)}% savings!`;
+      });
+      
+      // Initialize
+      checkWalletConnection();
+    });
+  </script>
+</body>
+</html>

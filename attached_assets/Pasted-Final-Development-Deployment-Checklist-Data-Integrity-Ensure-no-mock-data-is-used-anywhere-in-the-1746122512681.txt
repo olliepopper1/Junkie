@@ -1,0 +1,65 @@
+Final Development & Deployment Checklist
+Data Integrity
+
+Ensure no mock data is used anywhere in the application.
+
+All data sources should be connected to live production endpoints or databases.
+
+Authentication & Wallet Integration
+
+Fix the logout issue currently showing "internal account error."
+
+Replace Discord login with Phantom Wallet authentication (Solana).
+
+Store and configure your Solana wallet address in the app's secure environment (e.g., account secrets) for payment collection.
+
+Update the account page to show wallet-related settings and connection status.
+
+Referral Page
+
+Fully update and test the referral/refer-a-friend page for accuracy, functionality, and updated branding if needed.
+
+Payment System
+
+Implement and test the complete Solana payment flow, including:
+
+Subscription initiation and confirmation
+
+Wallet-based transactions
+
+Trial activation after successful payment
+
+Subscription expiration logic (after 30 days)
+
+Notification/reminder system for renewals
+
+Ensure your wallet is set as the payment recipient and verify funds transfer during testing.
+
+Dashboard & Trial Management
+
+Ensure users can view, generate, and delete trials within their dashboard.
+
+Confirm trial generation logic works end-to-end and only functions with an active subscription.
+
+API & Bot Commands Testing
+
+Fully test all API endpoints for correctness, security, and expected behavior.
+
+Write and run unit and integration tests for all bot commands.
+
+Ensure the bot logic reflects the current subscription system and only allows access for verified users.
+
+Documentation
+
+Update all project documentation and the README file to reflect final architecture, setup instructions, and usage.
+
+Include instructions for connecting wallets, managing subscriptions, and using bot/web features.
+
+Code Explanation & QA
+
+Ensure the entire codebase is commented and clearly structured for maintainability.
+
+Write a short explanation for each module, especially payment, wallet integration, and trial generation.
+
+Conduct a final QA pass to confirm everything functions correctly in staging and production environments.
+

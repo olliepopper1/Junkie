@@ -32,7 +32,7 @@ db = SQLAlchemy(model_class=Base)
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', static_url_path='')
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
-app.secret_key = os.environ.get("SESSION_SECRET")
+app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key_replace_in_production")
 
 # Configure SQLAlchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -129,6 +129,11 @@ def referral_landing(referral_code):
 @app.route('/roadmap')
 def roadmap():
     return send_from_directory('static', 'roadmap.html')
+
+@app.route('/subscriptions')
+def subscriptions():
+    """Show the subscriptions page"""
+    return send_from_directory('static', 'subscriptions.html')
 
 @app.route('/trials')
 def trials():
