@@ -35,38 +35,53 @@ API_CONFIG = {
     "personator": {
         "key": PERSONATOR_API_KEY,
         "host": "personator.melissadata.net",
-        "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify"
+        "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify",
+        "auth_type": "bearer",
+        "content_type": "application/json"
     },
     "virtual_number": {
         "key": VIRTUAL_NUMBER_API_KEY,
+        "secret": os.getenv('VIRTUAL_NUMBER_API_SECRET', ''),
         "host": "api.nexmo.com",
-        "endpoint": "https://api.nexmo.com/verify/json"
+        "endpoint": "https://api.nexmo.com/verify/json",
+        "auth_type": "form",
+        "content_type": "application/x-www-form-urlencoded"
     },
     "virtual_number_backup": {
         "key": VIRTUAL_NUMBER_API_KEY,
         "host": "apilayer.net",
-        "endpoint": "https://apilayer.net/api/validate"
+        "endpoint": "https://apilayer.net/api/validate",
+        "auth_type": "query",
+        "content_type": "application/json"
     },
     "fake_card": {
         # Using Stripe test cards API
         "key": FAKE_CARD_API_KEY,
         "host": "api.stripe.com",
-        "endpoint": "https://api.stripe.com/v1/test_helpers/test_cards"
+        "endpoint": "https://api.stripe.com/v1/charges",
+        "auth_type": "bearer",
+        "content_type": "application/x-www-form-urlencoded"
     },
     "virtual_card": {
         "key": VIRTUAL_CARD_API_KEY,
         "host": "api.stripe.com",
-        "endpoint": "https://api.stripe.com/v1/issuing/cards"
+        "endpoint": "https://api.stripe.com/v1/issuing/cards",
+        "auth_type": "bearer",
+        "content_type": "application/x-www-form-urlencoded"
     },
     "temp_email": {
         "key": TEMP_EMAIL_API_KEY,
         "host": "api.temp-mail.io",
-        "endpoint": "https://api.temp-mail.io/request"
+        "endpoint": "https://api.temp-mail.io/request/mail/id",
+        "auth_type": "bearer",
+        "content_type": "application/json"
     },
     "temp_mail_backup": {
         "key": TEMP_MAIL_BACKUP_API_KEY,
         "host": "api.mail.tm",
-        "endpoint": "https://api.mail.tm/accounts"
+        "endpoint": "https://api.mail.tm/emails",
+        "auth_type": "bearer",
+        "content_type": "application/json"
     }
 }
 
@@ -80,47 +95,57 @@ class APIIntegrations:
         if api_name not in API_CONFIG:
             raise ValueError(f"Unknown API: {api_name}")
         
+        api_config = API_CONFIG[api_name]
+        
+        # Set content type from configuration
+        content_type = api_config.get("content_type", "application/json")
+        
         # Base headers that most APIs use
         headers = {
-            'Content-Type': 'application/json',
+            'Content-Type': content_type,
         }
         
-        # Add API-specific headers
-        if api_name == "personator":
-            # Melissa Personator API uses a different auth method
+        # Add API-specific headers based on auth_type
+        auth_type = api_config.get("auth_type", "api_key")
+        
+        if auth_type == "bearer":
+            # Bearer token authentication (e.g., Stripe, Personator)
             headers.update({
-                'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
+                'Authorization': f'Bearer {api_config["key"]}',
             })
-        elif api_name == "virtual_number" or api_name == "virtual_number_backup":
-            # Vonage/NumVerify APIs use different auth
-            headers.update({
-                'api-key': API_CONFIG[api_name]["key"],
-            })
-        elif api_name.startswith("fake_card") or api_name.startswith("virtual_card"):
-            # Stripe API uses bearer auth
-            headers.update({
-                'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
-                'Stripe-Version': '2023-10-16',  # Use current Stripe API version
-            })
-        elif api_name.startswith("temp_email") or api_name.startswith("temp_mail_backup"):
-            # Temp Mail APIs
-            if "temp_mail_backup" in api_name:
-                # Mail.tm uses different auth
+            # Add Stripe-specific version for Stripe APIs
+            if "stripe.com" in api_config["host"]:
                 headers.update({
-                    'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
+                    'Stripe-Version': '2023-10-16',  # Use current Stripe API version
+                })
+        elif auth_type == "form":
+            # Form-based authentication (e.g., Vonage)
+            # Note: For form-based auth, we'll include the credentials in the payload
+            # rather than in headers, so we don't add anything here
+            pass
+        elif auth_type == "query":
+            # Query parameter-based authentication (e.g., NumVerify)
+            # Note: For query-based auth, we'll include the credentials in the URL
+            # query parameters, so we don't add anything here
+            pass
+        elif auth_type == "api_key":
+            if api_name == "temp_email":
+                # Temp Mail uses X-API-Key
+                headers.update({
+                    'X-API-Key': api_config["key"],
+                })
+            elif api_name == "temp_mail_backup":
+                # Mail.tm uses Bearer auth
+                headers.update({
+                    'Authorization': f'Bearer {api_config["key"]}',
                 })
             else:
-                # Standard API key header
+                # Default to RapidAPI style headers
                 headers.update({
-                    'X-API-Key': API_CONFIG[api_name]["key"],
+                    'X-RapidAPI-Key': api_config["key"],
+                    'X-RapidAPI-Host': api_config["host"],
                 })
-        else:
-            # Default to RapidAPI style headers for backward compatibility
-            headers.update({
-                'X-RapidAPI-Key': API_CONFIG[api_name]["key"],
-                'X-RapidAPI-Host': API_CONFIG[api_name]["host"],
-            })
-            
+        
         return headers
     
     @staticmethod
@@ -148,6 +173,8 @@ class APIIntegrations:
                 }
             }
             
+            # Initialize response variable to avoid 'possibly unbound'
+            response = None
             try:
                 response = requests.post(url, headers=headers, json=payload, timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
@@ -174,7 +201,8 @@ class APIIntegrations:
             except ValueError as e:
                 # JSON parsing error
                 logger.error(f"Error parsing Personator API response: {e}")
-                logger.error(f"Response content: {response.text[:200]}...")
+                if response is not None:
+                    logger.error(f"Response content: {response.text[:200]}...")
                 raise
                 
         except requests.Timeout:

@@ -3,8 +3,8 @@
     "current": {
       "status": "down",
       "response_code": 405,
-      "response_time": 130.25,
-      "timestamp": "2025-05-01T19:51:53.890158",
+      "response_time": 101.1,
+      "timestamp": "2025-05-01T20:00:02.618349",
       "error": "API returned status code 405"
     },
     "history": [
@@ -21,6 +21,13 @@
         "response_time": 130.25,
         "timestamp": "2025-05-01T19:51:53.890158",
         "error": "API returned status code 405"
+      },
+      {
+        "status": "down",
+        "response_code": 405,
+        "response_time": 101.1,
+        "timestamp": "2025-05-01T20:00:02.618349",
+        "error": "API returned status code 405"
       }
     ]
   },
@@ -28,8 +35,8 @@
     "current": {
       "status": "up",
       "response_code": 200,
-      "response_time": 53.91,
-      "timestamp": "2025-05-01T19:51:53.945268"
+      "response_time": 58.71,
+      "timestamp": "2025-05-01T20:00:02.677708"
     },
     "history": [
       {
@@ -43,6 +50,12 @@
         "response_code": 200,
         "response_time": 53.91,
         "timestamp": "2025-05-01T19:51:53.945268"
+      },
+      {
+        "status": "up",
+        "response_code": 200,
+        "response_time": 58.71,
+        "timestamp": "2025-05-01T20:00:02.677708"
       }
     ]
   },
@@ -50,8 +63,8 @@
     "current": {
       "status": "down",
       "response_code": 403,
-      "response_time": 207.3,
-      "timestamp": "2025-05-01T19:51:54.153184",
+      "response_time": 206.28,
+      "timestamp": "2025-05-01T20:00:02.884980",
       "error": "API returned status code 403"
     },
     "history": [
@@ -68,16 +81,23 @@
         "response_time": 207.3,
         "timestamp": "2025-05-01T19:51:54.153184",
         "error": "API returned status code 403"
+      },
+      {
+        "status": "down",
+        "response_code": 403,
+        "response_time": 206.28,
+        "timestamp": "2025-05-01T20:00:02.884980",
+        "error": "API returned status code 403"
       }
     ]
   },
   "fake_card": {
     "current": {
       "status": "down",
-      "response_code": 404,
-      "response_time": 58.29,
-      "timestamp": "2025-05-01T19:51:54.212145",
-      "error": "API returned status code 404"
+      "response_code": 401,
+      "response_time": 66.09,
+      "timestamp": "2025-05-01T20:00:02.951732",
+      "error": "API returned status code 401"
     },
     "history": [
       {
@@ -93,6 +113,13 @@
         "response_time": 58.29,
         "timestamp": "2025-05-01T19:51:54.212145",
         "error": "API returned status code 404"
+      },
+      {
+        "status": "down",
+        "response_code": 401,
+        "response_time": 66.09,
+        "timestamp": "2025-05-01T20:00:02.951732",
+        "error": "API returned status code 401"
       }
     ]
   },
@@ -100,8 +127,8 @@
     "current": {
       "status": "down",
       "response_code": 401,
-      "response_time": 77.68,
-      "timestamp": "2025-05-01T19:51:54.290426",
+      "response_time": 59.87,
+      "timestamp": "2025-05-01T20:00:03.012193",
       "error": "API returned status code 401"
     },
     "history": [
@@ -118,6 +145,13 @@
         "response_time": 77.68,
         "timestamp": "2025-05-01T19:51:54.290426",
         "error": "API returned status code 401"
+      },
+      {
+        "status": "down",
+        "response_code": 401,
+        "response_time": 59.87,
+        "timestamp": "2025-05-01T20:00:03.012193",
+        "error": "API returned status code 401"
       }
     ]
   },
@@ -125,8 +159,8 @@
     "current": {
       "status": "down",
       "response_code": 400,
-      "response_time": 807.17,
-      "timestamp": "2025-05-01T19:51:55.098708",
+      "response_time": 1902.95,
+      "timestamp": "2025-05-01T20:00:04.915640",
       "error": "API returned status code 400"
     },
     "history": [
@@ -143,16 +177,23 @@
         "response_time": 807.17,
         "timestamp": "2025-05-01T19:51:55.098708",
         "error": "API returned status code 400"
+      },
+      {
+        "status": "down",
+        "response_code": 400,
+        "response_time": 1902.95,
+        "timestamp": "2025-05-01T20:00:04.915640",
+        "error": "API returned status code 400"
       }
     ]
   },
   "temp_mail_backup": {
     "current": {
       "status": "down",
-      "response_code": 405,
-      "response_time": 467.02,
-      "timestamp": "2025-05-01T19:51:55.566530",
-      "error": "API returned status code 405"
+      "response_code": 404,
+      "response_time": 466.62,
+      "timestamp": "2025-05-01T20:00:05.383046",
+      "error": "API returned status code 404"
     },
     "history": [
       {
@@ -168,6 +209,13 @@
         "response_time": 467.02,
         "timestamp": "2025-05-01T19:51:55.566530",
         "error": "API returned status code 405"
+      },
+      {
+        "status": "down",
+        "response_code": 404,
+        "response_time": 466.62,
+        "timestamp": "2025-05-01T20:00:05.383046",
+        "error": "API returned status code 404"
       }
     ]
   }
