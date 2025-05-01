@@ -34,6 +34,10 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key_replace_in_production")
 
+# Enable logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Configure SQLAlchemy
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -70,6 +74,96 @@ from models import WebUser, Trial, Payment, Referral, Commission, UserTier
 @login_manager.user_loader
 def load_user(user_id):
     return WebUser.query.get(int(user_id))
+    
+# Helper function to check subscription status
+def check_subscription_status(user_id):
+    """Check if a user has an active subscription
+    
+    Args:
+        user_id: The user ID to check
+        
+    Returns:
+        dict: Subscription status information
+    """
+    user = WebUser.query.get(user_id)
+    if not user:
+        return {
+            'active': False,
+            'tier': None,
+            'error': 'User not found'
+        }
+        
+    from datetime import datetime
+    now = datetime.utcnow()
+    
+    # Check if subscription is active
+    active = bool(user.subscription_tier and user.subscription_expires_at and user.subscription_expires_at > now)
+    
+    # Calculate days remaining if active
+    days_remaining = 0
+    if active and user.subscription_expires_at:
+        days_remaining = (user.subscription_expires_at - now).days
+        
+    # Check if subscription is expiring soon (5 days or less)
+    expiring_soon = active and days_remaining <= 5
+    
+    return {
+        'active': active,
+        'tier': user.subscription_tier if active else None,
+        'expires_at': user.subscription_expires_at.isoformat() if active and user.subscription_expires_at else None,
+        'days_remaining': days_remaining,
+        'expiring_soon': expiring_soon,
+        'last_payment_date': user.last_payment_date.isoformat() if user.last_payment_date else None,
+        'last_payment_amount': user.last_payment_amount
+    }
+    
+# Helper function to check trial usage limits
+def check_trial_usage_limits(user_id, subscription_tier, db_conn=None):
+    """Check if a user has reached their daily trial generation limit
+    
+    Args:
+        user_id: The user ID to check
+        subscription_tier: The user's subscription tier
+        db_conn: A Database connection (optional)
+        
+    Returns:
+        dict: Usage limit information including whether generation is allowed
+    """
+    # Define tier limits
+    tier_limits = {
+        'standard': 10,
+        'premium': 25,
+        'dealers_choice': 50,
+        'free': 3  # Free tier has the lowest limit
+    }
+    
+    # Get limit based on user's tier (default to free tier limit)
+    tier_limit = tier_limits.get(subscription_tier, tier_limits['free'])
+    
+    # Create database connection if not provided
+    if not db_conn:
+        from database import Database
+        db_conn = Database()
+    
+    # Get current usage count for today
+    daily_usage = db_conn.get_usage_count(user_id, 'generate_trial')
+    
+    # Check if user is below the limit
+    allowed = daily_usage < tier_limit
+    
+    # Generate appropriate message
+    if allowed:
+        message = f"You have used {daily_usage}/{tier_limit} trial generations today"
+    else:
+        message = f"You have reached your daily limit of {tier_limit} trial generations for your {subscription_tier} tier"
+    
+    return {
+        'allowed': allowed,
+        'current_usage': daily_usage,
+        'limit': tier_limit,
+        'tier': subscription_tier,
+        'message': message
+    }
 
 # In newer Flask versions, we use this pattern instead of before_first_request
 with app.app_context():
@@ -796,26 +890,20 @@ def generate_trial():
                 'redirect': '/subscriptions'
             }), 403
         
-        # Check daily trial generation limits based on tier
-        tier_limits = {
-            'standard': 10,
-            'premium': 25,
-            'dealers_choice': 50
-        }
-        
-        # Get usage count for today
+        # Check trial usage limits based on subscription tier
+        # Import the database accessor
         from database import Database
         bot_db = Database()
-        daily_usage = bot_db.get_usage_count(user_id, 'generate_trial')
         
-        # Get limit based on user's tier
-        tier_limit = tier_limits.get(user.subscription_tier, 10)  # Default to standard tier limit
-        
-        if daily_usage >= tier_limit:
+        # Check if user has reached their daily limit
+        usage_result = check_trial_usage_limits(user_id, user.subscription_tier, bot_db)
+        if not usage_result['allowed']:
             return jsonify({
                 'error': 'Daily limit reached',
-                'message': f'You have reached your daily limit of {tier_limit} trial generations for your {user.subscription_tier} tier',
-                'upgrade_url': '/subscriptions'
+                'message': usage_result['message'],
+                'upgrade_url': '/subscriptions',
+                'current_usage': usage_result['current_usage'],
+                'limit': usage_result['limit']
             }), 429  # 429 Too Many Requests
         
         # Import the trial generator
@@ -1085,6 +1173,24 @@ def wallet_status():
             })
     except Exception as e:
         logger.error(f"Error getting wallet status: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+        
+@app.route('/api/subscription/status', methods=['GET'])
+def subscription_status():
+    """Get subscription status for the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        status = check_subscription_status(user_id)
+        
+        return jsonify({
+            'status': 'success',
+            'subscription': status
+        })
+    except Exception as e:
+        logger.error(f"Error getting subscription status: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
