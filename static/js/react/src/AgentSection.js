@@ -5,7 +5,7 @@ const AgentSection = () => {
     {
       id: 'heroin-harry',
       name: 'Heroin Harry',
-      image: '/static/images/skeleton-green.png',
+      image: '/img/purple-pill-logo.png',
       title: 'Identity Provider | The Rush Master',
       description: 'Fast-talking, addicted to efficiency, and never sleeps. Harry generates the most authentic identities with hypnotic precision.',
       specialties: ['Email Generation', 'Phone Verification', 'Identity Creation'],
@@ -14,7 +14,7 @@ const AgentSection = () => {
     {
       id: 'cash-carter',
       name: 'Cash Carter',
-      image: '/static/images/skeleton-purple.png',
+      image: '/img/purple-pill-logo.png',
       title: 'Financial Guardian | Card Dealer',
       description: 'Sarcastic and protective, Cash handles all your financial needs with surgical precision. No payment loop can trap this dealer.',
       specialties: ['Card Generation', 'Payment Protection', 'Checkout Automation'],
@@ -32,7 +32,7 @@ const AgentSection = () => {
     {
       id: 'molly-morphine',
       name: 'Molly Morphine',
-      image: '/static/images/pink-skeleton.png',
+      image: '/img/purple-pill-logo.png',
       title: 'Multi-Trial Specialist | The High Roller',
       description: 'Smooth-talking and reliable, Molly delivers multiple trials simultaneously, keeping your entertainment flowing.',
       specialties: ['Parallel Processing', 'Service Stacking', 'Renewal Prevention'],
