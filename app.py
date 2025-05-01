@@ -271,17 +271,117 @@ def logout():
     return redirect('/')
 
 # Discord OAuth2 Routes
+# Wallet Authentication routes
+@app.route('/api/login-with-wallet', methods=['POST'])
+def login_with_wallet():
+    """Login with Phantom wallet"""
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Invalid request format"})
+    
+    data = request.get_json()
+    wallet_address = data.get('wallet_address')
+    
+    if not wallet_address:
+        return jsonify({"success": False, "message": "Wallet address is required"})
+    
+    # Check if user exists with this wallet address
+    user = WebUser.query.filter_by(wallet_address=wallet_address).first()
+    
+    if not user:
+        # No existing user with this wallet
+        return jsonify({
+            "success": False, 
+            "message": "No account found for this wallet. Please register first."
+        })
+    
+    # User found, log them in
+    login_user(user)
+    session['user_id'] = user.id
+    session['username'] = user.username
+    
+    # Return success
+    return jsonify({
+        "success": True,
+        "message": "Login successful",
+        "redirect": "/dashboard"
+    })
+
+@app.route('/api/register-with-wallet', methods=['POST'])
+def register_with_wallet():
+    """Register with Phantom wallet"""
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Invalid request format"})
+    
+    data = request.get_json()
+    wallet_address = data.get('wallet_address')
+    username = data.get('username')
+    email = data.get('email')
+    
+    if not wallet_address:
+        return jsonify({"success": False, "message": "Wallet address is required"})
+    
+    if not username or not email:
+        return jsonify({"success": False, "message": "Username and email are required"})
+    
+    # Check if user already exists with this wallet
+    existing_wallet_user = WebUser.query.filter_by(wallet_address=wallet_address).first()
+    
+    if existing_wallet_user:
+        return jsonify({"success": False, "message": "This wallet is already registered"})
+    
+    # Check if username or email already exists
+    existing_user = WebUser.query.filter((WebUser.username == username) | (WebUser.email == email)).first()
+    
+    if existing_user:
+        return jsonify({"success": False, "message": "Username or email already exists"})
+    
+    # Create new user with wallet address
+    user = WebUser(
+        username=username,
+        email=email,
+        wallet_address=wallet_address
+    )
+    
+    # Generate a random secure password for wallet users
+    import secrets
+    import string
+    password = ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(20))
+    user.set_password(password)
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    # Process referral if provided
+    referral_code = session.get('referral_code')
+    if referral_code:
+        try:
+            from database import Database
+            db_conn = Database()
+            db_conn.register_referral(user.id, referral_code)
+            logger.info(f"Wallet user {username} registered with referral code: {referral_code}")
+            # Clear referral code from session after use
+            session.pop('referral_code')
+        except Exception as e:
+            logger.error(f"Error processing referral: {str(e)}")
+    
+    # Log the user in
+    login_user(user)
+    session['user_id'] = user.id
+    session['username'] = user.username
+    
+    # Return success
+    return jsonify({
+        "success": True,
+        "message": "Registration successful",
+        "redirect": "/dashboard"
+    })
+    
+# Deprecated Discord OAuth routes - keeping for backward compatibility
 @app.route('/login-with-discord')
 def login_with_discord():
-    """Initiate the Discord OAuth2 flow"""
-    if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
-        flash('Discord login is not configured', 'danger')
-        return redirect('/login')
-    
-    discord = get_discord_oauth()
-    authorization_url, state = discord.authorization_url(DISCORD_AUTHORIZATION_BASE_URL)
-    session['oauth2_state'] = state
-    return redirect(authorization_url)
+    """Initiate the Discord OAuth2 flow - Deprecated"""
+    flash('Discord login is being phased out. Please use Phantom Wallet login instead.', 'warning')
+    return redirect('/login')
 
 @app.route('/discord-callback')
 def discord_callback():

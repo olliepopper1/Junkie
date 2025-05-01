@@ -253,12 +253,20 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a href="/login-with-discord" class="btn btn-lg text-white" style="background-color: #5865F2;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-discord me-2" viewBox="0 0 16 16">
-                            <path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019Zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612Zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612Z"/>
-                        </svg>
-                        Register with Discord
-                    </a>
+                    <button id="connect-wallet-btn" class="btn btn-lg text-white" style="background-color: #9945FF; display: flex; align-items: center; justify-content: center;">
+                        <img src="/img/phantom-icon.svg" width="20" height="20" alt="Phantom" class="me-2">
+                        Register with Phantom Wallet
+                    </button>
+                    <div id="wallet-info" class="d-none">
+                        <div class="alert alert-success mt-3 d-flex align-items-center">
+                            <span id="wallet-status-icon" class="me-2">✓</span>
+                            <div>
+                                <div>Connected as: <span id="wallet-address-display" class="fw-bold"></span></div>
+                                <small id="wallet-balance-display"></small>
+                                <button id="continue-with-wallet" class="btn btn-success btn-sm w-100 mt-2">Continue Registration with Wallet</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="login-link">
@@ -268,6 +276,11 @@
         </div>
     </div>
     
+    <!-- Solana Web3 library -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    
+    <script src="/js/phantom-wallet.js"></script>
+    
     <script>
         // Check for error message
         window.addEventListener('DOMContentLoaded', () => {
@@ -275,6 +288,119 @@
             if (urlParams.has('error')) {
                 document.getElementById('errorMessage').classList.add('show');
             }
+            
+            // Set up wallet components
+            const connectWalletBtn = document.getElementById('connect-wallet-btn');
+            const walletInfo = document.getElementById('wallet-info');
+            const walletAddressDisplay = document.getElementById('wallet-address-display');
+            const walletBalanceDisplay = document.getElementById('wallet-balance-display');
+            const continueWithWalletBtn = document.getElementById('continue-with-wallet');
+            
+            // Check if Phantom is installed
+            const isPhantomInstalled = window.phantom?.solana?.isPhantom;
+            if (!isPhantomInstalled) {
+                connectWalletBtn.textContent = "Phantom Wallet Not Installed";
+                connectWalletBtn.disabled = true;
+                return;
+            }
+            
+            // Define wallet connection function
+            async function handleWalletConnection() {
+                try {
+                    // Connect to the wallet
+                    const provider = window.phantom?.solana;
+                    const resp = await provider.connect();
+                    const walletAddress = resp.publicKey.toString();
+                    
+                    // Display wallet info
+                    walletAddressDisplay.textContent = shortenAddress(walletAddress);
+                    walletInfo.classList.remove('d-none');
+                    connectWalletBtn.classList.add('d-none');
+                    
+                    // Add wallet address to hidden field
+                    const walletAddressInput = document.createElement('input');
+                    walletAddressInput.type = 'hidden';
+                    walletAddressInput.name = 'wallet_address';
+                    walletAddressInput.value = walletAddress;
+                    document.querySelector('form').appendChild(walletAddressInput);
+                    
+                    // Get wallet balance
+                    try {
+                        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+                        const balance = await connection.getBalance(new solanaWeb3.PublicKey(walletAddress));
+                        const solBalance = balance / 1000000000; // Convert lamports to SOL
+                        walletBalanceDisplay.textContent = `Balance: ${solBalance.toFixed(4)} SOL`;
+                    } catch (error) {
+                        walletBalanceDisplay.textContent = `Balance: Unknown`;
+                    }
+                } catch (error) {
+                    console.error('Error connecting to wallet:', error);
+                    alert('Could not connect to Phantom wallet. Please try again.');
+                }
+            }
+            
+            // Continue with wallet registration
+            function handleContinueRegistration() {
+                fetch('/api/register-with-wallet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        wallet_address: document.querySelector('input[name="wallet_address"]').value,
+                        username: document.getElementById('username').value || '',
+                        email: document.getElementById('email').value || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert(data.message || 'Error registering with wallet');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error registering with wallet:', error);
+                    alert('Could not register with wallet. Please try again.');
+                });
+            }
+            
+            // Helper to shorten address for display
+            function shortenAddress(address) {
+                if (!address) return '';
+                return address.slice(0, 6) + '...' + address.slice(-4);
+            }
+            
+            // Add event listeners
+            connectWalletBtn.addEventListener('click', handleWalletConnection);
+            continueWithWalletBtn.addEventListener('click', handleContinueRegistration);
+            
+            // Check for existing connection
+            async function checkExistingConnection() {
+                try {
+                    const provider = window.phantom?.solana;
+                    const resp = await provider.connect({ onlyIfTrusted: true });
+                    if (resp && resp.publicKey) {
+                        const walletAddress = resp.publicKey.toString();
+                        walletAddressDisplay.textContent = shortenAddress(walletAddress);
+                        walletInfo.classList.remove('d-none');
+                        connectWalletBtn.classList.add('d-none');
+                        
+                        // Add wallet address to hidden field
+                        const walletAddressInput = document.createElement('input');
+                        walletAddressInput.type = 'hidden';
+                        walletAddressInput.name = 'wallet_address';
+                        walletAddressInput.value = walletAddress;
+                        document.querySelector('form').appendChild(walletAddressInput);
+                    }
+                } catch (error) {
+                    // Not already connected, do nothing
+                }
+            }
+            
+            // Check for existing wallet connection
+            checkExistingConnection();
         });
     </script>
 </body>
