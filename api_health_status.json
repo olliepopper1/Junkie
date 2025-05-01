@@ -1,272 +1,61 @@
 {
-  "personator": {
-    "current": {
-      "status": "down",
-      "response_code": 401,
-      "response_time": 248.51,
-      "timestamp": "2025-05-01T20:03:05.511004",
-      "error": "API returned status code 401"
+  "timestamp": "2025-05-01 20:32:07",
+  "apis": {
+    "personator": {
+      "name": "Identity Generation",
+      "status": "Degraded",
+      "message": "API is responding but not returning expected data (184ms)",
+      "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 405,
-        "response_time": 198.0,
-        "timestamp": "2025-05-01T19:28:44.153846",
-        "error": "API returned status code 405"
-      },
-      {
-        "status": "down",
-        "response_code": 405,
-        "response_time": 130.25,
-        "timestamp": "2025-05-01T19:51:53.890158",
-        "error": "API returned status code 405"
-      },
-      {
-        "status": "down",
-        "response_code": 405,
-        "response_time": 101.1,
-        "timestamp": "2025-05-01T20:00:02.618349",
-        "error": "API returned status code 405"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 248.51,
-        "timestamp": "2025-05-01T20:03:05.511004",
-        "error": "API returned status code 401"
-      }
-    ]
-  },
-  "virtual_number": {
-    "current": {
-      "status": "down",
-      "response_code": 401,
-      "response_time": 266.04,
-      "timestamp": "2025-05-01T20:03:05.778530",
-      "error": "API returned status code 401"
+    "virtual_number": {
+      "name": "Virtual Phone Number",
+      "status": "Degraded",
+      "message": "API is responding but not returning expected data (0ms)",
+      "endpoint": "https://api.veriphone.io/v2/verify",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "up",
-        "response_code": 200,
-        "response_time": 121.45,
-        "timestamp": "2025-05-01T19:28:44.275926"
-      },
-      {
-        "status": "up",
-        "response_code": 200,
-        "response_time": 53.91,
-        "timestamp": "2025-05-01T19:51:53.945268"
-      },
-      {
-        "status": "up",
-        "response_code": 200,
-        "response_time": 58.71,
-        "timestamp": "2025-05-01T20:00:02.677708"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 266.04,
-        "timestamp": "2025-05-01T20:03:05.778530",
-        "error": "API returned status code 401"
-      }
-    ]
-  },
-  "virtual_number_backup": {
-    "current": {
-      "status": "down",
-      "response_code": 404,
-      "response_time": 223.24,
-      "timestamp": "2025-05-01T20:03:06.002405",
-      "error": "API returned status code 404"
+    "virtual_number_backup": {
+      "name": "Virtual Number Backup",
+      "status": "Degraded",
+      "message": "API is responding but not returning expected data (0ms)",
+      "endpoint": "https://api.veriphone.io/v2/verify",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 403,
-        "response_time": 83.51,
-        "timestamp": "2025-05-01T19:28:44.360520",
-        "error": "API returned status code 403"
-      },
-      {
-        "status": "down",
-        "response_code": 403,
-        "response_time": 207.3,
-        "timestamp": "2025-05-01T19:51:54.153184",
-        "error": "API returned status code 403"
-      },
-      {
-        "status": "down",
-        "response_code": 403,
-        "response_time": 206.28,
-        "timestamp": "2025-05-01T20:00:02.884980",
-        "error": "API returned status code 403"
-      },
-      {
-        "status": "down",
-        "response_code": 404,
-        "response_time": 223.24,
-        "timestamp": "2025-05-01T20:03:06.002405",
-        "error": "API returned status code 404"
-      }
-    ]
-  },
-  "fake_card": {
-    "current": {
-      "status": "down",
-      "response_code": 401,
-      "response_time": 230.68,
-      "timestamp": "2025-05-01T20:03:06.233584",
-      "error": "API returned status code 401"
+    "fake_card": {
+      "name": "Credit Card Generator",
+      "status": "Up",
+      "message": "API is functioning correctly (99ms)",
+      "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/v1/card/generate",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 404,
-        "response_time": 79.35,
-        "timestamp": "2025-05-01T19:28:44.440479",
-        "error": "API returned status code 404"
-      },
-      {
-        "status": "down",
-        "response_code": 404,
-        "response_time": 58.29,
-        "timestamp": "2025-05-01T19:51:54.212145",
-        "error": "API returned status code 404"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 66.09,
-        "timestamp": "2025-05-01T20:00:02.951732",
-        "error": "API returned status code 401"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 230.68,
-        "timestamp": "2025-05-01T20:03:06.233584",
-        "error": "API returned status code 401"
-      }
-    ]
-  },
-  "virtual_card": {
-    "current": {
-      "status": "down",
-      "response_code": 401,
-      "response_time": 254.91,
-      "timestamp": "2025-05-01T20:03:06.490714",
-      "error": "API returned status code 401"
+    "email_validator": {
+      "name": "Email Validator",
+      "status": "Up",
+      "message": "API is functioning correctly (12ms)",
+      "endpoint": "https://api.advancedemailverifier.com/verify",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 80.08,
-        "timestamp": "2025-05-01T19:28:44.521046",
-        "error": "API returned status code 401"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 77.68,
-        "timestamp": "2025-05-01T19:51:54.290426",
-        "error": "API returned status code 401"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 59.87,
-        "timestamp": "2025-05-01T20:00:03.012193",
-        "error": "API returned status code 401"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 254.91,
-        "timestamp": "2025-05-01T20:03:06.490714",
-        "error": "API returned status code 401"
-      }
-    ]
-  },
-  "temp_email": {
-    "current": {
-      "status": "down",
-      "response_code": 401,
-      "response_time": 250.37,
-      "timestamp": "2025-05-01T20:03:06.741674",
-      "error": "API returned status code 401"
+    "temp_email": {
+      "name": "Disposable Email",
+      "status": "Up",
+      "message": "API is functioning correctly (0ms)",
+      "endpoint": "https://disposable-email-generator.p.rapidapi.com/api/v1/email/generate",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 400,
-        "response_time": 539.02,
-        "timestamp": "2025-05-01T19:28:45.060686",
-        "error": "API returned status code 400"
-      },
-      {
-        "status": "down",
-        "response_code": 400,
-        "response_time": 807.17,
-        "timestamp": "2025-05-01T19:51:55.098708",
-        "error": "API returned status code 400"
-      },
-      {
-        "status": "down",
-        "response_code": 400,
-        "response_time": 1902.95,
-        "timestamp": "2025-05-01T20:00:04.915640",
-        "error": "API returned status code 400"
-      },
-      {
-        "status": "down",
-        "response_code": 401,
-        "response_time": 250.37,
-        "timestamp": "2025-05-01T20:03:06.741674",
-        "error": "API returned status code 401"
-      }
-    ]
-  },
-  "temp_mail_backup": {
-    "current": {
-      "status": "down",
-      "response_code": 404,
-      "response_time": 225.95,
-      "timestamp": "2025-05-01T20:03:06.968299",
-      "error": "API returned status code 404"
+    "temp_mail_backup": {
+      "name": "Email Backup",
+      "status": "Up",
+      "message": "API is functioning correctly (0ms)",
+      "endpoint": "https://temp-mail-service.p.rapidapi.com/create",
+      "time_checked": "2025-05-01 20:32:07"
     },
-    "history": [
-      {
-        "status": "down",
-        "response_code": 405,
-        "response_time": 332.13,
-        "timestamp": "2025-05-01T19:28:45.393511",
-        "error": "API returned status code 405"
-      },
-      {
-        "status": "down",
-        "response_code": 405,
-        "response_time": 467.02,
-        "timestamp": "2025-05-01T19:51:55.566530",
-        "error": "API returned status code 405"
-      },
-      {
-        "status": "down",
-        "response_code": 404,
-        "response_time": 466.62,
-        "timestamp": "2025-05-01T20:00:05.383046",
-        "error": "API returned status code 404"
-      },
-      {
-        "status": "down",
-        "response_code": 404,
-        "response_time": 225.95,
-        "timestamp": "2025-05-01T20:03:06.968299",
-        "error": "API returned status code 404"
-      }
-    ]
+    "scrape_ninja": {
+      "name": "Web Scraping",
+      "status": "Degraded",
+      "message": "API is responding but not returning expected data (0ms)",
+      "endpoint": "https://api.scrapeninja.com/scrape",
+      "time_checked": "2025-05-01 20:32:07"
+    }
   }
 }

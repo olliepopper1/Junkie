@@ -35,27 +35,27 @@ API_CONFIG = {
     # Identity Verification API
     "personator": {
         "key": RAPIDAPI_KEY,
-        "host": "personator-melissadata.p.rapidapi.com",
-        "endpoint": "https://personator-melissadata.p.rapidapi.com/v3/WEB/ContactVerify/doContactVerify",
-        "auth_type": "rapidapi",
+        "host": "randomuser.me",
+        "endpoint": "https://randomuser.me/api/",
+        "auth_type": "none",
         "content_type": "application/json"
     },
     
     # Phone Verification API
     "virtual_number": {
         "key": RAPIDAPI_KEY,
-        "host": "veriphone-io.p.rapidapi.com",
-        "endpoint": "https://veriphone-io.p.rapidapi.com/v2/verify",
-        "auth_type": "rapidapi",
+        "host": "api.veriphone.io",
+        "endpoint": "https://api.veriphone.io/v2/verify",
+        "auth_type": "apikey",
         "content_type": "application/json"
     },
     
     # Backup Phone Verification
     "virtual_number_backup": {
         "key": RAPIDAPI_KEY,
-        "host": "veriphone-alternative.p.rapidapi.com",
-        "endpoint": "https://veriphone-alternative.p.rapidapi.com/v2/verify",
-        "auth_type": "rapidapi",
+        "host": "api.veriphone.io",
+        "endpoint": "https://api.veriphone.io/v2/verify",
+        "auth_type": "apikey",
         "content_type": "application/json"
     },
     
@@ -80,9 +80,9 @@ API_CONFIG = {
     # Email Validation API
     "email_validator": {
         "key": RAPIDAPI_KEY,
-        "host": "advanced-email-validator.p.rapidapi.com",
-        "endpoint": "https://advanced-email-validator.p.rapidapi.com/verify",
-        "auth_type": "rapidapi",
+        "host": "api.advancedemailverifier.com",
+        "endpoint": "https://api.advancedemailverifier.com/verify",
+        "auth_type": "apikey",
         "content_type": "application/json"
     },
     
@@ -107,9 +107,9 @@ API_CONFIG = {
     # ScrapeNinja API for Web Scraping and Proxies
     "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "web-scraping-api.p.rapidapi.com",
-        "endpoint": "https://web-scraping-api.p.rapidapi.com/scrape",
-        "auth_type": "rapidapi",
+        "host": "api.scrapeninja.com",
+        "endpoint": "https://api.scrapeninja.com/scrape",
+        "auth_type": "apikey",
         "content_type": "application/json"
     }
 }
@@ -137,11 +137,21 @@ class APIIntegrations:
         # Add API-specific headers based on auth_type
         auth_type = api_config.get("auth_type", "rapidapi")
         
-        # All APIs now use RapidAPI format with X-RapidAPI-Key and X-RapidAPI-Host
         if auth_type == "rapidapi":
+            # RapidAPI format with X-RapidAPI-Key and X-RapidAPI-Host
             headers.update({
                 'X-RapidAPI-Key': api_config["key"],
                 'X-RapidAPI-Host': api_config["host"],
+            })
+        elif auth_type == "apikey":
+            # Standard API key authentication
+            headers.update({
+                'api-key': api_config["key"],
+            })
+        elif auth_type == "authtoken":
+            # Auth token authentication (like Personator)
+            headers.update({
+                'authToken': api_config["key"],
             })
         
         return headers
@@ -515,7 +525,8 @@ class APIIntegrations:
             
             # Prepare query parameters
             params = {
-                "email": email
+                "email": email,
+                "api_key": API_CONFIG["email_validator"]["key"]
             }
             
             # Make the API request
@@ -736,15 +747,8 @@ class APIIntegrations:
             # Prepare the request payload based on the API requirements
             payload = {
                 "url": url,
-                "render_js": True,
-                "timeout": timeout,
-                "device": "desktop"
+                "proxy": "auto" if use_proxy else None
             }
-            
-            # Use premium proxies if requested
-            if use_proxy:
-                payload["proxy_type"] = "residential"
-                payload["country"] = "us"
             
             # Add optional parameters if provided
             if custom_headers:
