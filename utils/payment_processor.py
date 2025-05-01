@@ -58,7 +58,8 @@ class PaymentProcessor:
     def __init__(self, db_url=None):
         """Initialize the payment processor"""
         self.db = Database(db_url)
-        self.wallet_address = os.environ.get('SOLANA_WALLET_ADDRESS', 'J5ufWogRFSNYuULDC3EHTAcWYFASnbCo1kVS81eqnwyt')
+        # Get the wallet address from environment variables
+        self.wallet_address = os.environ.get('SOLANA_WALLET_ADDRESS')
         
     async def create_payment_request(self, user_id, plan_id, amount):
         """

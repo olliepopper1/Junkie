@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-05-01T19:10:15.279575",
+  "tests_run": 5,
+  "successful_tests": 4,
+  "success_rate": 80.0,
+  "results": {
+    "identity": {
+      "success": true,
+      "data": {
+        "first_name": "Sarah",
+        "last_name": "Johnson",
+        "address": "4915 Maple Ln",
+        "city": "Chicago",
+        "state": "AZ",
+        "zipcode": "15658",
+        "phone": "129-230-2981",
+        "dob": "4/3/1964",
+        "ssn": "XXX-XX-XXXX"
+      },
+      "error": null
+    },
+    "virtual_number": {
+      "success": true,
+      "data": {
+        "phone_number": "+14151647493",
+        "country_code": "US",
+        "verification_code": "786937",
+        "expires_at": "2025-05-01T19:40:14.307816"
+      },
+      "error": null
+    },
+    "card": {
+      "success": true,
+      "data": {
+        "card_number": "4365517276322379",
+        "card_type": "visa",
+        "cvv": "736",
+        "expiry": "05/27",
+        "cardholder_name": "Michael Williams"
+      },
+      "error": null
+    },
+    "email": {
+      "success": true,
+      "data": {
+        "email": "a8ujrpk0601@fakeemail.net",
+        "password": "<Qp64l@,Rf4Of",
+        "inbox_url": "https://fakeemail.net/inbox/a8ujrpk0601",
+        "expires_at": "2025-05-02T19:10:14.775016"
+      },
+      "error": null
+    },
+    "complete_trial": {
+      "success": false,
+      "data": {
+        "service": "netflix",
+        "generated_at": "2025-05-01T19:10:15.277804",
+        "trial_end_date": "2025-05-31",
+        "user_info": {
+          "first_name": "David",
+          "last_name": "Jones",
+          "email": "5v4ve6@tempmail.org",
+          "password": "ZKjlEj9mJ8hQ<",
+          "phone": "+12135513506",
+          "dob": "10/27/1985",
+          "address": "7293 Oak St",
+          "city": "Houston",
+          "state": "NY",
+          "zipcode": "37146"
+        },
+        "payment_info": {
+          "card_number": "4353157195578964",
+          "card_type": "visa",
+          "expiry": "02/26",
+          "cvv": "705",
+          "cardholder_name": "David Jones"
+        },
+        "verification_info": {
+          "email_inbox": "https://tempmail.org/inbox/5v4ve6",
+          "sms_verification_code": "694677",
+          "email_expires_at": "2025-05-02T19:10:15.189940",
+          "phone_expires_at": "2025-05-01T19:40:15.277453"
+        }
+      },
+      "error": null
+    }
+  }
+}
