@@ -36,7 +36,7 @@ intents = discord.Intents.default()
 intents.message_content = True  # For reading message content
 intents.members = True  # For accessing member information
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="/", intents=intents)
 
 # Import API keys from environment variables
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY', '')
@@ -231,7 +231,7 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name="for !guide commands"
+            name="for /guide commands"
         )
     )
 
@@ -239,7 +239,7 @@ async def on_ready():
 async def on_command_error(ctx, error):
     """Handle command errors"""
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found. Type `!guide` for a list of commands.")
+        await ctx.send("Command not found. Type `/guide` for a list of commands.")
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(f"Missing required argument: {error.param}")
     elif isinstance(error, commands.BadArgument):
@@ -262,11 +262,11 @@ async def guide_command(ctx):
     embed.add_field(
         name="🔥 Trial Commands",
         value=(
-            "`!hit [service]` - Full trial setup\n"
-            "`!dose [agent] [type]` - Single resource generation\n"
-            "`!trip [url]` - Run automation on custom URL\n"
-            "`!stash` - View your generated items\n"
-            "`!rehab` - Clear your data"
+            "`/hit [service]` - Full trial setup\n"
+            "`/dose [agent] [type]` - Single resource generation\n"
+            "`/trip [url]` - Run automation on custom URL\n"
+            "`/stash` - View your generated items\n"
+            "`/rehab` - Clear your data"
         ),
         inline=False
     )
@@ -275,8 +275,8 @@ async def guide_command(ctx):
     embed.add_field(
         name="😎 Agent Commands",
         value=(
-            "`!quote [agent]` - Get a quote from an agent\n"
-            "`!agents` - View all agents"
+            "`/quote [agent]` - Get a quote from an agent\n"
+            "`/agents` - View all agents"
         ),
         inline=False
     )
@@ -285,11 +285,11 @@ async def guide_command(ctx):
     embed.add_field(
         name="💰 Payment Commands",
         value=(
-            "`!plans` - View subscription plans\n"
-            "`!pay [plan]` - Subscribe to a plan\n"
-            "`!verify_payment [ref]` - Verify your payment\n"
-            "`!payments` - View payment history\n"
-            "`!tier` - Check your subscription tier"
+            "`/plans` - View subscription plans\n"
+            "`/pay [plan]` - Subscribe to a plan\n"
+            "`/verify_payment [ref]` - Verify your payment\n"
+            "`/payments` - View payment history\n"
+            "`/tier` - Check your subscription tier"
         ),
         inline=False
     )
@@ -298,9 +298,9 @@ async def guide_command(ctx):
     embed.add_field(
         name="👥 Referral Commands",
         value=(
-            "`!referral` - Get your referral code\n"
-            "`!refer [code]` - Use someone's referral code\n"
-            "`!commissions` - View your commission earnings"
+            "`/referral` - Get your referral code\n"
+            "`/refer [code]` - Use someone's referral code\n"
+            "`/commissions` - View your commission earnings"
         ),
         inline=False
     )
@@ -312,7 +312,7 @@ async def guide_command(ctx):
 async def hit_command(ctx, *, service_or_url: str = None):
     """Full trial setup command (all agents)"""
     if not service_or_url:
-        await ctx.send("Please specify a service (e.g., `!hit netflix`) or URL (e.g., `!hit https://example.com/trial`)")
+        await ctx.send("Please specify a service (e.g., `/hit netflix`) or URL (e.g., `/hit https://example.com/trial`)")
         return
     
     # Log the command
@@ -401,7 +401,7 @@ async def hit_command(ctx, *, service_or_url: str = None):
     
     success_embed.add_field(
         name="🔍 Note",
-        value="Use `!stash` to view your saved credentials anytime.",
+        value="Use `/stash` to view your saved credentials anytime.",
         inline=False
     )
     
@@ -491,7 +491,7 @@ async def agents_command(ctx):
         inline=False
     )
     
-    embed.set_footer(text="Use !dose [agent] to use a specific agent")
+    embed.set_footer(text="Use /dose [agent] to use a specific agent")
     await ctx.send(embed=embed)
 
 @bot.command(name="plans")

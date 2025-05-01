@@ -828,7 +828,7 @@ def setup_bot():
                 commissions = db.get_user_commissions(user_id)
                 
                 if not commissions:
-                    await ctx.send("💸 You haven't earned any commissions yet. Use `!referral` to get your referral code and start earning!")
+                    await ctx.send("💸 You haven't earned any commissions yet. Use `/referral` to get your referral code and start earning!")
                     return
                 
                 # Calculate totals
