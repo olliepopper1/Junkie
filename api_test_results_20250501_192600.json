@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-05-01T19:26:00.823093",
+  "tests_run": 5,
+  "successful_tests": 4,
+  "success_rate": 80.0,
+  "results": {
+    "identity": {
+      "success": true,
+      "data": {
+        "first_name": "",
+        "last_name": "",
+        "address": "",
+        "city": "",
+        "state": "",
+        "zipcode": "",
+        "phone": "",
+        "dob": "",
+        "ssn": ""
+      },
+      "error": null
+    },
+    "virtual_number": {
+      "success": true,
+      "data": {
+        "phone_number": "",
+        "country_code": "",
+        "verification_code": "",
+        "expires_at": ""
+      },
+      "error": null
+    },
+    "card": {
+      "success": true,
+      "data": {
+        "card_number": "4739048557884640",
+        "card_type": "visa",
+        "cvv": "559",
+        "expiry": "05/29",
+        "cardholder_name": "John Johnson"
+      },
+      "error": null
+    },
+    "email": {
+      "success": true,
+      "data": {
+        "email": "pyum7ksk9@trialmail.com",
+        "password": "+<J`-01#>9Cg[R.g",
+        "inbox_url": "https://trialmail.com/inbox/pyum7ksk9",
+        "expires_at": "2025-05-02T19:25:57.328908"
+      },
+      "error": null
+    },
+    "complete_trial": {
+      "success": false,
+      "data": {
+        "service": "netflix",
+        "generated_at": "2025-05-01T19:26:00.820518",
+        "trial_end_date": "2025-05-31",
+        "user_info": {
+          "first_name": "",
+          "last_name": "",
+          "email": "zjfqk6ffnt@disposable.com",
+          "password": "mvqTt?u>)fdq]",
+          "phone": "",
+          "dob": "",
+          "address": "",
+          "city": "",
+          "state": "",
+          "zipcode": ""
+        },
+        "payment_info": {
+          "card_number": "4272396382598033",
+          "card_type": "visa",
+          "expiry": "10/27",
+          "cvv": "395",
+          "cardholder_name": " "
+        },
+        "verification_info": {
+          "email_inbox": "https://disposable.com/inbox/zjfqk6ffnt",
+          "sms_verification_code": "",
+          "email_expires_at": "2025-05-02T19:26:00.674003",
+          "phone_expires_at": ""
+        }
+      },
+      "error": null
+    }
+  }
+}

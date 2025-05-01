@@ -79,12 +79,49 @@ class APIIntegrations:
         """Get standard headers for a specific API"""
         if api_name not in API_CONFIG:
             raise ValueError(f"Unknown API: {api_name}")
-            
-        return {
-            'X-RapidAPI-Key': API_CONFIG[api_name]["key"],
-            'X-RapidAPI-Host': API_CONFIG[api_name]["host"],
+        
+        # Base headers that most APIs use
+        headers = {
             'Content-Type': 'application/json',
         }
+        
+        # Add API-specific headers
+        if api_name == "personator":
+            # Melissa Personator API uses a different auth method
+            headers.update({
+                'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
+            })
+        elif api_name == "virtual_number" or api_name == "virtual_number_backup":
+            # Vonage/NumVerify APIs use different auth
+            headers.update({
+                'api-key': API_CONFIG[api_name]["key"],
+            })
+        elif api_name.startswith("fake_card") or api_name.startswith("virtual_card"):
+            # Stripe API uses bearer auth
+            headers.update({
+                'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
+                'Stripe-Version': '2023-10-16',  # Use current Stripe API version
+            })
+        elif api_name.startswith("temp_email") or api_name.startswith("temp_mail_backup"):
+            # Temp Mail APIs
+            if "temp_mail_backup" in api_name:
+                # Mail.tm uses different auth
+                headers.update({
+                    'Authorization': f'Bearer {API_CONFIG[api_name]["key"]}',
+                })
+            else:
+                # Standard API key header
+                headers.update({
+                    'X-API-Key': API_CONFIG[api_name]["key"],
+                })
+        else:
+            # Default to RapidAPI style headers for backward compatibility
+            headers.update({
+                'X-RapidAPI-Key': API_CONFIG[api_name]["key"],
+                'X-RapidAPI-Host': API_CONFIG[api_name]["host"],
+            })
+            
+        return headers
     
     @staticmethod
     def generate_identity(country="US"):
@@ -95,29 +132,65 @@ class APIIntegrations:
             # Use the Personator API to generate an identity
             url = API_CONFIG["personator"]["endpoint"]
             headers = APIIntegrations.get_headers("personator")
-            payload = json.dumps({"country": country})
             
-            response = requests.post(url, headers=headers, data=payload)
-            response.raise_for_status()  # Raise an exception for HTTP errors
-            
-            data = response.json()
-            logger.info("Identity generated successfully")
-            
-            return {
-                "first_name": data.get("first_name", ""),
-                "last_name": data.get("last_name", ""),
-                "address": data.get("address", {}).get("street", ""),
-                "city": data.get("address", {}).get("city", ""),
-                "state": data.get("address", {}).get("state", ""),
-                "zipcode": data.get("address", {}).get("zipcode", ""),
-                "phone": data.get("phone", ""),
-                "dob": data.get("dob", ""),
-                "ssn": data.get("ssn", "")
+            # Format payload according to Melissa Personator API specs
+            payload = {
+                "Records": [
+                    {
+                        "RecordID": "1",
+                        "FullName": "",  # Generate a random name
+                        "Country": country
+                    }
+                ],
+                "TransmissionReference": f"Identity-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                "Options": {
+                    "VerifyGlobalAddresses": "true"
+                }
             }
             
+            try:
+                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                response.raise_for_status()  # Raise an exception for HTTP errors
+                
+                # Parse the response
+                data = response.json()
+                record = data.get("Records", [{}])[0]
+                address_info = record.get("AddressVerification", {})
+                name_info = record.get("NameVerification", {})
+                
+                logger.info("Identity generated successfully")
+                
+                return {
+                    "first_name": name_info.get("FirstName", ""),
+                    "last_name": name_info.get("LastName", ""),
+                    "address": address_info.get("AddressLine1", ""),
+                    "city": address_info.get("City", ""),
+                    "state": address_info.get("State", ""),
+                    "zipcode": address_info.get("PostalCode", ""),
+                    "phone": record.get("PhoneNumber", ""),
+                    "dob": "",  # Personator doesn't typically provide DOB
+                    "ssn": ""   # Personator doesn't provide SSN for privacy reasons
+                }
+            except ValueError as e:
+                # JSON parsing error
+                logger.error(f"Error parsing Personator API response: {e}")
+                logger.error(f"Response content: {response.text[:200]}...")
+                raise
+                
+        except requests.Timeout:
+            logger.error("Personator API request timed out")
+            logger.info("Using fallback identity generation")
+            return APIIntegrations._generate_fallback_identity()
+        except requests.ConnectionError:
+            logger.error("Connection error when calling Personator API")
+            logger.info("Using fallback identity generation")
+            return APIIntegrations._generate_fallback_identity()
         except requests.RequestException as e:
             logger.error(f"Error calling Personator API: {e}")
-            # Fallback to local generation
+            logger.info("Using fallback identity generation")
+            return APIIntegrations._generate_fallback_identity()
+        except Exception as e:
+            logger.error(f"Unexpected error in generate_identity: {e}")
             logger.info("Using fallback identity generation")
             return APIIntegrations._generate_fallback_identity()
     
@@ -165,27 +238,96 @@ class APIIntegrations:
         logger.info(f"Generating virtual number for country: {country_code}")
         
         try:
-            # Use the Virtual Number API
+            # Try the primary Virtual Number API (Vonage)
             url = API_CONFIG["virtual_number"]["endpoint"]
             headers = APIIntegrations.get_headers("virtual_number")
-            payload = json.dumps({"country_code": country_code})
             
-            response = requests.post(url, headers=headers, data=payload)
-            response.raise_for_status()
-            
-            data = response.json()
-            logger.info("Virtual phone number generated successfully")
-            
-            return {
-                "phone_number": data.get("number", ""),
-                "country_code": data.get("country_code", ""),
-                "verification_code": data.get("verification_code", ""),
-                "expires_at": data.get("expires_at", "")
+            # Format payload according to Vonage Verify API specs
+            payload = {
+                "api_key": API_CONFIG["virtual_number"]["key"],
+                "number": "",  # Will be generated by API
+                "brand": "TrialJunkie",
+                "code_length": 6,
+                "lg": "en-us",
+                "country": country_code
             }
             
+            try:
+                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                response.raise_for_status()
+                
+                data = response.json()
+                
+                # Check if the API returned an error
+                if data.get("status") and data.get("status") != "0":
+                    logger.error(f"Vonage API returned error: {data.get('error_text', 'Unknown error')}")
+                    raise requests.RequestException(f"API error: {data.get('error_text', 'Unknown error')}")
+                
+                logger.info("Virtual phone number generated successfully")
+                
+                # Format expires_at to ISO format
+                expires_at = datetime.now() + timedelta(minutes=30)
+                
+                return {
+                    "phone_number": data.get("number", ""),
+                    "country_code": country_code,
+                    "verification_code": data.get("request_id", ""),  # Vonage uses request_id for verification
+                    "expires_at": expires_at.isoformat()
+                }
+                
+            except (requests.RequestException, ValueError) as primary_api_error:
+                # Try backup API if primary fails
+                logger.warning(f"Primary Virtual Number API failed: {primary_api_error}")
+                logger.info("Trying backup Virtual Number API...")
+                
+                # Use the backup API (NumVerify)
+                backup_url = API_CONFIG["virtual_number_backup"]["endpoint"]
+                backup_headers = APIIntegrations.get_headers("virtual_number_backup")
+                
+                # Format query parameters according to NumVerify API specs
+                number = f"1{random.randint(2000000000, 9999999999)}"  # Generate random US number
+                params = {
+                    "access_key": API_CONFIG["virtual_number_backup"]["key"],
+                    "number": number
+                }
+                
+                backup_response = requests.get(backup_url, headers=backup_headers, params=params, timeout=10)
+                backup_response.raise_for_status()
+                
+                backup_data = backup_response.json()
+                
+                # Check if the API returned an error
+                if backup_data.get("success") is False:
+                    logger.error(f"NumVerify API returned error: {backup_data.get('error', {}).get('info', 'Unknown error')}")
+                    raise requests.RequestException(f"Backup API error: {backup_data.get('error', {}).get('info', 'Unknown error')}")
+                
+                logger.info("Virtual phone number generated successfully via backup API")
+                
+                # Generate verification code and expiration (NumVerify doesn't provide these)
+                verification_code = ''.join(random.choices(string.digits, k=6))
+                expires_at = (datetime.now() + timedelta(minutes=30)).isoformat()
+                
+                return {
+                    "phone_number": f"+{backup_data.get('country_prefix', '1')}{backup_data.get('number', number)}",
+                    "country_code": backup_data.get("country_code", country_code),
+                    "verification_code": verification_code,
+                    "expires_at": expires_at
+                }
+                
+        except requests.Timeout:
+            logger.error("Virtual Number API request timed out")
+            logger.info("Using fallback phone number generation")
+            return APIIntegrations._generate_fallback_phone()
+        except requests.ConnectionError:
+            logger.error("Connection error when calling Virtual Number API")
+            logger.info("Using fallback phone number generation")
+            return APIIntegrations._generate_fallback_phone()
         except requests.RequestException as e:
             logger.error(f"Error calling Virtual Number API: {e}")
-            # Fallback to local generation
+            logger.info("Using fallback phone number generation")
+            return APIIntegrations._generate_fallback_phone()
+        except Exception as e:
+            logger.error(f"Unexpected error in generate_virtual_number: {e}")
             logger.info("Using fallback phone number generation")
             return APIIntegrations._generate_fallback_phone()
     

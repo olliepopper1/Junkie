@@ -1,0 +1,126 @@
+{
+  "personator": {
+    "current": {
+      "status": "down",
+      "response_code": 405,
+      "response_time": 198.0,
+      "timestamp": "2025-05-01T19:28:44.153846",
+      "error": "API returned status code 405"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 405,
+        "response_time": 198.0,
+        "timestamp": "2025-05-01T19:28:44.153846",
+        "error": "API returned status code 405"
+      }
+    ]
+  },
+  "virtual_number": {
+    "current": {
+      "status": "up",
+      "response_code": 200,
+      "response_time": 121.45,
+      "timestamp": "2025-05-01T19:28:44.275926"
+    },
+    "history": [
+      {
+        "status": "up",
+        "response_code": 200,
+        "response_time": 121.45,
+        "timestamp": "2025-05-01T19:28:44.275926"
+      }
+    ]
+  },
+  "virtual_number_backup": {
+    "current": {
+      "status": "down",
+      "response_code": 403,
+      "response_time": 83.51,
+      "timestamp": "2025-05-01T19:28:44.360520",
+      "error": "API returned status code 403"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 403,
+        "response_time": 83.51,
+        "timestamp": "2025-05-01T19:28:44.360520",
+        "error": "API returned status code 403"
+      }
+    ]
+  },
+  "fake_card": {
+    "current": {
+      "status": "down",
+      "response_code": 404,
+      "response_time": 79.35,
+      "timestamp": "2025-05-01T19:28:44.440479",
+      "error": "API returned status code 404"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 404,
+        "response_time": 79.35,
+        "timestamp": "2025-05-01T19:28:44.440479",
+        "error": "API returned status code 404"
+      }
+    ]
+  },
+  "virtual_card": {
+    "current": {
+      "status": "down",
+      "response_code": 401,
+      "response_time": 80.08,
+      "timestamp": "2025-05-01T19:28:44.521046",
+      "error": "API returned status code 401"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 401,
+        "response_time": 80.08,
+        "timestamp": "2025-05-01T19:28:44.521046",
+        "error": "API returned status code 401"
+      }
+    ]
+  },
+  "temp_email": {
+    "current": {
+      "status": "down",
+      "response_code": 400,
+      "response_time": 539.02,
+      "timestamp": "2025-05-01T19:28:45.060686",
+      "error": "API returned status code 400"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 400,
+        "response_time": 539.02,
+        "timestamp": "2025-05-01T19:28:45.060686",
+        "error": "API returned status code 400"
+      }
+    ]
+  },
+  "temp_mail_backup": {
+    "current": {
+      "status": "down",
+      "response_code": 405,
+      "response_time": 332.13,
+      "timestamp": "2025-05-01T19:28:45.393511",
+      "error": "API returned status code 405"
+    },
+    "history": [
+      {
+        "status": "down",
+        "response_code": 405,
+        "response_time": 332.13,
+        "timestamp": "2025-05-01T19:28:45.393511",
+        "error": "API returned status code 405"
+      }
+    ]
+  }
+}
