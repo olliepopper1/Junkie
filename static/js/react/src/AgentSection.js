@@ -41,7 +41,7 @@ const AgentSection = () => {
     {
       id: 'keta-kev',
       name: 'Keta Kev',
-      image: '/img/purple-pill-logo.png',
+      image: '/static/images/phantom-logo.png',
       title: 'The Loop Runner | Trial Infinity Dealer',
       description: 'Intense, focused, and relentless. Kev generates trials on an infinite loop, keeping you in that k-hole of content.',
       specialties: ['Extended Trials', 'Account Recycling', 'Service Rotation'],
