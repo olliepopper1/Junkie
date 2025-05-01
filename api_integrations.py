@@ -33,54 +33,52 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 # API configuration
 API_CONFIG = {
     "personator": {
-        "key": PERSONATOR_API_KEY,
-        "host": "personator.melissadata.net",
-        "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify",
-        "auth_type": "bearer",
+        "key": RAPIDAPI_KEY,
+        "host": "personator.p.rapidapi.com",
+        "endpoint": "https://personator.p.rapidapi.com/v1/generate",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     },
     "virtual_number": {
-        "key": VIRTUAL_NUMBER_API_KEY,
-        "secret": os.getenv('VIRTUAL_NUMBER_API_SECRET', ''),
-        "host": "api.nexmo.com",
-        "endpoint": "https://api.nexmo.com/verify/json",
-        "auth_type": "form",
-        "content_type": "application/x-www-form-urlencoded"
+        "key": RAPIDAPI_KEY,
+        "host": "virtual-number.p.rapidapi.com",
+        "endpoint": "https://virtual-number.p.rapidapi.com/v1/numbers",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
     },
     "virtual_number_backup": {
-        "key": VIRTUAL_NUMBER_API_KEY,
-        "host": "apilayer.net",
-        "endpoint": "https://apilayer.net/api/validate",
-        "auth_type": "query",
+        "key": RAPIDAPI_KEY,
+        "host": "virtual-number-alternative.p.rapidapi.com",
+        "endpoint": "https://virtual-number-alternative.p.rapidapi.com/v1/verify",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     },
     "fake_card": {
-        # Using Stripe test cards API
-        "key": FAKE_CARD_API_KEY,
-        "host": "api.stripe.com",
-        "endpoint": "https://api.stripe.com/v1/charges",
-        "auth_type": "bearer",
-        "content_type": "application/x-www-form-urlencoded"
+        "key": RAPIDAPI_KEY,
+        "host": "fake-valid-cc-data-generator.p.rapidapi.com",
+        "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/v1/card/generate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
     },
     "virtual_card": {
-        "key": VIRTUAL_CARD_API_KEY,
-        "host": "api.stripe.com",
-        "endpoint": "https://api.stripe.com/v1/issuing/cards",
-        "auth_type": "bearer",
-        "content_type": "application/x-www-form-urlencoded"
+        "key": RAPIDAPI_KEY,
+        "host": "free-trial-virtual-card-issuing.p.rapidapi.com",
+        "endpoint": "https://free-trial-virtual-card-issuing.p.rapidapi.com/v1/generate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
     },
     "temp_email": {
-        "key": TEMP_EMAIL_API_KEY,
-        "host": "api.temp-mail.io",
-        "endpoint": "https://api.temp-mail.io/request/mail/id",
-        "auth_type": "bearer",
+        "key": RAPIDAPI_KEY,
+        "host": "fast-reliable-disposable-mx-email-checker.p.rapidapi.com",
+        "endpoint": "https://fast-reliable-disposable-mx-email-checker.p.rapidapi.com/v1/email/generate",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     },
     "temp_mail_backup": {
-        "key": TEMP_MAIL_BACKUP_API_KEY,
-        "host": "api.mail.tm",
-        "endpoint": "https://api.mail.tm/emails",
-        "auth_type": "bearer",
+        "key": RAPIDAPI_KEY,
+        "host": "temp-mail.p.rapidapi.com",
+        "endpoint": "https://temp-mail.p.rapidapi.com/v1/mail/create",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     }
 }
@@ -106,45 +104,14 @@ class APIIntegrations:
         }
         
         # Add API-specific headers based on auth_type
-        auth_type = api_config.get("auth_type", "api_key")
+        auth_type = api_config.get("auth_type", "rapidapi")
         
-        if auth_type == "bearer":
-            # Bearer token authentication (e.g., Stripe, Personator)
+        # All APIs now use RapidAPI format with X-RapidAPI-Key and X-RapidAPI-Host
+        if auth_type == "rapidapi":
             headers.update({
-                'Authorization': f'Bearer {api_config["key"]}',
+                'X-RapidAPI-Key': api_config["key"],
+                'X-RapidAPI-Host': api_config["host"],
             })
-            # Add Stripe-specific version for Stripe APIs
-            if "stripe.com" in api_config["host"]:
-                headers.update({
-                    'Stripe-Version': '2023-10-16',  # Use current Stripe API version
-                })
-        elif auth_type == "form":
-            # Form-based authentication (e.g., Vonage)
-            # Note: For form-based auth, we'll include the credentials in the payload
-            # rather than in headers, so we don't add anything here
-            pass
-        elif auth_type == "query":
-            # Query parameter-based authentication (e.g., NumVerify)
-            # Note: For query-based auth, we'll include the credentials in the URL
-            # query parameters, so we don't add anything here
-            pass
-        elif auth_type == "api_key":
-            if api_name == "temp_email":
-                # Temp Mail uses X-API-Key
-                headers.update({
-                    'X-API-Key': api_config["key"],
-                })
-            elif api_name == "temp_mail_backup":
-                # Mail.tm uses Bearer auth
-                headers.update({
-                    'Authorization': f'Bearer {api_config["key"]}',
-                })
-            else:
-                # Default to RapidAPI style headers
-                headers.update({
-                    'X-RapidAPI-Key': api_config["key"],
-                    'X-RapidAPI-Host': api_config["host"],
-                })
         
         return headers
     
