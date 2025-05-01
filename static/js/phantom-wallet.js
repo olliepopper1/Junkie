@@ -1,223 +1,197 @@
 /**
- * Phantom Wallet Integration for Trial Junkie
- * Manages wallet connections and transaction signing
+ * Phantom Wallet integration for Trial Junkie
+ * 
+ * Handles interactions with the Phantom wallet extension for Solana blockchain
  */
 
-// Wallet state tracking
-let walletConnected = false;
-let walletAddress = null;
-let walletBalance = 0;
+// Check if Phantom is available
+const isPhantomInstalled = window.phantom?.solana?.isPhantom;
 
-// DOM elements (will be initialized when DOM is ready)
-let connectButton;
-let disconnectButton;
-let walletAddressDisplay;
-let walletSection;
-let walletBalanceDisplay;
-let walletLogo;
-let walletStatus;
+// Wallet connection status
+let walletStatus = {
+    connected: false,
+    address: null,
+    balance: null
+};
 
-// Initialize wallet functionality
-document.addEventListener('DOMContentLoaded', async function() {
-  console.log('Initializing Phantom Wallet integration');
-  
-  // Get wallet DOM elements
-  connectButton = document.getElementById('connect-wallet-btn');
-  disconnectButton = document.getElementById('disconnect-wallet-btn');
-  walletAddressDisplay = document.getElementById('wallet-address');
-  walletSection = document.getElementById('wallet-section');
-  walletBalanceDisplay = document.getElementById('wallet-balance');
-  walletLogo = document.getElementById('phantom-logo');
-  walletStatus = document.getElementById('wallet-status');
-  
-  // Check if the wallet section exists on this page
-  if (!walletSection) {
-    console.log('Wallet section not found on this page');
-    return;
-  }
-  
-  // Add event listeners
-  if (connectButton) {
-    connectButton.addEventListener('click', connectWallet);
-  }
-  
-  if (disconnectButton) {
-    disconnectButton.addEventListener('click', disconnectWallet);
-  }
-  
-  // Check if the wallet is already connected
-  checkConnection();
-});
-
-// Check for existing connection
-async function checkConnection() {
-  try {
-    const isPhantomInstalled = window.phantom?.solana?.isPhantom;
-    if (!isPhantomInstalled) {
-      console.log('Phantom wallet extension not detected');
-      walletStatus.textContent = 'Not Installed';
-      walletStatus.classList.remove('bg-secondary', 'bg-success');
-      walletStatus.classList.add('bg-danger');
-      return;
-    }
-    
-    // Check if we're already connected
-    const provider = window.phantom?.solana;
-    const resp = await provider.connect({ onlyIfTrusted: true });
-    
-    if (resp && resp.publicKey) {
-      walletAddress = resp.publicKey.toString();
-      walletConnected = true;
-      updateWalletUI(true);
-    }
-  } catch (error) {
-    console.log('Not connected to wallet:', error.message);
-  }
-}
-
-// Connect to Phantom wallet
+/**
+ * Connect to Phantom Wallet
+ * @returns {Promise<Object>} The connection result
+ */
 async function connectWallet() {
-  try {
-    // Check if Phantom is installed
-    const isPhantomInstalled = window.phantom?.solana?.isPhantom;
-    if (!isPhantomInstalled) {
-      alert('Phantom wallet extension not detected. Please install Phantom wallet first.');
-      return;
+    try {
+        if (!isPhantomInstalled) {
+            console.error("Phantom wallet is not installed");
+            return {
+                success: false,
+                message: "Phantom wallet is not installed"
+            };
+        }
+        
+        const provider = window.phantom?.solana;
+        const resp = await provider.connect();
+        const walletAddress = resp.publicKey.toString();
+        
+        walletStatus.connected = true;
+        walletStatus.address = walletAddress;
+        
+        // Get wallet balance
+        try {
+            const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+            const balance = await connection.getBalance(new solanaWeb3.PublicKey(walletAddress));
+            const solBalance = balance / 1000000000; // Convert lamports to SOL
+            walletStatus.balance = solBalance;
+        } catch (error) {
+            console.error("Error fetching wallet balance:", error);
+            walletStatus.balance = null;
+        }
+        
+        return {
+            success: true,
+            address: walletAddress,
+            balance: walletStatus.balance
+        };
+    } catch (error) {
+        console.error("Error connecting to wallet:", error);
+        return {
+            success: false,
+            message: error.message || "Could not connect to Phantom wallet"
+        };
     }
-    
-    // Connect to the wallet
-    const provider = window.phantom?.solana;
-    const resp = await provider.connect();
-    walletAddress = resp.publicKey.toString();
-    walletConnected = true;
-    
-    // Update the UI
-    updateWalletUI(true);
-    
-    // Get wallet balance
-    await updateWalletBalance();
-    
-    // Save connection to server
-    saveWalletConnection();
-  } catch (error) {
-    console.error('Error connecting to wallet:', error);
-    alert('Could not connect to Phantom wallet. Please try again.');
-  }
 }
 
-// Disconnect from Phantom wallet
+/**
+ * Disconnect from Phantom Wallet
+ */
 async function disconnectWallet() {
-  try {
-    // Disconnect from the wallet
-    const provider = window.phantom?.solana;
-    await provider.disconnect();
-    
-    // Update state
-    walletConnected = false;
-    walletAddress = null;
-    
-    // Update the UI
-    updateWalletUI(false);
-    
-    // Save disconnection to server
-    saveWalletDisconnection();
-  } catch (error) {
-    console.error('Error disconnecting from wallet:', error);
-    alert('Could not disconnect from Phantom wallet. Please try again.');
-  }
-}
-
-// Update wallet balance
-async function updateWalletBalance() {
-  try {
-    if (!walletConnected || !walletAddress) return;
-    
-    // Get the Solana connection
-    const provider = window.phantom?.solana;
-    const connection = provider.connection;
-    
-    // Get wallet balance
-    const balance = await connection.getBalance(new solanaWeb3.PublicKey(walletAddress));
-    walletBalance = balance / 1000000000; // Convert lamports to SOL
-    
-    // Update UI
-    walletBalanceDisplay.textContent = `Balance: ${walletBalance.toFixed(4)} SOL`;
-  } catch (error) {
-    console.error('Error getting wallet balance:', error);
-    walletBalanceDisplay.textContent = `Balance: Unknown`;
-  }
-}
-
-// Update UI based on wallet connection status
-function updateWalletUI(connected) {
-  if (connected) {
-    // Connected state
-    connectButton.style.display = 'none';
-    disconnectButton.style.display = 'inline-block';
-    walletStatus.textContent = 'Connected';
-    walletStatus.classList.remove('bg-secondary', 'bg-danger');
-    walletStatus.classList.add('bg-success');
-    walletAddressDisplay.textContent = shortenAddress(walletAddress);
-    walletLogo.style.opacity = '1';
-    
-    // Add a connected class to wallet section
-    walletSection.classList.add('wallet-connected');
-  } else {
-    // Disconnected state
-    connectButton.style.display = 'inline-block';
-    disconnectButton.style.display = 'none';
-    walletStatus.textContent = 'Disconnected';
-    walletStatus.classList.remove('bg-success', 'bg-danger');
-    walletStatus.classList.add('bg-secondary');
-    walletAddressDisplay.textContent = 'Not connected';
-    walletBalanceDisplay.textContent = '';
-    walletLogo.style.opacity = '0.7';
-    
-    // Remove connected class from wallet section
-    walletSection.classList.remove('wallet-connected');
-  }
-}
-
-// Save wallet connection to server
-function saveWalletConnection() {
-  fetch('/api/connect-wallet', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ address: walletAddress })
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Wallet connection saved:', data);
-  })
-  .catch(error => {
-    console.error('Error saving wallet connection:', error);
-  });
-}
-
-// Save wallet disconnection to server
-function saveWalletDisconnection() {
-  fetch('/api/disconnect-wallet', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
+    try {
+        if (isPhantomInstalled) {
+            // Note: Phantom doesn't have a direct disconnect method
+            // But we can reset our connection state
+            walletStatus.connected = false;
+            walletStatus.address = null;
+            walletStatus.balance = null;
+        }
+    } catch (error) {
+        console.error("Error disconnecting wallet:", error);
     }
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Wallet disconnection saved:', data);
-  })
-  .catch(error => {
-    console.error('Error saving wallet disconnection:', error);
-  });
 }
 
-// Helper to shorten address for display
+/**
+ * Check if wallet is already connected
+ * @returns {Promise<Object>} Connection status
+ */
+async function checkWalletConnection() {
+    try {
+        if (!isPhantomInstalled) {
+            return { connected: false };
+        }
+        
+        const provider = window.phantom?.solana;
+        
+        try {
+            // This will only succeed if user has already authorized
+            const resp = await provider.connect({ onlyIfTrusted: true });
+            if (resp && resp.publicKey) {
+                const walletAddress = resp.publicKey.toString();
+                walletStatus.connected = true;
+                walletStatus.address = walletAddress;
+                
+                return {
+                    connected: true,
+                    address: walletAddress
+                };
+            }
+        } catch (error) {
+            // Not connected, which is fine - not an error
+            return { connected: false };
+        }
+    } catch (error) {
+        console.error("Error checking wallet connection:", error);
+        return { connected: false, error: error.message };
+    }
+}
+
+/**
+ * Helper function to shorten wallet address for display
+ * @param {string} address - The full wallet address
+ * @returns {string} The shortened address
+ */
 function shortenAddress(address) {
-  if (!address) return '';
-  return address.slice(0, 6) + '...' + address.slice(-4);
+    if (!address) return '';
+    return address.slice(0, 6) + '...' + address.slice(-4);
 }
 
-// Log initialization
-console.log('Phantom wallet integration script loaded');
+/**
+ * Send a transaction via Phantom Wallet
+ * @param {string} recipient - Recipient wallet address
+ * @param {number} amount - Amount in SOL
+ * @returns {Promise<Object>} Transaction result
+ */
+async function sendTransaction(recipient, amount) {
+    try {
+        if (!isPhantomInstalled) {
+            return {
+                success: false,
+                message: "Phantom wallet is not installed"
+            };
+        }
+        
+        if (!walletStatus.connected) {
+            // Try to connect first
+            const connectionResult = await connectWallet();
+            if (!connectionResult.success) {
+                return connectionResult;
+            }
+        }
+        
+        const provider = window.phantom?.solana;
+        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
+        
+        // Convert amount to lamports (1 SOL = 1,000,000,000 lamports)
+        const lamports = amount * 1000000000;
+        
+        // Create transaction
+        const transaction = new solanaWeb3.Transaction().add(
+            solanaWeb3.SystemProgram.transfer({
+                fromPubkey: new solanaWeb3.PublicKey(walletStatus.address),
+                toPubkey: new solanaWeb3.PublicKey(recipient),
+                lamports: lamports
+            })
+        );
+        
+        // Set recent blockhash and fee payer
+        transaction.feePayer = new solanaWeb3.PublicKey(walletStatus.address);
+        transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        
+        // Sign and send transaction
+        const signed = await provider.signTransaction(transaction);
+        const signature = await connection.sendRawTransaction(signed.serialize());
+        
+        // Wait for confirmation
+        await connection.confirmTransaction(signature);
+        
+        return {
+            success: true,
+            signature: signature,
+            message: "Transaction successful"
+        };
+    } catch (error) {
+        console.error("Error sending transaction:", error);
+        return {
+            success: false,
+            message: error.message || "Transaction failed"
+        };
+    }
+}
+
+// Export wallet functions as globals
+window.phantomWallet = {
+    connect: connectWallet,
+    disconnect: disconnectWallet,
+    checkConnection: checkWalletConnection,
+    shortenAddress: shortenAddress,
+    sendTransaction: sendTransaction,
+    isInstalled: isPhantomInstalled,
+    status: walletStatus
+};

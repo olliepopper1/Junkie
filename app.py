@@ -105,9 +105,9 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    # Temporarily disable login check for testing
-    # if 'user_id' not in session:
-    #     return redirect('/login')
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect('/login')
     return send_from_directory('static', 'dashboard.html')
 
 @app.route('/agents')

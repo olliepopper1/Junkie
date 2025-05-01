@@ -491,12 +491,132 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/psychedelic-bg.js"></script>
+  <!-- Solana Web3 library -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  
   <script src="/js/phantom-wallet.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log('Trial Junkie Dashboard Initialized');
       
-      // Simulate data loading
+      // Initialize wallet components
+      const connectWalletBtn = document.getElementById('connect-wallet-btn');
+      const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
+      const walletStatus = document.getElementById('wallet-status');
+      const walletAddress = document.getElementById('wallet-address');
+      const walletBalance = document.getElementById('wallet-balance');
+      
+      // Handle connect wallet button click
+      connectWalletBtn.addEventListener('click', async function() {
+        try {
+          const result = await window.phantomWallet.connect();
+          
+          if (result.success) {
+            // Update UI
+            walletStatus.textContent = 'Connected';
+            walletStatus.classList.remove('bg-secondary');
+            walletStatus.classList.add('bg-success');
+            
+            walletAddress.textContent = window.phantomWallet.shortenAddress(result.address);
+            
+            if (result.balance !== null) {
+              walletBalance.textContent = `Balance: ${result.balance.toFixed(4)} SOL`;
+            }
+            
+            // Show disconnect button
+            connectWalletBtn.style.display = 'none';
+            disconnectWalletBtn.style.display = 'inline-block';
+            
+            // Notify backend of the wallet connection
+            updateWalletStatus(result.address);
+          } else {
+            console.error('Failed to connect wallet:', result.message);
+            alert('Could not connect to Phantom wallet: ' + result.message);
+          }
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
+          alert('Error connecting to Phantom wallet. Please make sure the extension is installed and try again.');
+        }
+      });
+      
+      // Handle disconnect wallet button click
+      disconnectWalletBtn.addEventListener('click', async function() {
+        await window.phantomWallet.disconnect();
+        
+        // Update UI
+        walletStatus.textContent = 'Disconnected';
+        walletStatus.classList.remove('bg-success');
+        walletStatus.classList.add('bg-secondary');
+        
+        walletAddress.textContent = 'Not connected';
+        walletBalance.textContent = '';
+        
+        // Show connect button
+        connectWalletBtn.style.display = 'inline-block';
+        disconnectWalletBtn.style.display = 'none';
+        
+        // Notify backend of the wallet disconnection
+        updateWalletStatus(null);
+      });
+      
+      // Function to update wallet status on the server
+      function updateWalletStatus(address) {
+        fetch('/api/wallet-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            wallet_address: address
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            console.warn('Failed to update wallet status on server:', data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error updating wallet status:', error);
+        });
+      }
+      
+      // Check for existing wallet connection
+      async function checkWalletConnection() {
+        try {
+          const connectionStatus = await window.phantomWallet.checkConnection();
+          
+          if (connectionStatus.connected) {
+            // Update UI
+            walletStatus.textContent = 'Connected';
+            walletStatus.classList.remove('bg-secondary');
+            walletStatus.classList.add('bg-success');
+            
+            walletAddress.textContent = window.phantomWallet.shortenAddress(connectionStatus.address);
+            
+            // Check balance
+            const result = await window.phantomWallet.connect();
+            if (result.success && result.balance !== null) {
+              walletBalance.textContent = `Balance: ${result.balance.toFixed(4)} SOL`;
+            }
+            
+            // Show disconnect button
+            connectWalletBtn.style.display = 'none';
+            disconnectWalletBtn.style.display = 'inline-block';
+            
+            // Notify backend of the wallet connection
+            updateWalletStatus(connectionStatus.address);
+          }
+        } catch (error) {
+          console.error('Error checking wallet connection:', error);
+        }
+      }
+      
+      // Check for existing connection on page load
+      checkWalletConnection();
+      
+      // Simulate data loading for stats cards
       setTimeout(() => {
         const cards = document.querySelectorAll('.dashboard-card');
         cards.forEach((card, index) => {
