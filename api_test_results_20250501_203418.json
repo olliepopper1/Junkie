@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-05-01 20:34:18",
+  "success_rate": 100.0,
+  "successful_tests": 7,
+  "total_tests": 7,
+  "results": {
+    "identity_generation": {
+      "success": true,
+      "time": 0.17
+    },
+    "email_generation": {
+      "success": true,
+      "time": 0.48
+    },
+    "email_validation": {
+      "success": true,
+      "time": 0.01
+    },
+    "virtual_number": {
+      "success": true,
+      "time": 0.39
+    },
+    "card_generation": {
+      "success": true,
+      "time": 0.09
+    },
+    "web_scraping": {
+      "success": true,
+      "time": 2.75
+    },
+    "complete_trial_data": {
+      "success": true,
+      "time": 1.02
+    }
+  }
+}

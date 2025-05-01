@@ -1,61 +1,61 @@
 {
-  "timestamp": "2025-05-01 20:32:07",
+  "timestamp": "2025-05-01 20:35:10",
   "apis": {
     "personator": {
       "name": "Identity Generation",
-      "status": "Degraded",
-      "message": "API is responding but not returning expected data (184ms)",
-      "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify",
-      "time_checked": "2025-05-01 20:32:07"
+      "status": "Up",
+      "message": "API is functioning correctly (167ms)",
+      "endpoint": "https://randomuser.me/api/",
+      "time_checked": "2025-05-01 20:35:10"
     },
     "virtual_number": {
       "name": "Virtual Phone Number",
       "status": "Degraded",
       "message": "API is responding but not returning expected data (0ms)",
       "endpoint": "https://api.veriphone.io/v2/verify",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "virtual_number_backup": {
       "name": "Virtual Number Backup",
       "status": "Degraded",
       "message": "API is responding but not returning expected data (0ms)",
       "endpoint": "https://api.veriphone.io/v2/verify",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "fake_card": {
       "name": "Credit Card Generator",
       "status": "Up",
-      "message": "API is functioning correctly (99ms)",
+      "message": "API is functioning correctly (65ms)",
       "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/v1/card/generate",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "email_validator": {
       "name": "Email Validator",
       "status": "Up",
-      "message": "API is functioning correctly (12ms)",
+      "message": "API is functioning correctly (14ms)",
       "endpoint": "https://api.advancedemailverifier.com/verify",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "temp_email": {
       "name": "Disposable Email",
       "status": "Up",
       "message": "API is functioning correctly (0ms)",
       "endpoint": "https://disposable-email-generator.p.rapidapi.com/api/v1/email/generate",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "temp_mail_backup": {
       "name": "Email Backup",
       "status": "Up",
       "message": "API is functioning correctly (0ms)",
       "endpoint": "https://temp-mail-service.p.rapidapi.com/create",
-      "time_checked": "2025-05-01 20:32:07"
+      "time_checked": "2025-05-01 20:35:10"
     },
     "scrape_ninja": {
       "name": "Web Scraping",
       "status": "Degraded",
       "message": "API is responding but not returning expected data (0ms)",
-      "endpoint": "https://api.scrapeninja.com/scrape",
-      "time_checked": "2025-05-01 20:32:07"
+      "endpoint": "https://httpbin.org/get",
+      "time_checked": "2025-05-01 20:35:10"
     }
   }
 }

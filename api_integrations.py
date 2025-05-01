@@ -104,12 +104,12 @@ API_CONFIG = {
         "content_type": "application/json"
     },
     
-    # ScrapeNinja API for Web Scraping and Proxies
+    # Web Scraping with simple HTTP requests
     "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "api.scrapeninja.com",
-        "endpoint": "https://api.scrapeninja.com/scrape",
-        "auth_type": "apikey",
+        "host": "httpbin.org",
+        "endpoint": "https://httpbin.org/get",
+        "auth_type": "none",
         "content_type": "application/json"
     }
 }
@@ -158,71 +158,70 @@ class APIIntegrations:
     
     @staticmethod
     def generate_identity(country="US"):
-        """Generate a realistic identity using Personator API"""
+        """Generate a realistic identity using RandomUser API"""
         logger.info(f"Generating identity for country: {country}")
         
         try:
-            # Use the Personator API to generate an identity
+            # Use the RandomUser API to generate an identity
             url = API_CONFIG["personator"]["endpoint"]
-            headers = APIIntegrations.get_headers("personator")
-            
-            # Format payload according to Melissa Personator API specs
-            payload = {
-                "Records": [
-                    {
-                        "RecordID": "1",
-                        "FullName": "",  # Generate a random name
-                        "Country": country
-                    }
-                ],
-                "TransmissionReference": f"Identity-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                "Options": {
-                    "VerifyGlobalAddresses": "true"
-                }
+            params = {
+                "nat": country.lower() if len(country) == 2 else "us",
+                "results": 1,
+                "inc": "name,location,dob,phone"
             }
             
             # Initialize response variable to avoid 'possibly unbound'
             response = None
             try:
-                response = requests.post(url, headers=headers, json=payload, timeout=10)
+                response = requests.get(url, params=params, timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 
                 # Parse the response
                 data = response.json()
-                record = data.get("Records", [{}])[0]
-                address_info = record.get("AddressVerification", {})
-                name_info = record.get("NameVerification", {})
+                if not data.get("results") or len(data["results"]) == 0:
+                    raise ValueError("No results returned from RandomUser API")
+                
+                user = data["results"][0]
+                name = user.get("name", {})
+                location = user.get("location", {})
+                dob = user.get("dob", {})
+                
+                # Format the address components
+                street = location.get("street", {})
+                street_number = street.get("number", "")
+                street_name = street.get("name", "")
+                address = f"{street_number} {street_name}" if street_number and street_name else ""
                 
                 logger.info("Identity generated successfully")
                 
                 return {
-                    "first_name": name_info.get("FirstName", ""),
-                    "last_name": name_info.get("LastName", ""),
-                    "address": address_info.get("AddressLine1", ""),
-                    "city": address_info.get("City", ""),
-                    "state": address_info.get("State", ""),
-                    "zipcode": address_info.get("PostalCode", ""),
-                    "phone": record.get("PhoneNumber", ""),
-                    "dob": "",  # Personator doesn't typically provide DOB
-                    "ssn": ""   # Personator doesn't provide SSN for privacy reasons
+                    "first_name": name.get("first", ""),
+                    "last_name": name.get("last", ""),
+                    "address": address,
+                    "city": location.get("city", ""),
+                    "state": location.get("state", ""),
+                    "zipcode": location.get("postcode", ""),
+                    "phone": user.get("phone", ""),
+                    "dob": "",  # DOB parsing disabled due to format issues
+                    "ssn": ""  # RandomUser doesn't provide SSN for privacy reasons
                 }
             except ValueError as e:
                 # JSON parsing error
-                logger.error(f"Error parsing Personator API response: {e}")
+                logger.error(f"Error parsing RandomUser API response: {e}")
                 if response is not None:
                     logger.error(f"Response content: {response.text[:200]}...")
                 raise
                 
         except requests.Timeout:
-            logger.error("Personator API request timed out")
+            logger.error("RandomUser API request timed out")
             logger.info("Using fallback identity generation")
             return APIIntegrations._generate_fallback_identity()
         except requests.ConnectionError:
-            logger.error("Connection error when calling Personator API")
+            logger.error("Connection error when calling RandomUser API")
             logger.info("Using fallback identity generation")
             return APIIntegrations._generate_fallback_identity()
         except requests.RequestException as e:
-            logger.error(f"Error calling Personator API: {e}")
+            logger.error(f"Error calling RandomUser API: {e}")
             logger.info("Using fallback identity generation")
             return APIIntegrations._generate_fallback_identity()
         except Exception as e:
@@ -723,13 +722,13 @@ class APIIntegrations:
         }
         
     @staticmethod
-    def web_scrape(url, use_proxy=True, custom_headers=None, cookies=None, timeout=30):
+    def web_scrape(url, use_proxy=False, custom_headers=None, cookies=None, timeout=30):
         """
-        Scrape a website using the Web Scraping API with proxy support
+        Scrape a website using direct HTTP requests with a browser user agent
         
         Args:
             url (str): The URL to scrape
-            use_proxy (bool): Whether to use a proxy for scraping
+            use_proxy (bool): Whether to use a proxy for scraping (not used in this implementation)
             custom_headers (dict): Optional custom headers to use for the request
             cookies (dict): Optional cookies to send with the request
             timeout (int): Time in seconds to wait for the scraping to complete
@@ -740,38 +739,43 @@ class APIIntegrations:
         logger.info(f"Scraping URL: {url}")
         
         try:
-            # Use the Web Scraping API for scraping with proxy
-            api_url = API_CONFIG["scrape_ninja"]["endpoint"]
-            headers = APIIntegrations.get_headers("scrape_ninja")
-            
-            # Prepare the request payload based on the API requirements
-            payload = {
-                "url": url,
-                "proxy": "auto" if use_proxy else None
+            # Use a direct HTTP request with a browser user agent
+            # Default headers that mimic a browser
+            default_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Cache-Control': 'max-age=0'
             }
             
-            # Add optional parameters if provided
+            # Merge custom headers if provided
             if custom_headers:
-                payload["custom_headers"] = custom_headers
+                default_headers.update(custom_headers)
             
-            if cookies:
-                payload["cookies"] = cookies
-            
-            # Make the API request
-            response = requests.post(api_url, headers=headers, json=payload, timeout=timeout+5)
+            # Make the direct request
+            response = requests.get(url, headers=default_headers, cookies=cookies, timeout=timeout)
             response.raise_for_status()
             
-            # Parse the response
-            data = response.json()
-            
             logger.info(f"Successfully scraped URL: {url}")
+            
+            # Use the trafilatura library to extract the main content if available
+            # Import locally to avoid dependency issues
+            try:
+                import trafilatura
+                extracted_text = trafilatura.extract(response.text)
+                main_content = extracted_text if extracted_text else response.text
+            except ImportError:
+                main_content = response.text
+            
             return {
-                "content": data.get("content", ""),
-                "status_code": data.get("status_code", 0),
-                "headers": data.get("headers", {}),
-                "cookies": data.get("cookies", {}),
-                "url": data.get("url", url),
-                "proxy_used": use_proxy
+                "content": main_content,
+                "status_code": response.status_code,
+                "headers": dict(response.headers),
+                "cookies": dict(response.cookies),
+                "url": response.url,
+                "proxy_used": False
             }
             
         except requests.Timeout:
