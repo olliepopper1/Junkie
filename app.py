@@ -83,6 +83,42 @@ DISCORD_API_BASE_URL = "https://discord.com/api"
 DISCORD_AUTHORIZATION_BASE_URL = DISCORD_API_BASE_URL + "/oauth2/authorize"
 DISCORD_TOKEN_URL = DISCORD_API_BASE_URL + "/oauth2/token"
 
+# Decorator for authentication requirement
+def authenticated_only(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# Decorator for subscription requirement
+def subscription_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+            
+        user_id = session['user_id']
+        user = WebUser.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Check if user has an active subscription
+        from datetime import datetime
+        now = datetime.utcnow()
+        
+        if not user.subscription_tier or not user.subscription_expires_at or user.subscription_expires_at < now:
+            return jsonify({
+                'error': 'Subscription required',
+                'message': 'You need an active subscription to use this feature',
+                'redirect': '/subscriptions'
+            }), 403
+            
+        return f(*args, **kwargs)
+    return decorated
+
 def get_discord_oauth():
     return OAuth2Session(
         client_id=DISCORD_CLIENT_ID,
@@ -359,9 +395,27 @@ def login():
 
 @app.route('/logout')
 def logout():
-    logout_user()
-    session.clear()
-    return redirect('/')
+    try:
+        # Get user ID before clearing session to cleanup wallet sessions
+        user_id = session.get('user_id')
+        
+        # Clear Flask-Login
+        logout_user()
+        
+        # Remove from wallet session tracking if it exists
+        if user_id and user_id in wallet_sessions:
+            del wallet_sessions[user_id]
+        
+        # Clear all session data
+        session.clear()
+        
+        logger.info(f"User logged out successfully: {user_id}")
+        return redirect('/')
+    except Exception as e:
+        logger.error(f"Error during logout: {str(e)}")
+        # Even if there's an error, try to clear session and redirect
+        session.clear()
+        return redirect('/?error=logout_error')
 
 # Discord OAuth2 Routes
 # Wallet Authentication routes
@@ -768,14 +822,49 @@ def verify_payment():
             user_id = session['user_id']
             user = WebUser.query.get(user_id)
             
-            # Implementation would update the user's tier here
-            # ...
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+                
+            # Get payment details to determine plan
+            payment = result.get('payment', {})
+            plan_id = payment.get('plan_id')
             
+            # Set subscription dates - 30 days from now for expiration
+            from datetime import datetime, timedelta
+            now = datetime.utcnow()
+            expiration_date = now + timedelta(days=30)
+            
+            # Update the user's subscription in the database
+            user.subscription_tier = plan_id
+            user.subscription_starts_at = now
+            user.subscription_expires_at = expiration_date
+            
+            # Store the payment information
+            user.last_payment_amount = payment.get('amount')
+            user.last_payment_date = now
+            user.last_payment_reference = reference
+            
+            db.session.commit()
+            
+            # Also update in the bot database if needed
+            try:
+                from database import Database
+                bot_db = Database()
+                bot_db.update_user_tier(user_id, plan_id, expiration_date.isoformat())
+                logger.info(f"Updated subscription tier in bot database: {user_id} -> {plan_id}")
+            except Exception as e:
+                logger.error(f"Error updating tier in bot database: {str(e)}")
+            
+            # Return success with subscription details
             return jsonify({
                 'success': True,
+                'message': 'Payment verified successfully',
                 'status': 'confirmed',
-                'plan_id': result['plan_id'],
-                'expires_at': result['expires_at']
+                'subscription': {
+                    'tier': plan_id,
+                    'starts_at': now.isoformat(),
+                    'expires_at': expiration_date.isoformat()
+                }
             })
         else:
             return jsonify({
