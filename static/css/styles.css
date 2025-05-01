@@ -47,8 +47,55 @@ body {
   opacity: 0.8;
 }
 
-/* Responsive fixes */
+/* Hero section styles */
+.hero {
+  position: relative;
+  background-color: var(--darker-bg);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(111, 66, 193, 0.2) 0%, rgba(23, 26, 29, 0) 70%);
+  z-index: 0;
+}
+
+.hero .container {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  white-space: nowrap; /* Prevent text wrapping */
+  margin: 0 auto;
+  display: inline-block;
+}
+
+@media (max-width: 992px) {
+  .hero-title {
+    font-size: 2.5rem; /* Smaller font on medium devices */
+  }
+}
+
 @media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem; /* Even smaller font on mobile */
+    white-space: normal; /* Allow wrapping on very small screens */
+    display: block;
+    line-height: 1.2;
+  }
+  
+  /* Strategic wrapping with non-breaking spaces for better appearance */
+  .hero-title .no-wrap {
+    white-space: nowrap;
+    display: inline-block;
+  }
+  
   #wallet-section .card-body {
     padding: 1.5rem;
   }
