@@ -5,6 +5,7 @@ Adds reset_password_token and reset_password_expires fields to WebUser model
 import os
 import sys
 import logging
+from sqlalchemy import text
 from app import app, db
 from models import WebUser
 
@@ -37,16 +38,17 @@ def migrate():
             
             if 'reset_password_token' not in columns:
                 db.session.execute(
-                    'ALTER TABLE web_user ADD COLUMN reset_password_token VARCHAR(100) UNIQUE'
+                    text('ALTER TABLE web_user ADD COLUMN reset_password_token VARCHAR(100) UNIQUE')
                 )
                 logger.info("Added reset_password_token column")
             
             if 'reset_password_expires' not in columns:
                 db.session.execute(
-                    'ALTER TABLE web_user ADD COLUMN reset_password_expires DATETIME'
+                    text('ALTER TABLE web_user ADD COLUMN reset_password_expires TIMESTAMP')
                 )
                 logger.info("Added reset_password_expires column")
             
+            # Recreate all tables to ensure model consistency
             db.session.commit()
             logger.info("Migration completed successfully")
         
