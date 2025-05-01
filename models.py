@@ -2,7 +2,7 @@
 Trial Junkie - Database Models
 Models for the Trial Junkie platform
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
@@ -23,6 +23,8 @@ class WebUser(UserMixin, db.Model):
     referral_code = db.Column(db.String(20), unique=True, nullable=True)
     referred_by_id = db.Column(db.Integer, db.ForeignKey('web_user.id'), nullable=True)
     referral_count = db.Column(db.Integer, default=0)
+    reset_password_token = db.Column(db.String(100), unique=True, nullable=True)
+    reset_password_expires = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Self-referential relationship for referrals
@@ -33,6 +35,29 @@ class WebUser(UserMixin, db.Model):
         
     def check_password(self, password):
         return self.password_hash and check_password_hash(self.password_hash, password)
+        
+    def generate_reset_token(self):
+        """Generate a secure token for password reset"""
+        import secrets
+        import string
+        token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
+        self.reset_password_token = token
+        # Token expires after 24 hours
+        self.reset_password_expires = datetime.utcnow() + timedelta(hours=24)
+        return token
+    
+    def verify_reset_token(self, token):
+        """Verify if a reset token is valid"""
+        if self.reset_password_token != token:
+            return False
+        if datetime.utcnow() > self.reset_password_expires:
+            return False
+        return True
+        
+    def clear_reset_token(self):
+        """Clear the reset token after use"""
+        self.reset_password_token = None
+        self.reset_password_expires = None
 
 class Trial(db.Model):
     id = db.Column(db.Integer, primary_key=True)

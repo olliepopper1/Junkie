@@ -173,6 +173,94 @@ def js_files(filename):
 def img_files(filename):
     return send_from_directory('static/img', filename)
 
+# Password reset routes
+@app.route('/forgot-password')
+def forgot_password():
+    """Show forgot password page"""
+    return send_from_directory('static', 'forgot-password.html')
+
+@app.route('/reset-password')
+def reset_password_page():
+    """Show reset password page"""
+    # Check if token is provided
+    token = request.args.get('token')
+    if not token:
+        return redirect('/forgot-password?error=no_token')
+    
+    return send_from_directory('static', 'reset-password.html')
+
+@app.route('/api/forgot-password', methods=['POST'])
+def api_forgot_password():
+    """Handle forgot password request"""
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Invalid request format"})
+    
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({"success": False, "message": "Email is required"})
+    
+    # Find user by email
+    user = WebUser.query.filter_by(email=email).first()
+    
+    if not user:
+        return jsonify({"success": False, "message": "Email not found"})
+    
+    # Generate reset token
+    token = user.generate_reset_token()
+    db.session.commit()
+    
+    # In a real application, we would send an email with the reset link
+    # For now, we'll just log it
+    reset_link = f"{request.host_url}reset-password?token={token}"
+    logger.info(f"Password reset link for {email}: {reset_link}")
+    
+    # For demo purposes, we'll return the token in the response
+    # In production, you would NOT do this - you would only send it via email
+    return jsonify({
+        "success": True,
+        "message": "Password reset instructions sent to your email. Please check your inbox.",
+        "_debug_link": reset_link  # For development only, remove in production
+    })
+
+@app.route('/api/reset-password', methods=['POST'])
+def api_reset_password():
+    """Handle password reset"""
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Invalid request format"})
+    
+    data = request.get_json()
+    token = data.get('token')
+    password = data.get('password')
+    
+    if not token or not password:
+        return jsonify({"success": False, "message": "Token and password are required"})
+    
+    # Find user by reset token
+    user = WebUser.query.filter_by(reset_password_token=token).first()
+    
+    if not user:
+        return jsonify({"success": False, "message": "Invalid or expired token"})
+    
+    # Verify token is valid
+    if not user.verify_reset_token(token):
+        return jsonify({"success": False, "message": "Token has expired. Please request a new password reset."})
+    
+    # Check password strength
+    if len(password) < 8:
+        return jsonify({"success": False, "message": "Password must be at least 8 characters long"})
+    
+    # Update password and clear token
+    user.set_password(password)
+    user.clear_reset_token()
+    db.session.commit()
+    
+    return jsonify({
+        "success": True,
+        "message": "Password has been reset successfully. You can now log in with your new password."
+    })
+
 # Authentication routes
 @app.route('/register', methods=['GET', 'POST'])
 def register():
