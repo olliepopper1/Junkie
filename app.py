@@ -290,6 +290,10 @@ def referral_landing(referral_code):
 def roadmap():
     return send_from_directory('static', 'roadmap.html')
 
+@app.route('/bot-guide')
+def bot_guide():
+    return render_template('bot_guide.html')
+
 @app.route('/subscriptions')
 def subscriptions():
     """Show the subscriptions page"""
