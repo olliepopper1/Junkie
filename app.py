@@ -361,6 +361,7 @@ def logout():
 # Discord OAuth2 Routes
 # Wallet Authentication routes
 @app.route('/api/login-with-wallet', methods=['POST'])
+@app.route('/login-with-wallet', methods=['POST'])
 def login_with_wallet():
     """Login with Phantom wallet"""
     if not request.is_json:
@@ -395,6 +396,7 @@ def login_with_wallet():
     })
 
 @app.route('/api/register-with-wallet', methods=['POST'])
+@app.route('/register-with-wallet', methods=['POST'])
 def register_with_wallet():
     """Register with Phantom wallet"""
     if not request.is_json:
@@ -782,6 +784,7 @@ def verify_payment():
 
 # Phantom Wallet API Endpoints
 @app.route('/api/wallet/connect', methods=['POST'])
+@app.route('/connect-wallet', methods=['POST'])
 def connect_wallet():
     """Connect a Phantom wallet"""
     if 'user_id' not in session:
@@ -817,6 +820,7 @@ def connect_wallet():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/wallet/disconnect', methods=['POST'])
+@app.route('/disconnect-wallet', methods=['POST'])
 def disconnect_wallet():
     """Disconnect a Phantom wallet"""
     if 'user_id' not in session:
@@ -844,6 +848,7 @@ def disconnect_wallet():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/wallet/status', methods=['GET'])
+@app.route('/wallet-status', methods=['GET'])
 def wallet_status():
     """Get wallet connection status"""
     if 'user_id' not in session:
