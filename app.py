@@ -935,8 +935,19 @@ def generate_trial():
             logger.error(f"Error saving trial to database: {str(e)}")
             # Continue anyway since we have the trial info to return
         
-        # Return the trial info with the database ID if available
-        trial_id = trial.id if 'trial' in locals() and trial.id else random.randint(1000, 9999)
+        # Generate a random trial ID as fallback
+        trial_id = random.randint(1000, 9999)
+        
+        # This variable will be defined if database save was successful
+        saved_trial = locals().get('trial')
+        
+        # If we have a saved trial with an ID, use that instead
+        if saved_trial is not None:
+            try:
+                if hasattr(saved_trial, 'id') and saved_trial.id:
+                    trial_id = saved_trial.id
+            except Exception as e:
+                logger.debug(f"Using random trial ID due to error: {e}")
         
         return jsonify({
             'success': True,
@@ -950,8 +961,8 @@ def generate_trial():
                 'created_at': trial_info['generated_at'],
                 'expires_at': trial_info['trial_end_date'],
                 'subscription_tier': user.subscription_tier,
-                'usage_count': daily_usage + 1,
-                'daily_limit': tier_limit
+                'usage_count': usage_result['current_usage'] + 1,
+                'daily_limit': usage_result['limit']
             }
         })
     except Exception as e:
