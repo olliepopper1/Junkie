@@ -239,7 +239,7 @@
             <span id="wallet-username" class="me-3 d-none d-md-inline">Not connected</span>
           </div>
           <button id="nav-connect-wallet-btn" class="btn btn-primary btn-sm me-2">
-            <i class="bi bi-wallet2"></i> Connect Wallet
+            <i class="bi bi-wallet2"></i> My Wallet
           </button>
           <button id="nav-disconnect-wallet-btn" class="btn btn-outline-light btn-sm" style="display: none;">
             <i class="bi bi-box-arrow-right"></i> Logout
@@ -258,36 +258,23 @@
       </div>
     </div>
 
-    <!-- Wallet Connection Section -->
-    <div class="wallet-section mb-5">
-      <div class="row align-items-center">
-        <div class="col-md-2 text-center mb-3 mb-md-0">
-          <div class="phantom-logo">
-            <svg width="60" height="60" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M110.584 64.9142C109.841 61.4594 107.628 58.6464 104.593 57.0389C106.573 53.489 106.111 48.9485 103.476 45.883C100.842 42.8175 96.421 42.0369 92.9537 43.6444C91.3516 40.1897 88.2929 37.7041 84.5359 37.1187C80.779 36.5334 77.0221 38.2359 74.8492 41.3014C71.9986 38.6307 67.8126 37.8501 64.1859 39.4576C60.5592 41.0651 58.1782 44.716 58.0478 48.7533C54.4211 48.7533 51.0624 50.9438 49.4603 54.3986C47.8581 57.8533 48.6013 61.8983 51.193 64.5986C48.6013 67.2693 47.8581 71.314 49.4603 74.7687C51.0624 78.2235 54.4211 80.414 58.0478 80.414C58.0478 84.4516 60.4289 88.1025 64.0556 89.71C67.6822 91.3175 71.8683 90.5369 74.7189 87.8662C76.8919 90.9317 80.6488 92.6342 84.4057 92.0488C88.1626 91.4635 91.2214 88.9779 92.8235 85.5231C96.2908 87.1307 100.712 86.35 103.346 83.2845C105.981 80.219 106.443 75.6786 104.463 72.1287C107.498 70.5212 109.711 67.7082 110.454 64.2534C110.584 64.3486 110.584 64.819 110.584 64.9142Z" fill="white"/>
-              <path d="M48.6013 64.6239C48.6013 70.5586 51.3236 76.0509 55.9412 79.5056C61.0414 83.4555 67.9329 83.9457 73.5535 81.0375C73.8141 80.9423 74.3356 80.6472 74.5962 80.5521C75.8972 79.8666 77.0677 79.0859 78.1079 78.1101C78.3685 77.9198 78.6291 77.6247 78.8897 77.4344C79.5416 76.8491 80.1935 76.2637 80.7151 75.5782C80.7151 75.3879 80.9757 75.0928 80.9757 74.9025C81.9972 73.2473 82.6747 71.4324 83.0922 69.4829C83.5225 67.1927 83.3744 64.7887 82.7352 62.59H83.2221C86.0551 62.59 88.1831 60.4646 88.1831 57.8264C88.1831 55.1881 86.0551 53.0628 83.4094 53.0628H78.0339C78.0339 53.0628 78.0339 53.0628 78.0339 52.9676C77.2907 50.9229 76.5476 49.068 72.9765 46.9797C69.4055 44.8914 68.1402 43.4744 66.2193 40.9889C66.2193 40.9889 63.1605 45.1647 67.7781 48.5243C67.1318 48.5243 63.1734 48.5243 59.9851 51.6661C56.797 54.8079 56.5364 58.2627 56.5364 58.2627C56.5364 58.2627 53.2284 59.3814 51.0624 62.3997C48.8965 65.418 48.6013 64.6239 48.6013 64.6239Z" fill="#534BB1"/>
-            </svg>
-          </div>
-        </div>
-        <div class="col-md-7">
-          <h4 class="mb-3">Connect Your Phantom Wallet</h4>
-          <p class="mb-3">Select a subscription below and pay with Solana (SOL) using your Phantom wallet.</p>
-          <div class="d-flex align-items-center">
-            <div class="wallet-status me-3">
-              <span id="wallet-status-text" class="badge bg-secondary">Not Connected</span>
-              <span id="wallet-address" class="ms-2 small text-muted font-monospace"></span>
-            </div>
-            <div id="wallet-balance" class="small text-muted"></div>
-          </div>
-        </div>
-        <div class="col-md-3 text-md-end mt-3 mt-md-0">
-          <button id="connect-wallet-btn" class="btn btn-primary">
-            <i class="bi bi-wallet2"></i> Connect Wallet
-          </button>
-          <button id="disconnect-wallet-btn" class="btn btn-outline-danger" style="display: none;">
-            <i class="bi bi-box-arrow-right"></i> Disconnect
-          </button>
-        </div>
+    <!-- Subscription Notice Section -->
+    <div class="subscription-notice mb-5 text-center">
+      <div class="alert alert-info">
+        <h4 class="mb-3"><i class="bi bi-info-circle"></i> How to Subscribe</h4>
+        <p class="mb-3">1. Choose your preferred plan below</p>
+        <p class="mb-3">2. Click "Subscribe" on your preferred plan</p>
+        <p class="mb-3">3. Connect your Phantom wallet when prompted</p>
+        <p class="mb-0">4. Complete payment to activate your subscription</p>
+      </div>
+      
+      <!-- Discord Community Banner -->
+      <div class="mt-4 p-3 rounded bg-dark">
+        <h5><i class="bi bi-discord"></i> Join Our Discord Community</h5>
+        <p class="mb-2">Get help, share tips, and connect with other Trial Junkies</p>
+        <a href="https://discord.gg/PBKUAjwhwX" target="_blank" class="btn btn-secondary">
+          <i class="bi bi-discord"></i> Join Discord
+        </a>
       </div>
     </div>
 
