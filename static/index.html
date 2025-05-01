@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+  <script src="/js/phantom-wallet.js"></script>
+  <script src="/js/wallet-header.js"></script>
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -46,19 +49,19 @@
         transform: translateY(0);
       }
     }
-    .discord-login-btn {
+    .wallet-connect-btn {
       display: flex;
       align-items: center;
-      background-color: #5865F2;
-      border-color: #5865F2;
+      background-color: #AB70FF;
+      border-color: #AB70FF;
       transition: all 0.3s ease;
     }
-    .discord-login-btn:hover {
-      background-color: #4752C4;
+    .wallet-connect-btn:hover {
+      background-color: #9656FB;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(88, 101, 242, 0.5);
+      box-shadow: 0 4px 8px rgba(171, 112, 255, 0.5);
     }
-    .discord-logo {
+    .wallet-logo {
       margin-right: 8px;
     }
   </style>
@@ -96,9 +99,24 @@
           </li>
         </ul>
         <div class="d-flex">
-          <a href="https://discord.gg/trialjunkie" class="btn discord-login-btn text-white">
-            <i class="bi bi-discord discord-logo"></i> Login with Discord
-          </a>
+          <button id="wallet-connect-btn" class="btn wallet-connect-btn text-white">
+            <img src="/img/phantom-icon.svg" alt="Phantom" class="wallet-logo" width="20"> 
+            Connect Wallet
+          </button>
+          <div id="wallet-connected" class="wallet-connected d-none">
+            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="walletDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="/img/phantom-icon.svg" alt="Phantom" class="wallet-logo me-1" width="16">
+              <span id="wallet-address-display"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="walletDropdown">
+              <li><span class="dropdown-item-text">Balance: <span id="wallet-balance">-- SOL</span></span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
+              <li><a class="dropdown-item" href="/trials">My Trials</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="wallet-disconnect">Disconnect</a></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
