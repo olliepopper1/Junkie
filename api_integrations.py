@@ -89,8 +89,17 @@ API_CONFIG = {
     # Disposable Email Generator
     "temp_email": {
         "key": RAPIDAPI_KEY,
-        "host": "fast-reliable-disposable-mx-email-checker.p.rapidapi.com",
-        "endpoint": "https://fast-reliable-disposable-mx-email-checker.p.rapidapi.com/v1/email/generate",
+        "host": "disposable-email-generator.p.rapidapi.com",
+        "endpoint": "https://disposable-email-generator.p.rapidapi.com/api/v1/email/generate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Backup Disposable Email
+    "temp_mail_backup": {
+        "key": RAPIDAPI_KEY,
+        "host": "temp-mail-service.p.rapidapi.com",
+        "endpoint": "https://temp-mail-service.p.rapidapi.com/create",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -98,8 +107,8 @@ API_CONFIG = {
     # ScrapeNinja API for Web Scraping and Proxies
     "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "scrapeninja.p.rapidapi.com",
-        "endpoint": "https://scrapeninja.p.rapidapi.com/scrape",
+        "host": "web-scraping-api.p.rapidapi.com",
+        "endpoint": "https://web-scraping-api.p.rapidapi.com/scrape",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     }
@@ -705,7 +714,7 @@ class APIIntegrations:
     @staticmethod
     def web_scrape(url, use_proxy=True, custom_headers=None, cookies=None, timeout=30):
         """
-        Scrape a website using the ScrapeNinja API with proxy support
+        Scrape a website using the Web Scraping API with proxy support
         
         Args:
             url (str): The URL to scrape
@@ -717,23 +726,29 @@ class APIIntegrations:
         Returns:
             dict: Scraped content and metadata
         """
-        logger.info(f"Scraping URL with ScrapeNinja: {url}")
+        logger.info(f"Scraping URL: {url}")
         
         try:
-            # Use the ScrapeNinja API for scraping with proxy
+            # Use the Web Scraping API for scraping with proxy
             api_url = API_CONFIG["scrape_ninja"]["endpoint"]
             headers = APIIntegrations.get_headers("scrape_ninja")
             
-            # Prepare the request payload
+            # Prepare the request payload based on the API requirements
             payload = {
                 "url": url,
-                "proxy": "auto" if use_proxy else None,
-                "timeout": timeout
+                "render_js": True,
+                "timeout": timeout,
+                "device": "desktop"
             }
+            
+            # Use premium proxies if requested
+            if use_proxy:
+                payload["proxy_type"] = "residential"
+                payload["country"] = "us"
             
             # Add optional parameters if provided
             if custom_headers:
-                payload["headers"] = custom_headers
+                payload["custom_headers"] = custom_headers
             
             if cookies:
                 payload["cookies"] = cookies
@@ -807,22 +822,22 @@ class APIIntegrations:
                 trial_data["service"] = "custom_url"  # Mark as custom URL trial
                 
             except Exception as automation_error:
-                # If browser automation fails, fallback to ScrapeNinja
-                logger.warning(f"Browser automation failed, falling back to ScrapeNinja: {automation_error}")
+                # If browser automation fails, fallback to Web Scraping API
+                logger.warning(f"Browser automation failed, falling back to Web Scraping API: {automation_error}")
                 
-                # Use ScrapeNinja to get the page content
+                # Use Web Scraping API to get the page content
                 scrape_result = APIIntegrations.web_scrape(url, use_proxy=True, timeout=60)
                 
                 if "error" in scrape_result:
-                    logger.error(f"ScrapeNinja fallback also failed: {scrape_result['error']}")
-                    raise Exception(f"Both automation methods failed: {automation_error}. ScrapeNinja error: {scrape_result['error']}")
+                    logger.error(f"Web Scraping API fallback also failed: {scrape_result['error']}")
+                    raise Exception(f"Both automation methods failed: {automation_error}. Web Scraping error: {scrape_result['error']}")
                 
                 # Successfully scraped the page, add to trial data
                 trial_data.update({
                     "automation_result": {
                         "success": scrape_result.get("status_code") == 200,
                         "content_length": len(scrape_result.get("content", "")),
-                        "method": "scrapeninja_proxy"
+                        "method": "web_scraping_proxy"
                     },
                     "success": scrape_result.get("status_code") == 200,
                     "success_score": 0.7 if scrape_result.get("status_code") == 200 else 0.0,
@@ -831,7 +846,7 @@ class APIIntegrations:
                     "service": "custom_url_scraped"
                 })
                 
-                logger.info(f"Trial content retrieved successfully for URL: {url} using ScrapeNinja")
+                logger.info(f"Trial content retrieved successfully for URL: {url} using Web Scraping API")
             
             return trial_data
             
