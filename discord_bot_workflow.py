@@ -73,7 +73,7 @@ def run_bot():
         intents.message_content = True
         
         # Create bot instance
-        bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+        bot = commands.Bot(command_prefix='/', intents=intents, help_command=None)
         
         @bot.event
         async def on_ready():
