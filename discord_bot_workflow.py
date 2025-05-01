@@ -1,61 +1,249 @@
 #!/usr/bin/env python3
 """
-Discord Bot Workflow Runner
-This script is specifically designed to work with the Replit 'discord_bot' workflow
-It runs the Discord bot without any Flask dependencies
+Discord Bot Workflow Script
+This script is specifically designed for the Replit workflow system
+and avoids any imports that might conflict with Flask or cause port issues.
 """
 import os
 import sys
+import json
 import logging
-import subprocess
+import random
+import sqlite3
+from datetime import datetime, timedelta
+import time
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("discord_bot_workflow.log"),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger("discord_bot_workflow")
 
-def main():
-    """Run the Discord bot directly"""
-    logger.info("Starting Discord bot workflow runner...")
-    
-    # Set environment variables to prevent Flask conflicts
-    os.environ['NO_FLASK'] = '1'
-    os.environ['NO_WEB_APP'] = '1'
-    os.environ['DISCORD_BOT_ONLY'] = '1'
-    os.environ['PYTHONUNBUFFERED'] = '1'
-    
-    # Run the standalone bot script directly using subprocess
-    # This avoids any potential import conflicts with Flask
-    logger.info("Launching standalone bot process...")
+# Load environment variables
+load_dotenv()
+
+# Check if we have the Discord bot token
+DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+if not DISCORD_BOT_TOKEN:
+    logger.error("DISCORD_BOT_TOKEN not found in environment variables")
+    sys.exit(1)
+
+def run_bot():
+    """Run the Discord bot"""
+    logger.info("Starting Discord bot workflow...")
     
     try:
-        # Execute the standalone bot as a separate process
-        process = subprocess.Popen(
-            ["python", "-u", "standalone_bot.py"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            env=os.environ.copy()
-        )
+        # Import Discord.py here to avoid any circular imports
+        import discord
+        from discord.ext import commands
         
-        # Stream output
-        for line in process.stdout:
-            print(line, end='')
-            sys.stdout.flush()
+        # Set up intents
+        intents = discord.Intents.default()
+        intents.message_content = True
+        
+        # Create bot instance
+        bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+        
+        @bot.event
+        async def on_ready():
+            """Called when the bot is ready"""
+            logger.info(f"Trial Junkie bot is online as {bot.user}")
+            await bot.change_presence(activity=discord.Game(name="!help for commands"))
+        
+        @bot.event
+        async def on_command_error(ctx, error):
+            """Handle command errors"""
+            if isinstance(error, commands.CommandNotFound):
+                await ctx.send("❌ Command not found. Use `!help` to see available commands.")
+            elif isinstance(error, commands.MissingRequiredArgument):
+                await ctx.send(f"❌ Missing required argument: {error.param.name}")
+            else:
+                logger.error(f"Command error: {error}")
+                await ctx.send(f"❌ Error: {str(error)}")
+        
+        @bot.command(name="ping")
+        async def ping_command(ctx):
+            """Simple ping command to test the bot"""
+            await ctx.send(f"🏓 Pong! Bot latency: {round(bot.latency * 1000)}ms")
+        
+        @bot.command(name="help")
+        async def help_command(ctx):
+            """Display help information"""
+            embed = discord.Embed(
+                title="🧪 Trial Junkie - Help",
+                description="Your friendly neighborhood dealer for free trials",
+                color=0x6f42c1
+            )
             
-        # Wait for the process to finish
-        return_code = process.wait()
-        if return_code != 0:
-            logger.error(f"Bot process exited with code {return_code}")
-            return return_code
+            # Main commands
+            embed.add_field(
+                name="🎯 Hit (Full Trial)",
+                value="`!hit <service/url>` - Generate all credentials for a trial\nExample: `!hit Netflix` or `!hit https://example.com`",
+                inline=False
+            )
             
+            # Utility commands
+            embed.add_field(
+                name="🧪 Stash",
+                value="`!stash` - View your saved credentials",
+                inline=True
+            )
+            
+            embed.add_field(
+                name="🏓 Ping",
+                value="`!ping` - Check if bot is responsive",
+                inline=True
+            )
+            
+            embed.set_footer(text="Trial Junkie | The Last Free Trial You'll Ever Need")
+            await ctx.send(embed=embed)
+        
+        @bot.command(name="hit")
+        async def hit_command(ctx, *, service_or_url: str = None):
+            """Full trial setup command (all agents) - Works with services or URLs"""
+            if not service_or_url:
+                await ctx.send("❌ Please specify a service (e.g., `!hit Netflix`) or URL (e.g., `!hit https://example.com/trial`)")
+                return
+            
+            # Check if URL or service name
+            is_url = service_or_url.startswith(("http://", "https://"))
+            
+            # Create an initial message based on what was provided
+            if is_url:
+                embed = discord.Embed(
+                    title="🧪 Trial Generation Started",
+                    description=f"Running trial setup for URL: {service_or_url}",
+                    color=0x6f42c1
+                )
+            else:
+                embed = discord.Embed(
+                    title="🧪 Trial Generation Started",
+                    description=f"Running trial setup for service: {service_or_url.upper()}",
+                    color=0x6f42c1
+                )
+            
+            # Add agent information
+            embed.add_field(
+                name="Agents Deployed",
+                value=(
+                    "💉 **Heroin Harry** - Identity generation\n"
+                    "💨 **Meth Mandy** - Card generation\n"
+                    "💊 **Xanny Xan** - Email creation\n"
+                    "❄️ **Cokehead Carl** - Phone verification\n"
+                    "🍄 **Shroomy Sal** - Browser automation\n"
+                ),
+                inline=False
+            )
+            
+            embed.add_field(
+                name="Estimated Time",
+                value="⏱️ 30-60 seconds",
+                inline=False
+            )
+            
+            embed.set_footer(text="Trial Junkie - Get your digital fix")
+            processing_message = await ctx.send(embed=embed)
+            
+            try:
+                # Import API integrations here to avoid circular imports
+                sys.path.append('.')  # Ensure the current directory is in the path
+                from api_integrations import APIIntegrations
+                
+                # Generate trial data based on whether it's a URL or service
+                if is_url:
+                    # URL-based trial generation
+                    trial_data = APIIntegrations.create_trial_for_url(service_or_url)
+                    service_name = "Custom URL Trial"
+                else:
+                    # Service-based trial generation
+                    trial_data = APIIntegrations.generate_complete_trial_data(service_or_url)
+                    service_name = service_or_url.upper()
+                
+                # Extract user info
+                user_info = trial_data.get("user_info", {})
+                
+                # Create success response
+                success_embed = discord.Embed(
+                    title=f"✅ {service_name} Trial Ready",
+                    description="Your trial credentials have been generated!",
+                    color=0x28a745
+                )
+                
+                # Add primary credentials
+                success_embed.add_field(name="📧 Email", value=f"`{user_info.get('email', 'N/A')}`", inline=True)
+                success_embed.add_field(name="🔑 Password", value=f"`{user_info.get('password', 'N/A')}`", inline=True)
+                
+                # Add payment info if available
+                payment_info = user_info.get("payment_info", {})
+                if payment_info:
+                    card_info = (
+                        f"Type: `{payment_info.get('card_type', 'N/A')}`\n"
+                        f"Number: `{payment_info.get('card_number', 'N/A')}`\n"
+                        f"Expiry: `{payment_info.get('expiry', 'N/A')}`\n"
+                        f"CVV: `{payment_info.get('cvv', 'N/A')}`\n"
+                        f"Name: `{payment_info.get('cardholder_name', 'N/A')}`"
+                    )
+                    success_embed.add_field(name="💳 Payment Details", value=card_info, inline=False)
+                
+                # Add verification info if available
+                verification_info = user_info.get("verification_info", {})
+                if verification_info:
+                    verify_info = (
+                        f"Phone: `{user_info.get('phone', 'N/A')}`\n"
+                        f"Email Inbox: [Check Inbox]({verification_info.get('email_inbox', '')})"
+                    )
+                    success_embed.add_field(name="📱 Verification", value=verify_info, inline=False)
+                
+                # Add trial end date if available
+                if "trial_end_date" in trial_data:
+                    success_embed.add_field(name="⏰ Trial Expires", value=f"`{trial_data['trial_end_date']}`", inline=True)
+                
+                # Add automation result info for URLs
+                if is_url and "automation_result" in trial_data:
+                    auto_result = trial_data.get("automation_result", {})
+                    result_status = "✅ Success" if trial_data.get("success", False) else "❌ Partial/Failed"
+                    score = auto_result.get("success_score", 0)
+                    
+                    auto_info = (
+                        f"Status: {result_status}\n"
+                        f"Score: {score}/8\n"
+                        f"Site Category: {trial_data.get('category', 'Unknown')}\n"
+                        f"Final URL: `{trial_data.get('final_url', 'N/A')}`"
+                    )
+                    success_embed.add_field(name="🤖 Automation Results", value=auto_info, inline=False)
+                
+                success_embed.set_footer(text="Use !stash to view all your credentials")
+                
+                # Update the original message with the success embed
+                await processing_message.edit(embed=success_embed)
+                
+            except Exception as e:
+                logger.error(f"Error generating trial: {str(e)}")
+                error_embed = discord.Embed(
+                    title="❌ Trial Generation Failed",
+                    description=f"There was an error generating your trial: ```{str(e)}```",
+                    color=0xdc3545
+                )
+                await processing_message.edit(embed=error_embed)
+        
+        @bot.command(name="stash")
+        async def stash_command(ctx):
+            """View user's generated items"""
+            # For the workflow version, we'll just show a placeholder message
+            await ctx.send("🧪 Your saved trials would be displayed here in the full version.")
+        
+        # Run the bot
+        bot.run(DISCORD_BOT_TOKEN)
+        
     except Exception as e:
         logger.error(f"Error running Discord bot: {e}")
-        return 1
-        
-    return 0
+        sys.exit(1)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    run_bot()
