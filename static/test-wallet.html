@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phantom Wallet Test - Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+  <script src="/js/phantom-wallet.js"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+    .navbar-brand, h1, h2, h3 {
+      font-family: 'Audiowide', cursive;
+    }
+    .wallet-card {
+      transition: all 0.3s ease;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(138, 91, 246, 0.2);
+      overflow: hidden;
+    }
+    .wallet-card:hover {
+      box-shadow: 0 0 20px rgba(138, 91, 246, 0.3);
+      transform: translateY(-5px);
+    }
+    .wallet-header {
+      background: linear-gradient(145deg, #534BB1, #8b5cf6);
+      padding: 20px;
+      color: white;
+    }
+    .wallet-content {
+      padding: 20px;
+    }
+    .phantom-logo {
+      background-color: #534BB1;
+      border-radius: 15px;
+      padding: 15px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .address-box {
+      background-color: rgba(0,0,0,0.2);
+      border-radius: 5px;
+      padding: 10px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .status-connected {
+      background-color: #10b981;
+      box-shadow: 0 0 5px #10b981;
+    }
+    .status-disconnected {
+      background-color: #6b7280;
+      box-shadow: 0 0 5px #6b7280;
+    }
+    .log-container {
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: #1f1f1f;
+      border-radius: 5px;
+      padding: 10px;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 5px;
+    }
+    .log-time {
+      color: #8b5cf6;
+    }
+    .log-success {
+      color: #10b981;
+    }
+    .log-error {
+      color: #ef4444;
+    }
+    .log-info {
+      color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.svg" alt="Trial Junkie Logo" width="30" height="30" class="d-inline-block align-top me-2">
+        Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/test-wallet">Test Wallet</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+    <div class="row mb-4">
+      <div class="col-12 text-center">
+        <h1 class="mb-3">Phantom Wallet Testing</h1>
+        <p class="lead mb-0">Test your Phantom wallet connection and integration with Trial Junkie</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-6 mb-4">
+        <div class="wallet-card h-100">
+          <div class="wallet-header">
+            <h2>Wallet Connection</h2>
+            <p class="mb-0">Connect your Phantom wallet to test functionality</p>
+          </div>
+          <div class="wallet-content">
+            <div class="text-center mb-4">
+              <div class="phantom-logo">
+                <svg width="50" height="50" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M110.584 64.9142C109.841 61.4594 107.628 58.6464 104.593 57.0389C106.573 53.489 106.111 48.9485 103.476 45.883C100.842 42.8175 96.421 42.0369 92.9537 43.6444C91.3516 40.1897 88.2929 37.7041 84.5359 37.1187C80.779 36.5334 77.0221 38.2359 74.8492 41.3014C71.9986 38.6307 67.8126 37.8501 64.1859 39.4576C60.5592 41.0651 58.1782 44.716 58.0478 48.7533C54.4211 48.7533 51.0624 50.9438 49.4603 54.3986C47.8581 57.8533 48.6013 61.8983 51.193 64.5986C48.6013 67.2693 47.8581 71.314 49.4603 74.7687C51.0624 78.2235 54.4211 80.414 58.0478 80.414C58.0478 84.4516 60.4289 88.1025 64.0556 89.71C67.6822 91.3175 71.8683 90.5369 74.7189 87.8662C76.8919 90.9317 80.6488 92.6342 84.4057 92.0488C88.1626 91.4635 91.2214 88.9779 92.8235 85.5231C96.2908 87.1307 100.712 86.35 103.346 83.2845C105.981 80.219 106.443 75.6786 104.463 72.1287C107.498 70.5212 109.711 67.7082 110.454 64.2534C110.584 64.3486 110.584 64.819 110.584 64.9142Z" fill="white"/>
+                  <path d="M48.6013 64.6239C48.6013 70.5586 51.3236 76.0509 55.9412 79.5056C61.0414 83.4555 67.9329 83.9457 73.5535 81.0375C73.8141 80.9423 74.3356 80.6472 74.5962 80.5521C75.8972 79.8666 77.0677 79.0859 78.1079 78.1101C78.3685 77.9198 78.6291 77.6247 78.8897 77.4344C79.5416 76.8491 80.1935 76.2637 80.7151 75.5782C80.7151 75.3879 80.9757 75.0928 80.9757 74.9025C81.9972 73.2473 82.6747 71.4324 83.0922 69.4829C83.5225 67.1927 83.3744 64.7887 82.7352 62.59H83.2221C86.0551 62.59 88.1831 60.4646 88.1831 57.8264C88.1831 55.1881 86.0551 53.0628 83.4094 53.0628H78.0339C78.0339 53.0628 78.0339 53.0628 78.0339 52.9676C77.2907 50.9229 76.5476 49.068 72.9765 46.9797C69.4055 44.8914 68.1402 43.4744 66.2193 40.9889C66.2193 40.9889 63.1605 45.1647 67.7781 48.5243C67.1318 48.5243 63.1734 48.5243 59.9851 51.6661C56.797 54.8079 56.5364 58.2627 56.5364 58.2627C56.5364 58.2627 53.2284 59.3814 51.0624 62.3997C48.8965 65.418 48.6013 64.6239 48.6013 64.6239Z" fill="#534BB1"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="fw-bold me-2">Status:</span>
+                <span id="status-text">Disconnected</span>
+                <span id="status-indicator" class="status-indicator status-disconnected ms-2"></span>
+              </div>
+              
+              <div id="wallet-details" style="display: none;">
+                <div class="mb-2">
+                  <span class="fw-bold me-2">Address:</span>
+                  <div class="address-box mt-1" id="wallet-address">-</div>
+                </div>
+                <div class="mb-2">
+                  <span class="fw-bold me-2">Balance:</span>
+                  <span id="wallet-balance">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button id="connect-btn" class="btn btn-primary">
+                <i class="bi bi-wallet2 me-2"></i>Connect Phantom Wallet
+              </button>
+              <button id="disconnect-btn" class="btn btn-outline-danger" style="display: none;">
+                <i class="bi bi-box-arrow-right me-2"></i>Disconnect Wallet
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 mb-4">
+        <div class="wallet-card h-100">
+          <div class="wallet-header">
+            <h2>API Testing</h2>
+            <p class="mb-0">Test the backend API integration with Phantom wallet</p>
+          </div>
+          <div class="wallet-content">
+            <div class="mb-4">
+              <h4>Backend Operations</h4>
+              <p>Test Trial Junkie's API endpoints for wallet-based authentication</p>
+              
+              <div class="d-grid gap-2 mb-3">
+                <button id="test-login-btn" class="btn btn-primary" disabled>
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Test Login
+                </button>
+                <button id="test-register-btn" class="btn btn-success" disabled>
+                  <i class="bi bi-person-plus me-2"></i>Test Registration
+                </button>
+                <button id="test-status-btn" class="btn btn-info text-white">
+                  <i class="bi bi-info-circle me-2"></i>Check Wallet Status API
+                </button>
+              </div>
+            </div>
+
+            <div class="log-container" id="log-container">
+              <div class="log-entry">
+                <span class="log-time">[00:00:00]</span> <span class="log-info">Wallet test initialized.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-5 mt-5">
+    <div class="container">
+      <div class="text-center">
+        <p class="mb-0">&copy; 2025 Trial Junkie. All rights reserved.</p>
+        <p>For testing purposes only.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const connectBtn = document.getElementById('connect-btn');
+      const disconnectBtn = document.getElementById('disconnect-btn');
+      const statusText = document.getElementById('status-text');
+      const statusIndicator = document.getElementById('status-indicator');
+      const walletDetails = document.getElementById('wallet-details');
+      const walletAddress = document.getElementById('wallet-address');
+      const walletBalance = document.getElementById('wallet-balance');
+      const testLoginBtn = document.getElementById('test-login-btn');
+      const testRegisterBtn = document.getElementById('test-register-btn');
+      const testStatusBtn = document.getElementById('test-status-btn');
+      const logContainer = document.getElementById('log-container');
+
+      // Log function
+      function log(message, type = 'info') {
+        const date = new Date();
+        const time = date.toTimeString().split(' ')[0];
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${message}</span>`;
+        logContainer.prepend(logEntry);
+      }
+
+      // Update UI when connected
+      function updateUIConnected(address, balance = null) {
+        statusText.textContent = 'Connected';
+        statusIndicator.classList.remove('status-disconnected');
+        statusIndicator.classList.add('status-connected');
+        walletDetails.style.display = 'block';
+        walletAddress.textContent = address;
+        
+        if (balance !== null) {
+          walletBalance.textContent = `${balance.toFixed(4)} SOL`;
+        } else {
+          walletBalance.textContent = 'Loading...';
+        }
+        
+        connectBtn.style.display = 'none';
+        disconnectBtn.style.display = 'block';
+        testLoginBtn.disabled = false;
+        testRegisterBtn.disabled = false;
+        
+        log(`Wallet connected: ${address}`, 'success');
+      }
+
+      // Update UI when disconnected
+      function updateUIDisconnected() {
+        statusText.textContent = 'Disconnected';
+        statusIndicator.classList.remove('status-connected');
+        statusIndicator.classList.add('status-disconnected');
+        walletDetails.style.display = 'none';
+        walletAddress.textContent = '-';
+        walletBalance.textContent = '-';
+        
+        connectBtn.style.display = 'block';
+        disconnectBtn.style.display = 'none';
+        testLoginBtn.disabled = true;
+        testRegisterBtn.disabled = true;
+        
+        log('Wallet disconnected', 'info');
+      }
+
+      // Connect to Phantom wallet
+      connectBtn.addEventListener('click', async () => {
+        try {
+          log('Attempting to connect to Phantom wallet...');
+          const result = await window.PhantomWallet.connect();
+          
+          if (result.success) {
+            updateUIConnected(result.walletAddress, result.balance);
+            
+            // Get balance if not provided
+            if (result.balance === null) {
+              try {
+                const balance = await getWalletBalance(result.walletAddress);
+                walletBalance.textContent = `${balance.toFixed(4)} SOL`;
+              } catch (error) {
+                walletBalance.textContent = 'Error fetching balance';
+                log(`Balance error: ${error.message}`, 'error');
+              }
+            }
+          } else {
+            log(`Connection failed: ${result.message}`, 'error');
+          }
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error');
+        }
+      });
+
+      // Disconnect from Phantom wallet
+      disconnectBtn.addEventListener('click', async () => {
+        try {
+          log('Disconnecting from Phantom wallet...');
+          const result = await window.PhantomWallet.disconnect();
+          
+          if (result.success) {
+            updateUIDisconnected();
+          } else {
+            log(`Disconnection failed: ${result.message}`, 'error');
+          }
+        } catch (error) {
+          log(`Error: ${error.message}`, 'error');
+        }
+      });
+
+      // Get wallet balance
+      async function getWalletBalance(address) {
+        if (window.solana && window.solana.isPhantom) {
+          const connection = new solanaWeb3.Connection(
+            'https://api.mainnet-beta.solana.com',
+            'confirmed'
+          );
+          
+          const publicKey = new solanaWeb3.PublicKey(address);
+          const balance = await connection.getBalance(publicKey);
+          return balance / 1000000000; // convert lamports to SOL
+        }
+        throw new Error('Phantom wallet not available');
+      }
+
+      // Test login API
+      testLoginBtn.addEventListener('click', async () => {
+        try {
+          log('Testing wallet login API...');
+          const status = await window.PhantomWallet.getStatus();
+          
+          if (!status.connected || !status.walletAddress) {
+            log('Wallet not connected for login test', 'error');
+            return;
+          }
+          
+          const response = await fetch('/api/login-with-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              wallet_address: status.walletAddress
+            })
+          });
+          
+          const data = await response.json();
+          log(`Login API response: ${JSON.stringify(data)}`, data.success ? 'success' : 'error');
+        } catch (error) {
+          log(`Login API error: ${error.message}`, 'error');
+        }
+      });
+
+      // Test registration API
+      testRegisterBtn.addEventListener('click', async () => {
+        try {
+          log('Testing wallet registration API...');
+          const status = await window.PhantomWallet.getStatus();
+          
+          if (!status.connected || !status.walletAddress) {
+            log('Wallet not connected for registration test', 'error');
+            return;
+          }
+          
+          // Generate random username and email for testing
+          const random = Math.floor(Math.random() * 10000);
+          const testUsername = `test_user_${random}`;
+          const testEmail = `test_${random}@example.com`;
+          
+          const response = await fetch('/api/register-with-wallet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              wallet_address: status.walletAddress,
+              username: testUsername,
+              email: testEmail
+            })
+          });
+          
+          const data = await response.json();
+          log(`Registration API response: ${JSON.stringify(data)}`, data.success ? 'success' : 'error');
+        } catch (error) {
+          log(`Registration API error: ${error.message}`, 'error');
+        }
+      });
+
+      // Test wallet status API
+      testStatusBtn.addEventListener('click', async () => {
+        try {
+          log('Checking wallet status API...');
+          
+          const response = await fetch('/api/wallet/status');
+          const data = await response.json();
+          
+          log(`Status API response: ${JSON.stringify(data)}`, 'info');
+          
+          if (data.connected) {
+            log(`Wallet connected in backend: ${data.address}`, 'success');
+          } else {
+            log('Wallet not connected in backend', 'info');
+          }
+        } catch (error) {
+          log(`Status API error: ${error.message}`, 'error');
+        }
+      });
+
+      // Check wallet status on page load
+      async function checkWalletStatus() {
+        try {
+          log('Checking existing wallet connection...');
+          const status = await window.PhantomWallet.getStatus();
+          
+          if (status.connected && status.walletAddress) {
+            updateUIConnected(status.walletAddress);
+            
+            // Get wallet balance
+            try {
+              const balance = await getWalletBalance(status.walletAddress);
+              walletBalance.textContent = `${balance.toFixed(4)} SOL`;
+            } catch (error) {
+              walletBalance.textContent = 'Error fetching balance';
+              log(`Balance error: ${error.message}`, 'error');
+            }
+          } else {
+            updateUIDisconnected();
+          }
+        } catch (error) {
+          log(`Error checking wallet status: ${error.message}`, 'error');
+          updateUIDisconnected();
+        }
+      }
+
+      // Check if Phantom is installed
+      if (window.solana && window.solana.isPhantom) {
+        log('Phantom wallet detected', 'success');
+      } else {
+        log('Phantom wallet not installed', 'error');
+        connectBtn.disabled = true;
+        connectBtn.textContent = 'Phantom Wallet Not Installed';
+      }
+
+      // Initialize
+      checkWalletStatus();
+    });
+  </script>
+</body>
+</html>
