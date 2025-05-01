@@ -14,7 +14,7 @@ const AgentSection = () => {
     {
       id: 'cash-carter',
       name: 'Cash Carter',
-      image: '/img/purple-pill-logo.png',
+      image: '/static/images/skeleton-purple.png',
       title: 'Financial Guardian | Card Dealer',
       description: 'Sarcastic and protective, Cash handles all your financial needs with surgical precision. No payment loop can trap this dealer.',
       specialties: ['Card Generation', 'Payment Protection', 'Checkout Automation'],
@@ -32,7 +32,7 @@ const AgentSection = () => {
     {
       id: 'molly-morphine',
       name: 'Molly Morphine',
-      image: '/img/purple-pill-logo.png',
+      image: '/static/images/pink-skeleton.png',
       title: 'Multi-Trial Specialist | The High Roller',
       description: 'Smooth-talking and reliable, Molly delivers multiple trials simultaneously, keeping your entertainment flowing.',
       specialties: ['Parallel Processing', 'Service Stacking', 'Renewal Prevention'],
@@ -41,7 +41,7 @@ const AgentSection = () => {
     {
       id: 'keta-kev',
       name: 'Keta Kev',
-      image: '/static/images/phantom-logo.png',
+      image: '/img/purple-pill-logo.png',
       title: 'The Loop Runner | Trial Infinity Dealer',
       description: 'Intense, focused, and relentless. Kev generates trials on an infinite loop, keeping you in that k-hole of content.',
       specialties: ['Extended Trials', 'Account Recycling', 'Service Rotation'],

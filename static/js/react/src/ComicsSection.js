@@ -9,13 +9,13 @@ const ComicsSection = () => {
   const getBotImage = (botType) => {
     switch(botType) {
       case 'heroin-harry':
-        return '/static/images/skeleton-green.png';
+        return '/img/purple-pill-logo.png';
       case 'molly-morphine':
-        return '/static/images/skeleton-purple.png';
+        return '/img/purple-pill-logo.png';
       case 'keta-kev':
-        return '/static/images/fire-skull.png';
+        return '/img/purple-pill-logo.png';
       default:
-        return '/static/images/skeleton-green.png';
+        return '/img/purple-pill-logo.png';
     }
   };
   

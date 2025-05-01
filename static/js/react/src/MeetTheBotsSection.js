@@ -5,7 +5,7 @@ const MeetTheBotsSection = () => {
     {
       name: "HEROIN HARRY",
       subtitle: "Microdose",
-      image: "/static/images/skeleton-green.png",
+      image: "/img/purple-pill-logo.png",
       description: "Harry handles one-shot free trial creation using burner emails, SMS verification, and fake debit cards. He's sarcastic and teasing, acting like he's doing you a shady favor.",
       command: "!hit [service]",
       commandDescription: "Triggers one full account generation",
@@ -19,7 +19,7 @@ const MeetTheBotsSection = () => {
     {
       name: "MOLLY MORPHINE",
       subtitle: "Binge",
-      image: "/static/images/skeleton-purple.png",
+      image: "/img/purple-pill-logo.png",
       description: "Molly runs 3 trial signups at a time for the same service. Her personality is cool and smooth-talking, always delivering like a reliable plug.",
       command: "!binge [service]",
       commandDescription: "Runs 3 trial signups for the specified service",
@@ -33,7 +33,7 @@ const MeetTheBotsSection = () => {
     {
       name: "KETA KEV",
       subtitle: "Overdose",
-      image: "/static/images/fire-skull.png",
+      image: "/img/purple-pill-logo.png",
       description: "Kev generates free trials on an infinite loop with login token capture. He's spaced out but insanely reliable, with psychedelic coder vibes.",
       command: "!overdose [service]",
       commandDescription: "Generates trials on an infinite loop",
