@@ -79,13 +79,13 @@ def run_bot():
         async def on_ready():
             """Called when the bot is ready"""
             logger.info(f"Trial Junkie bot is online as {bot.user}")
-            await bot.change_presence(activity=discord.Game(name="!help for commands"))
+            await bot.change_presence(activity=discord.Game(name="/help for commands"))
         
         @bot.event
         async def on_command_error(ctx, error):
             """Handle command errors"""
             if isinstance(error, commands.CommandNotFound):
-                await ctx.send("❌ Command not found. Use `!help` to see available commands.")
+                await ctx.send("❌ Command not found. Use `/help` to see available commands.")
             elif isinstance(error, commands.MissingRequiredArgument):
                 await ctx.send(f"❌ Missing required argument: {error.param.name}")
             else:
@@ -109,26 +109,26 @@ def run_bot():
             # Main commands
             embed.add_field(
                 name="🎯 Hit (Full Trial)",
-                value="`!hit <service/url>` - Generate all credentials for a trial\nExample: `!hit Netflix` or `!hit https://example.com`",
+                value="`/hit <service/url>` - Generate all credentials for a trial\nExample: `/hit Netflix` or `/hit https://example.com`",
                 inline=False
             )
             
             # Utility commands
             embed.add_field(
                 name="🧪 Stash",
-                value="`!stash` - View your saved credentials",
+                value="`/stash` - View your saved credentials",
                 inline=True
             )
             
             embed.add_field(
                 name="💰 Plans",
-                value="`!plans` - View subscription plans",
+                value="`/plans` - View subscription plans",
                 inline=True
             )
             
             embed.add_field(
                 name="🏓 Ping",
-                value="`!ping` - Check if bot is responsive",
+                value="`/ping` - Check if bot is responsive",
                 inline=True
             )
             
@@ -139,7 +139,7 @@ def run_bot():
         async def hit_command(ctx, *, service_or_url: str = None):
             """Full trial setup command (all agents) - Works with services or URLs"""
             if not service_or_url:
-                await ctx.send("❌ Please specify a service (e.g., `!hit Netflix`) or URL (e.g., `!hit https://example.com/trial`)")
+                await ctx.send("❌ Please specify a service (e.g., `/hit Netflix`) or URL (e.g., `/hit https://example.com/trial`)")
                 return
             
             # Check if URL or service name
@@ -249,7 +249,7 @@ def run_bot():
                     )
                     success_embed.add_field(name="🤖 Automation Results", value=auto_info, inline=False)
                 
-                success_embed.set_footer(text="Use !stash to view all your credentials")
+                success_embed.set_footer(text="Use /stash to view all your credentials")
                 
                 # Update the original message with the success embed
                 await processing_message.edit(embed=success_embed)
@@ -277,7 +277,7 @@ def run_bot():
                 features_text = "\n".join([f"• {feature}" for feature in plan["features"]])
                 embed.add_field(
                     name=f"{plan['name']} - ${plan['price']:.2f}",
-                    value=f"{plan['description']}\n\n{features_text}\n\nDaily limit: {plan['daily_limit']} trials\nUse `!pay {plan_id}` to subscribe",
+                    value=f"{plan['description']}\n\n{features_text}\n\nDaily limit: {plan['daily_limit']} trials\nUse `/subscribe` to view subscription options",
                     inline=False
                 )
             
@@ -289,6 +289,39 @@ def run_bot():
             """View user's generated items"""
             # For the workflow version, we'll just show a placeholder message
             await ctx.send("🧪 Your saved trials would be displayed here in the full version.")
+            
+        @bot.command(name="subscribe")
+        async def subscribe_command(ctx):
+            """Redirect users to the website subscription page"""
+            # Get your app's URL from an environment variable or config
+            website_url = os.environ.get("APP_URL", "https://trialjunkie.replit.app")
+            subscription_url = f"{website_url}/subscriptions"
+            
+            logger.info(f"User {ctx.author.id} ({ctx.author.name}) requested subscription link")
+            
+            embed = discord.Embed(
+                title="💊 Subscribe to Trial Junkie",
+                description="Visit our website to choose a subscription plan that fits your needs.",
+                color=0xf1c40f
+            )
+            
+            embed.add_field(
+                name="How to Subscribe",
+                value="1. Click the link below to visit our subscription page\n"
+                      "2. Choose a subscription plan\n"
+                      "3. Complete the payment using Solana\n"
+                      "4. Return to Discord and start generating trials!",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="🔗 Subscription Link",
+                value=f"[Click here to subscribe]({subscription_url})",
+                inline=False
+            )
+            
+            embed.set_footer(text="Trial Junkie - Get your digital fix")
+            await ctx.send(embed=embed)
         
         # Run the bot
         bot.run(DISCORD_BOT_TOKEN)
