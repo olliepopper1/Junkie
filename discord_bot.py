@@ -285,8 +285,8 @@ async def guide_command(ctx):
     embed.add_field(
         name="💰 Payment Commands",
         value=(
+            "`/subscribe` - Get link to website subscription page\n"
             "`/plans` - View subscription plans\n"
-            "`/pay [plan]` - Subscribe to a plan\n"
             "`/verify_payment [ref]` - Verify your payment\n"
             "`/payments` - View payment history\n"
             "`/tier` - Check your subscription tier"
@@ -781,6 +781,39 @@ async def admin_pay_commission_command(ctx, user_id: str = None, amount: float =
     embed.add_field(name="Status", value="Transaction completed", inline=True)
     
     embed.set_footer(text="Trial Junkie - Admin Command")
+    await ctx.send(embed=embed)
+
+@bot.command(name="subscribe")
+async def subscribe_command(ctx):
+    """Redirect users to the website subscription page"""
+    # Get your app's URL from an environment variable or config
+    website_url = os.environ.get("APP_URL", "https://trialjunkie.replit.app")
+    subscription_url = f"{website_url}/subscriptions"
+    
+    logger.info(f"User {ctx.author.id} ({ctx.author.name}) requested subscription link")
+    
+    embed = discord.Embed(
+        title="💊 Subscribe to Trial Junkie",
+        description="Visit our website to choose a subscription plan that fits your needs.",
+        color=COLORS["payment"]
+    )
+    
+    embed.add_field(
+        name="How to Subscribe",
+        value="1. Click the link below to visit our subscription page\n"
+              "2. Choose a subscription plan\n"
+              "3. Complete the payment using Solana\n"
+              "4. Return to Discord and start generating trials!",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🔗 Subscription Link",
+        value=f"[Click here to subscribe]({subscription_url})",
+        inline=False
+    )
+    
+    embed.set_footer(text="Trial Junkie - Get your digital fix")
     await ctx.send(embed=embed)
 
 @bot.command(name="admin_stats")
