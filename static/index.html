@@ -359,25 +359,48 @@
     </div>
   </section>
 
-  <!-- Discord CTA Section -->
+  <!-- Wallet CTA Section -->
   <section class="py-5 bg-dark">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-7">
-          <h2 class="mb-3 drug-glow">Join Our Discord</h2>
-          <p class="lead mb-4">Get instant access to Trial Junkie bot and generate trials on demand with a simple command.</p>
+          <h2 class="mb-3 drug-glow">Connect Your Wallet</h2>
+          <p class="lead mb-4">Get instant access to Trial Junkie services by connecting your Solana wallet. Subscribe once and generate unlimited trials during your subscription period.</p>
           <div class="code-block bg-dark-subtle p-3 rounded mb-4">
-            <code class="text-light">!hit netflix</code>
+            <code class="text-light">One-click trials with active subscription</code>
           </div>
-          <p>Our community of digital junkies is waiting for you!</p>
-          <a href="https://discord.gg/trialjunkie" class="btn btn-primary btn-lg mt-2 pulsate">Join Discord</a>
+          <p>No hidden fees, just a simple subscription for all your trial needs!</p>
+          <button id="cta-wallet-connect-btn" class="btn btn-primary btn-lg mt-2 pulsate wallet-connect-btn text-white">
+            <img src="/img/phantom-icon.svg" alt="Phantom" class="wallet-logo" width="24"> 
+            Connect Wallet
+          </button>
         </div>
         <div class="col-md-5 text-center">
-          <img src="/img/discord-preview.svg" alt="Discord Preview" class="img-fluid rounded float-element" style="max-width: 80%;">
+          <img src="/img/phantom-logo.png" alt="Phantom Wallet" class="img-fluid rounded float-element" style="max-width: 80%;">
         </div>
       </div>
     </div>
   </section>
+  
+  <script>
+    // Add event listener for the CTA wallet connect button
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctaWalletBtn = document.getElementById('cta-wallet-connect-btn');
+      if (ctaWalletBtn) {
+        ctaWalletBtn.addEventListener('click', async function() {
+          if (window.phantomWallet) {
+            const result = await window.phantomWallet.connect();
+            if (result.success) {
+              // Redirect to subscriptions page
+              window.location.href = '/subscriptions';
+            }
+          } else {
+            alert('Phantom wallet not available. Please install the Phantom extension.');
+          }
+        });
+      }
+    });
+  </script>
   
   <!-- Add to Your Server Section -->
   <section class="py-5">

@@ -167,11 +167,29 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // If on login or register page, redirect to dashboard
-                const currentPath = window.location.pathname;
-                if (currentPath === '/login' || currentPath === '/register') {
-                    window.location.href = '/dashboard';
-                }
+                // Check subscription status to determine redirect path
+                fetch('/api/subscription/status')
+                    .then(response => response.json())
+                    .then(subData => {
+                        // If the user doesn't have an active subscription, redirect to subscriptions page
+                        if (!subData.subscription.active) {
+                            window.location.href = '/subscriptions';
+                        } else {
+                            // If on login or register page, redirect to dashboard
+                            const currentPath = window.location.pathname;
+                            if (currentPath === '/login' || currentPath === '/register') {
+                                window.location.href = '/dashboard';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking subscription status:', error);
+                        // Default redirect to dashboard if we can't check subscription
+                        const currentPath = window.location.pathname;
+                        if (currentPath === '/login' || currentPath === '/register') {
+                            window.location.href = '/dashboard';
+                        }
+                    });
             } else {
                 console.error('Login failed:', data.message);
             }
