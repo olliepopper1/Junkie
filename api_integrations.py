@@ -32,27 +32,34 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 
 # API configuration
 API_CONFIG = {
+    # Identity Verification API
     "personator": {
         "key": RAPIDAPI_KEY,
-        "host": "personator.p.rapidapi.com",
-        "endpoint": "https://personator.p.rapidapi.com/v1/generate",
+        "host": "personator-melissadata.p.rapidapi.com",
+        "endpoint": "https://personator-melissadata.p.rapidapi.com/v3/WEB/ContactVerify/doContactVerify",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
+    
+    # Phone Verification API
     "virtual_number": {
         "key": RAPIDAPI_KEY,
-        "host": "virtual-number.p.rapidapi.com",
-        "endpoint": "https://virtual-number.p.rapidapi.com/v1/numbers",
+        "host": "veriphone-io.p.rapidapi.com",
+        "endpoint": "https://veriphone-io.p.rapidapi.com/v2/verify",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
+    
+    # Backup Phone Verification
     "virtual_number_backup": {
         "key": RAPIDAPI_KEY,
-        "host": "virtual-number-alternative.p.rapidapi.com",
-        "endpoint": "https://virtual-number-alternative.p.rapidapi.com/v1/verify",
+        "host": "veriphone-alternative.p.rapidapi.com",
+        "endpoint": "https://veriphone-alternative.p.rapidapi.com/v2/verify",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
+    
+    # Credit Card Generation API
     "fake_card": {
         "key": RAPIDAPI_KEY,
         "host": "fake-valid-cc-data-generator.p.rapidapi.com",
@@ -60,6 +67,8 @@ API_CONFIG = {
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
+    
+    # Virtual Card Issuing
     "virtual_card": {
         "key": RAPIDAPI_KEY,
         "host": "free-trial-virtual-card-issuing.p.rapidapi.com",
@@ -67,6 +76,17 @@ API_CONFIG = {
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
+    
+    # Email Validation API
+    "email_validator": {
+        "key": RAPIDAPI_KEY,
+        "host": "advanced-email-validator.p.rapidapi.com",
+        "endpoint": "https://advanced-email-validator.p.rapidapi.com/verify",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Disposable Email Generator
     "temp_email": {
         "key": RAPIDAPI_KEY,
         "host": "fast-reliable-disposable-mx-email-checker.p.rapidapi.com",
@@ -74,10 +94,12 @@ API_CONFIG = {
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
-    "temp_mail_backup": {
+    
+    # ScrapeNinja API for Web Scraping and Proxies
+    "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "temp-mail.p.rapidapi.com",
-        "endpoint": "https://temp-mail.p.rapidapi.com/v1/mail/create",
+        "host": "scrapeninja.p.rapidapi.com",
+        "endpoint": "https://scrapeninja.p.rapidapi.com/scrape",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     }
@@ -465,6 +487,69 @@ class APIIntegrations:
             return APIIntegrations._generate_fallback_card()
     
     @staticmethod
+    def validate_email(email):
+        """
+        Validate an email address using the Advanced Email Validator API
+        
+        Args:
+            email (str): The email address to validate
+            
+        Returns:
+            dict: Validation results including deliverability, quality score, etc.
+        """
+        logger.info(f"Validating email address: {email}")
+        
+        try:
+            # Use the Advanced Email Validator API
+            url = API_CONFIG["email_validator"]["endpoint"]
+            headers = APIIntegrations.get_headers("email_validator")
+            
+            # Prepare query parameters
+            params = {
+                "email": email
+            }
+            
+            # Make the API request
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            response.raise_for_status()
+            
+            # Parse the response
+            data = response.json()
+            
+            # Check if the API returned an error
+            if data.get("success") is False:
+                logger.error(f"Email Validator API returned error: {data.get('message', 'Unknown error')}")
+                raise requests.RequestException(f"API error: {data.get('message', 'Unknown error')}")
+            
+            logger.info(f"Email validation successful for: {email}")
+            
+            # Return validation results
+            return {
+                "is_valid": data.get("is_valid", False),
+                "deliverable": data.get("deliverable", False),
+                "quality_score": data.get("quality_score", 0.0),
+                "is_disposable": data.get("is_disposable", True),
+                "is_role_account": data.get("is_role_account", False),
+                "is_free_provider": data.get("is_free_provider", True),
+                "has_mx_records": data.get("has_mx_records", False),
+                "domain": data.get("domain", ""),
+                "checked_at": datetime.now().isoformat()
+            }
+            
+        except requests.Timeout:
+            logger.error(f"Email validation request timed out for: {email}")
+            return {"error": "Request timed out", "is_valid": False, "email": email}
+        except requests.ConnectionError:
+            logger.error(f"Connection error when validating email: {email}")
+            return {"error": "Connection error", "is_valid": False, "email": email}
+        except requests.RequestException as e:
+            logger.error(f"Error validating email {email}: {e}")
+            return {"error": str(e), "is_valid": False, "email": email}
+        except Exception as e:
+            logger.error(f"Unexpected error in validate_email: {e}")
+            return {"error": str(e), "is_valid": False, "email": email}
+    
+    @staticmethod
     def generate_email():
         """Generate a disposable email using Fast & Reliable Disposable Email API"""
         logger.info("Generating disposable email")
@@ -480,11 +565,22 @@ class APIIntegrations:
             data = response.json()
             logger.info("Disposable email generated successfully")
             
+            # Get the generated email
+            email = data.get("email", "")
+            
+            # Validate the email using the email validator API
+            if email:
+                validation = APIIntegrations.validate_email(email)
+                logger.info(f"Email validation results: valid={validation.get('is_valid', False)}, deliverable={validation.get('deliverable', False)}")
+            else:
+                validation = {"is_valid": False, "deliverable": False}
+            
             return {
-                "email": data.get("email", ""),
+                "email": email,
                 "password": data.get("password", ""),
                 "inbox_url": data.get("inbox_url", ""),
-                "expires_at": data.get("expires_at", "")
+                "expires_at": data.get("expires_at", ""),
+                "validation": validation
             }
             
         except requests.RequestException as e:
@@ -607,6 +703,72 @@ class APIIntegrations:
         }
         
     @staticmethod
+    def web_scrape(url, use_proxy=True, custom_headers=None, cookies=None, timeout=30):
+        """
+        Scrape a website using the ScrapeNinja API with proxy support
+        
+        Args:
+            url (str): The URL to scrape
+            use_proxy (bool): Whether to use a proxy for scraping
+            custom_headers (dict): Optional custom headers to use for the request
+            cookies (dict): Optional cookies to send with the request
+            timeout (int): Time in seconds to wait for the scraping to complete
+            
+        Returns:
+            dict: Scraped content and metadata
+        """
+        logger.info(f"Scraping URL with ScrapeNinja: {url}")
+        
+        try:
+            # Use the ScrapeNinja API for scraping with proxy
+            api_url = API_CONFIG["scrape_ninja"]["endpoint"]
+            headers = APIIntegrations.get_headers("scrape_ninja")
+            
+            # Prepare the request payload
+            payload = {
+                "url": url,
+                "proxy": "auto" if use_proxy else None,
+                "timeout": timeout
+            }
+            
+            # Add optional parameters if provided
+            if custom_headers:
+                payload["headers"] = custom_headers
+            
+            if cookies:
+                payload["cookies"] = cookies
+            
+            # Make the API request
+            response = requests.post(api_url, headers=headers, json=payload, timeout=timeout+5)
+            response.raise_for_status()
+            
+            # Parse the response
+            data = response.json()
+            
+            logger.info(f"Successfully scraped URL: {url}")
+            return {
+                "content": data.get("content", ""),
+                "status_code": data.get("status_code", 0),
+                "headers": data.get("headers", {}),
+                "cookies": data.get("cookies", {}),
+                "url": data.get("url", url),
+                "proxy_used": use_proxy
+            }
+            
+        except requests.Timeout:
+            logger.error(f"Scraping request timed out for URL: {url}")
+            return {"error": "Request timed out", "url": url}
+        except requests.ConnectionError:
+            logger.error(f"Connection error when scraping URL: {url}")
+            return {"error": "Connection error", "url": url}
+        except requests.RequestException as e:
+            logger.error(f"Error scraping URL {url}: {e}")
+            return {"error": str(e), "url": url}
+        except Exception as e:
+            logger.error(f"Unexpected error in web_scrape: {e}")
+            return {"error": str(e), "url": url}
+    
+    @staticmethod
     def create_trial_for_url(url):
         """
         Create a trial for any given URL using generic trial automation
@@ -624,23 +786,52 @@ class APIIntegrations:
         user_info = trial_data["user_info"]
         
         try:
-            # Import the generic trial automator to handle any URL
-            from generic_trial_automation import GenericTrialAutomator
-            
-            # Create the automator (headless mode)
-            automator = GenericTrialAutomator(headless=True)
-            
-            # Attempt to create the trial
-            logger.info("Starting generic trial automation...")
-            result = automator.create_trial(url, user_info)
-            
-            # Add the result information to our trial data
-            trial_data["automation_result"] = result
-            trial_data["success"] = result.get("success", False)
-            trial_data["success_score"] = result.get("success_score", 0)
-            trial_data["final_url"] = result.get("final_url", "")
-            trial_data["category"] = result.get("category", "unknown")
-            trial_data["service"] = "custom_url"  # Mark as custom URL trial
+            try:
+                # First attempt: Use regular browser automation
+                # Import the generic trial automator to handle any URL
+                from generic_trial_automation import GenericTrialAutomator
+                
+                # Create the automator (headless mode)
+                automator = GenericTrialAutomator(headless=True)
+                
+                # Attempt to create the trial
+                logger.info("Starting generic trial automation...")
+                result = automator.create_trial(url, user_info)
+                
+                # Add the result information to our trial data
+                trial_data["automation_result"] = result
+                trial_data["success"] = result.get("success", False)
+                trial_data["success_score"] = result.get("success_score", 0)
+                trial_data["final_url"] = result.get("final_url", "")
+                trial_data["category"] = result.get("category", "unknown")
+                trial_data["service"] = "custom_url"  # Mark as custom URL trial
+                
+            except Exception as automation_error:
+                # If browser automation fails, fallback to ScrapeNinja
+                logger.warning(f"Browser automation failed, falling back to ScrapeNinja: {automation_error}")
+                
+                # Use ScrapeNinja to get the page content
+                scrape_result = APIIntegrations.web_scrape(url, use_proxy=True, timeout=60)
+                
+                if "error" in scrape_result:
+                    logger.error(f"ScrapeNinja fallback also failed: {scrape_result['error']}")
+                    raise Exception(f"Both automation methods failed: {automation_error}. ScrapeNinja error: {scrape_result['error']}")
+                
+                # Successfully scraped the page, add to trial data
+                trial_data.update({
+                    "automation_result": {
+                        "success": scrape_result.get("status_code") == 200,
+                        "content_length": len(scrape_result.get("content", "")),
+                        "method": "scrapeninja_proxy"
+                    },
+                    "success": scrape_result.get("status_code") == 200,
+                    "success_score": 0.7 if scrape_result.get("status_code") == 200 else 0.0,
+                    "final_url": scrape_result.get("url", url),
+                    "category": "scraped_content",
+                    "service": "custom_url_scraped"
+                })
+                
+                logger.info(f"Trial content retrieved successfully for URL: {url} using ScrapeNinja")
             
             return trial_data
             
