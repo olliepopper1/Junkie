@@ -561,31 +561,38 @@
           <h2 class="mb-4 drug-glow">See How Much You Save</h2>
           <p class="lead">Trial Junkie helps you save money by providing access to premium services without the subscription costs.</p>
           <div class="card bg-dark-subtle p-3 border-0 mt-4">
-            <h4 class="text-center mb-3">Savings Calculator</h4>
-            <div class="savings-calculator">
-              <div class="mb-3">
-                <label for="serviceSelect" class="form-label">Select Service</label>
-                <select class="form-select" id="serviceSelect">
-                  <option value="netflix">Netflix</option>
-                  <option value="hulu">Hulu</option>
-                  <option value="disney">Disney+</option>
-                  <option value="spotify">Spotify</option>
-                  <option value="youtube">YouTube Premium</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="trialCount" class="form-label">Number of Trials</label>
-                <input type="range" class="form-range" min="1" max="12" value="3" id="trialCount">
-                <div class="d-flex justify-content-between">
-                  <small>1</small>
-                  <small id="trialCountValue">3</small>
-                  <small>12</small>
+            <h4 class="text-center mb-3">Annual Savings Chart</h4>
+            <div class="savings-chart">
+              <div class="savings-bar-chart">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span>Netflix</span>
+                  <div class="progress w-75" style="height: 25px;">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">$180/year</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span>Hulu</span>
+                  <div class="progress w-75" style="height: 25px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">$144/year</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span>Disney+</span>
+                  <div class="progress w-75" style="height: 25px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 55%;" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100">$96/year</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span>Spotify</span>
+                  <div class="progress w-75" style="height: 25px;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">$120/year</div>
+                  </div>
                 </div>
               </div>
-              <div class="savings-result p-3 bg-success-subtle text-center rounded">
-                <h5>Your Estimated Savings</h5>
-                <div class="savings-amount display-5 my-2">$<span id="savingsAmount">44.97</span></div>
-                <p class="mb-0">That's <span id="savingsPercent">100</span>% off regular price!</p>
+              <div class="text-center mt-3 p-3 bg-success-subtle rounded">
+                <h5>Total Potential Savings</h5>
+                <div class="display-5 my-2">$540+</div>
+                <p class="mb-0">Annual savings with Trial Junkie subscription</p>
               </div>
             </div>
           </div>
@@ -596,28 +603,28 @@
             <div class="service-savings-list">
               <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
                 <div class="d-flex align-items-center">
-                  <img src="/img/netflix-icon.svg" alt="Netflix" width="30" height="30" class="me-2">
+                  <i class="bi bi-netflix text-danger me-2 fs-5"></i>
                   <span>Netflix</span>
                 </div>
                 <div class="savings-badge bg-success px-2 py-1 rounded">Save $14.99/mo</div>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
                 <div class="d-flex align-items-center">
-                  <img src="/img/hulu-icon.svg" alt="Hulu" width="30" height="30" class="me-2">
+                  <i class="bi bi-hulu text-success me-2 fs-5"></i>
                   <span>Hulu</span>
                 </div>
                 <div class="savings-badge bg-success px-2 py-1 rounded">Save $11.99/mo</div>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
                 <div class="d-flex align-items-center">
-                  <img src="/img/disney-icon.svg" alt="Disney+" width="30" height="30" class="me-2">
+                  <i class="bi bi-disney-plus text-primary me-2 fs-5"></i>
                   <span>Disney+</span>
                 </div>
                 <div class="savings-badge bg-success px-2 py-1 rounded">Save $7.99/mo</div>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-dark rounded">
                 <div class="d-flex align-items-center">
-                  <img src="/img/spotify-icon.svg" alt="Spotify" width="30" height="30" class="me-2">
+                  <i class="bi bi-spotify text-success me-2 fs-5"></i>
                   <span>Spotify</span>
                 </div>
                 <div class="savings-badge bg-success px-2 py-1 rounded">Save $9.99/mo</div>
@@ -785,7 +792,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/psychedelic-bg.js"></script>
-  <script src="/js/calculator.js"></script>
   
   <!-- Subscription Buttons Handler -->
   <script>
