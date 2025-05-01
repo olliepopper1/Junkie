@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Trial Junkie - Bot Guide{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Discord Bot Guide</h1>
+    
+    <div class="alert alert-info">
+        <strong>Want to jump right in?</strong> Join our Discord server and start with the <code>!guide</code> command!
+        <a href="https://discord.gg/trialjunkie" class="btn btn-primary btn-sm ms-2">Join Discord</a>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <h2>Getting Started</h2>
+            <p>The Trial Junkie Discord bot is your gateway to generating trial accounts for various streaming and subscription services. Here's how to get started:</p>
+            
+            <ol class="mb-4">
+                <li>Join our <a href="https://discord.gg/trialjunkie">Discord server</a></li>
+                <li>Authenticate with the bot using <code>!register</code> or link your web account</li>
+                <li>Check your subscription tier with <code>!tier</code></li>
+                <li>Start generating trials!</li>
+            </ol>
+            
+            <h2>Trial Generation Process</h2>
+            <p>Generating a trial with our bot is simple and straightforward. Here's a step-by-step breakdown:</p>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">Step 1: Select a Service</h3>
+                </div>
+                <div class="card-body">
+                    <p>Use the <code>!hit [service]</code> command to generate a complete trial for a specific service.</p>
+                    <p class="mb-0"><strong>Example:</strong> <code>!hit netflix</code> or <code>!hit hulu</code></p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">Step 2: Wait for Account Generation</h3>
+                </div>
+                <div class="card-body">
+                    <p>The bot will generate all necessary credentials:</p>
+                    <ul>
+                        <li><strong>Identity:</strong> Name, address, and location information</li>
+                        <li><strong>Email:</strong> A disposable email for verification</li>
+                        <li><strong>Phone Number:</strong> A virtual phone number for verification (if needed)</li>
+                        <li><strong>Payment Method:</strong> A virtual card for the trial subscription</li>
+                    </ul>
+                    <p class="mb-0">This process typically takes 10-30 seconds depending on service complexity.</p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">Step 3: Receive Your Account Details</h3>
+                </div>
+                <div class="card-body">
+                    <p>Once complete, the bot will provide:</p>
+                    <ul>
+                        <li>Login information (username/email and password)</li>
+                        <li>Subscription details (plan type, trial period)</li>
+                        <li>Expiration date (when the trial will end)</li>
+                        <li>Cancellation instructions (to avoid charges)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0">Step 4: Access Your New Account</h3>
+                </div>
+                <div class="card-body">
+                    <p>Simply log in to the service using the provided credentials and enjoy your trial!</p>
+                    <p class="mb-0">All credentials are saved in your <code>!stash</code> for later reference.</p>
+                </div>
+            </div>
+            
+            <h2>Automation Features</h2>
+            <p>For supported services, you can use the <code>!trip [service]</code> command to have the bot automatically create the account for you.</p>
+            <p>The bot will use browser automation to:</p>
+            <ul>
+                <li>Navigate to the service website</li>
+                <li>Fill out registration forms</li>
+                <li>Verify email and phone (if required)</li>
+                <li>Enter payment information</li>
+                <li>Complete the signup process</li>
+            </ul>
+            <p>When complete, you'll receive the login details just like with the <code>!hit</code> command.</p>
+            
+            <h2>Individual Agent Commands</h2>
+            <p>Need just a specific piece of information? Use the <code>!dose</code> command to generate individual components:</p>
+            <ul>
+                <li><code>!dose identity</code> - Generate just a person's identity</li>
+                <li><code>!dose email</code> - Create a disposable email</li>
+                <li><code>!dose card</code> - Generate a virtual card</li>
+                <li><code>!dose phone</code> - Get a virtual phone number</li>
+            </ul>
+            
+            <h2>Managing Your Trials</h2>
+            <p>Use these commands to manage your trials:</p>
+            <ul>
+                <li><code>!stash</code> - View all your saved credentials</li>
+                <li><code>!rehab</code> - Clear your saved data (requires confirmation)</li>
+                <li><code>!tier</code> - Check your subscription status and limits</li>
+            </ul>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card bg-dark text-light sticky-top" style="top: 2rem;">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Command Reference</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!guide</code> - Display help information
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!hit [service]</code> - Full trial setup
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!dose [agent] [platform]</code> - Single agent generation
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!trip [service]</code> - Automated trial creation
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!stash</code> - View saved credentials
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!rehab</code> - Clear user data
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!agents</code> - View available agents
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!plans</code> - View subscription plans
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!pay [service]</code> - Make a payment
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!tier</code> - Check subscription tier
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <code>!referral</code> - Get/manage referral code
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="https://discord.gg/trialjunkie" class="btn btn-primary d-block">Join Discord</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert alert-warning">
+        <h4>Important Notice</h4>
+        <p>Always remember to cancel trials before they expire to avoid being charged. Trial Junkie is not responsible for any charges incurred if you forget to cancel.</p>
+    </div>
+</div>
+{% endblock %}
