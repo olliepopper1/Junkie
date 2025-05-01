@@ -116,6 +116,14 @@ def agents():
 
 @app.route('/referrals')
 def referrals():
+    # No login required for referrals page
+    return send_from_directory('static', 'referrals.html')
+
+@app.route('/referrals/<referral_code>')
+def referral_landing(referral_code):
+    # Landing page for referral links
+    # Store referral code in session for later use during registration
+    session['referral_code'] = referral_code
     return send_from_directory('static', 'referrals.html')
 
 @app.route('/roadmap')
@@ -174,6 +182,11 @@ def register():
         password = request.form.get('password')
         discord_id = request.form.get('discord_id')
         
+        # Get referral code from form or session
+        referral_code = request.form.get('referral_code')
+        if not referral_code and 'referral_code' in session:
+            referral_code = session.get('referral_code')
+        
         # Check if user already exists
         existing_user = WebUser.query.filter((WebUser.username == username) | (WebUser.email == email)).first()
         if existing_user:
@@ -187,12 +200,34 @@ def register():
         db.session.add(user)
         db.session.commit()
         
+        # Process referral if provided
+        if referral_code:
+            try:
+                # Link user to referrer in database
+                from database import Database
+                db_conn = Database()
+                db_conn.register_referral(user.id, referral_code)
+                logger.info(f"User {username} registered with referral code: {referral_code}")
+            except Exception as e:
+                logger.error(f"Error processing referral: {str(e)}")
+        
         # Log the user in
         login_user(user)
         session['user_id'] = user.id
         session['username'] = user.username
         
+        # Clear referral code from session after use
+        if 'referral_code' in session:
+            session.pop('referral_code')
+        
         return redirect('/dashboard')
+    
+    # Pass referral code to template if available in session
+    referral_code = session.get('referral_code', None)
+    if referral_code:
+        # In a real implementation, we would pass this to the template
+        # But for now, we'll just show it in the logs
+        logger.info(f"Registration page loaded with referral code: {referral_code}")
     
     return send_from_directory('static', 'register.html')
 
@@ -305,6 +340,20 @@ def discord_callback():
                 )
                 db.session.add(user)
                 db.session.commit()
+                
+                # Process referral if provided in session
+                referral_code = session.get('referral_code')
+                if referral_code:
+                    try:
+                        # Link user to referrer in database
+                        from database import Database
+                        db_conn = Database()
+                        db_conn.register_referral(user.id, referral_code)
+                        logger.info(f"Discord user {username} registered with referral code: {referral_code}")
+                        # Clear referral code from session after use
+                        session.pop('referral_code')
+                    except Exception as e:
+                        logger.error(f"Error processing referral for Discord user: {str(e)}")
             else:
                 # Update the existing user with Discord info
                 user.discord_id = discord_id

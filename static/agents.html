@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meet Our Agents | Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .navbar-brand, .display-3, .display-4, .display-5, h1, h2, h3 {
+      font-family: 'Audiowide', cursive;
+    }
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary-purple);
+      transition: width 0.3s ease, left 0.3s ease;
+    }
+    .nav-link:hover::before, .nav-link.active::before {
+      width: 100%;
+      left: 0;
+      box-shadow: 0 0 10px var(--primary-purple);
+    }
+    
+    /* Agent Cards Styling */
+    .agent-card {
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: #212529;
+    }
+    
+    .agent-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(111, 66, 193, 0.3);
+    }
+    
+    .agent-glow {
+      box-shadow: 0 0 20px rgba(111, 66, 193, 0.5);
+    }
+    
+    .agent-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto;
+      object-fit: cover;
+      border: 3px solid;
+    }
+    
+    .agent-harry .agent-avatar {
+      border-color: #dc3545;
+    }
+    
+    .agent-mandy .agent-avatar {
+      border-color: #0dcaf0;
+    }
+    
+    .agent-xan .agent-avatar {
+      border-color: #ffc107;
+    }
+    
+    .agent-carl .agent-avatar {
+      border-color: #6610f2;
+    }
+    
+    .agent-sal .agent-avatar {
+      border-color: #28a745;
+    }
+    
+    .agent-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .agent-harry {
+      background-color: #dc3545;
+      box-shadow: 0 0 5px #dc3545;
+    }
+    
+    .agent-mandy {
+      background-color: #0dcaf0;
+      box-shadow: 0 0 5px #0dcaf0;
+    }
+    
+    .agent-xan {
+      background-color: #ffc107;
+      box-shadow: 0 0 5px #ffc107;
+    }
+    
+    .agent-carl {
+      background-color: #6610f2;
+      box-shadow: 0 0 5px #6610f2;
+    }
+    
+    .agent-sal {
+      background-color: #28a745;
+      box-shadow: 0 0 5px #28a745;
+    }
+    
+    .command-title {
+      font-family: 'Courier New', monospace;
+      background-color: #2c2c2c;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin-bottom: 10px;
+      color: #6f42c1;
+    }
+    
+    .command-block {
+      background-color: #2c2c2c;
+      border-radius: 5px;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .blockquote {
+      border-left: 4px solid var(--primary-purple);
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top py-3">
+    <div class="container">
+      <a class="navbar-brand drug-glow" href="/">
+        <i class="bi bi-capsule-pill me-2"></i> Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/agents">Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roadmap">Roadmap</a>
+          </li>
+          <li class="nav-item ms-lg-3">
+            <a class="btn btn-outline-light" href="/logout">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-5">
+    <div class="container">
+      <!-- Header -->
+      <div class="row mb-5">
+        <div class="col-12 text-center">
+          <h1 class="display-4 mb-3 drug-glow">Meet Our Agents</h1>
+          <p class="lead">Our specialized team of digital agents work 24/7 to get you the best trials available.</p>
+        </div>
+      </div>
+      
+      <!-- Agents Cards -->
+      <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        <!-- Heroin Harry -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-harry">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <img src="/img/agent-harry.png" alt="Heroin Harry" class="agent-avatar">
+              </div>
+              <h3 class="card-title h4 mb-3">
+                <span class="agent-indicator agent-harry"></span> Heroin Harry
+              </h3>
+              <h6 class="text-muted mb-3">Identity Generation Specialist</h6>
+              <p class="card-text">Heroin Harry creates perfectly realistic identities that bypass any verification system. His identities have valid SSNs, addresses, and complete backgrounds.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!dose identity</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">Name Generation</span>
+                <span class="badge bg-dark mb-2">Address Verification</span>
+                <span class="badge bg-dark mb-2">SSN Validation</span>
+                <span class="badge bg-dark">Background Creation</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "I'll hook you up with an identity so real even your own mother would believe it."
+              </blockquote>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Meth Mandy -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-mandy">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <img src="/img/agent-mandy.png" alt="Meth Mandy" class="agent-avatar">
+              </div>
+              <h3 class="card-title h4 mb-3">
+                <span class="agent-indicator agent-mandy"></span> Meth Mandy
+              </h3>
+              <h6 class="text-muted mb-3">Payment Method Expert</h6>
+              <p class="card-text">Meth Mandy works tirelessly to generate valid card numbers that pass verification checks. Her cards have real BINs, valid checksums, and proper formatting.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!dose card [type]</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">Visa</span>
+                <span class="badge bg-dark mb-2">Mastercard</span>
+                <span class="badge bg-dark mb-2">American Express</span>
+                <span class="badge bg-dark">Discover</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "Need a payment method? I've got you covered with cards that actually work!"
+              </blockquote>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Xanny Xan -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-xan">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <img src="/img/agent-xan.png" alt="Xanny Xan" class="agent-avatar">
+              </div>
+              <h3 class="card-title h4 mb-3">
+                <span class="agent-indicator agent-xan"></span> Xanny Xan
+              </h3>
+              <h6 class="text-muted mb-3">Phone Verification Agent</h6>
+              <p class="card-text">Xanny Xan provides virtual phone numbers that receive real SMS and voice verification codes. His numbers work with all major verification systems.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!dose phone</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">SMS Reception</span>
+                <span class="badge bg-dark mb-2">Voice Calls</span>
+                <span class="badge bg-dark mb-2">Global Numbers</span>
+                <span class="badge bg-dark">Verification Bypass</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "Stay chill while I handle all your phone verification needs with my virtual numbers."
+              </blockquote>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Cocaine Carl -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-carl">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <img src="/img/agent-carl.png" alt="Cocaine Carl" class="agent-avatar">
+              </div>
+              <h3 class="card-title h4 mb-3">
+                <span class="agent-indicator agent-carl"></span> Cocaine Carl
+              </h3>
+              <h6 class="text-muted mb-3">Email Verification Pro</h6>
+              <p class="card-text">Cocaine Carl creates disposable email addresses at lightning speed. His emails can receive verification links and codes from any service without detection.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!dose email</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">Disposable Emails</span>
+                <span class="badge bg-dark mb-2">Custom Domains</span>
+                <span class="badge bg-dark mb-2">Auto-Verification</span>
+                <span class="badge bg-dark">Undetectable</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "Need an email that won't raise suspicion? I'll deliver one faster than you can snort!"
+              </blockquote>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Shroomy Sal -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-sal">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <img src="/img/agent-sal.png" alt="Shroomy Sal" class="agent-avatar">
+              </div>
+              <h3 class="card-title h4 mb-3">
+                <span class="agent-indicator agent-sal"></span> Shroomy Sal
+              </h3>
+              <h6 class="text-muted mb-3">Automation Specialist</h6>
+              <p class="card-text">Shroomy Sal is our browser automation expert. He can navigate websites, fill forms, solve captchas, and create trial accounts automatically with zero human interaction.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!trip [url]</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">Browser Automation</span>
+                <span class="badge bg-dark mb-2">Form Filling</span>
+                <span class="badge bg-dark mb-2">Captcha Solving</span>
+                <span class="badge bg-dark">Custom Scripts</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "Just sit back and watch me automate your wildest trial dreams. It's a trip, man!"
+              </blockquote>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Combined Team -->
+        <div class="col">
+          <div class="card h-100 agent-card agent-glow">
+            <div class="card-body text-center p-4">
+              <div class="mt-3 mb-4">
+                <div style="width: 120px; height: 120px; margin: 0 auto; position: relative;">
+                  <div class="d-flex justify-content-center align-items-center" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                    <i class="bi bi-people-fill display-1 text-purple"></i>
+                  </div>
+                </div>
+              </div>
+              <h3 class="card-title h4 mb-3 drug-glow">
+                The Whole Crew
+              </h3>
+              <h6 class="text-muted mb-3">Complete Trial Package</h6>
+              <p class="card-text">When all our agents work together, they can create a complete trial for any service. Just provide the service name or URL, and watch the magic happen.</p>
+              <div class="command-title">Primary Command</div>
+              <div class="command-block">
+                <code class="text-light">!hit [service]</code>
+              </div>
+              <div class="mt-4">
+                <span class="badge bg-dark mb-2">All-in-One</span>
+                <span class="badge bg-dark mb-2">Any Service</span>
+                <span class="badge bg-dark mb-2">Custom URLs</span>
+                <span class="badge bg-dark">Full Automation</span>
+              </div>
+            </div>
+            <div class="card-footer bg-dark-subtle border-0 text-center py-3">
+              <blockquote class="blockquote mb-0 text-muted fst-italic small">
+                "Together, our agents create the perfect high - free trials that feel like the real thing!"
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- How To Use Section -->
+      <div class="row mt-5">
+        <div class="col-12">
+          <div class="card bg-dark shadow border-0">
+            <div class="card-header bg-dark border-0">
+              <h2 class="h3 mb-0">How To Use Our Agents</h2>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h4 class="h5 mb-3">Individual Agent Commands</h4>
+                  <p>Each agent can be used individually with the <code>!dose</code> command to generate specific credentials:</p>
+                  <ul class="list-unstyled">
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!dose identity</code>
+                      </div>
+                      <p class="small">Generates a full identity with Heroin Harry</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!dose card visa</code>
+                      </div>
+                      <p class="small">Generates a Visa card with Meth Mandy</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!dose phone</code>
+                      </div>
+                      <p class="small">Creates a virtual phone number with Xanny Xan</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!dose email</code>
+                      </div>
+                      <p class="small">Provides a disposable email with Cocaine Carl</p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <h4 class="h5 mb-3">Combined Agent Commands</h4>
+                  <p>For a complete trial generation experience, use these commands:</p>
+                  <ul class="list-unstyled">
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!hit netflix</code>
+                      </div>
+                      <p class="small">Generates a complete Netflix trial with all agents</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!hit https://example.com/trial</code>
+                      </div>
+                      <p class="small">Creates a trial for any custom URL provided</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!trip https://example.com/trial</code>
+                      </div>
+                      <p class="small">Runs just Shroomy Sal's automation on a custom URL</p>
+                    </li>
+                    <li class="mb-3">
+                      <div class="command-block">
+                        <code class="text-light">!stash</code>
+                      </div>
+                      <p class="small">View all your generated trials and credentials</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="alert alert-purple mt-3">
+                <i class="bi bi-info-circle-fill me-2"></i> All commands can be used in our Discord server or directly through this website. Your trials are synchronized across both platforms.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark py-5 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h3 class="h5 drug-glow">Trial Junkie</h3>
+          <p class="text-muted">Your one-stop solution for automated free trials across any service. Our specialized agents work 24/7 to ensure you never miss out on premium content.</p>
+          <div class="d-flex mt-4">
+            <a href="https://discord.gg/trialjunkie" class="me-3 text-light h4 discord-icon"><i class="bi bi-discord"></i></a>
+            <a href="https://twitter.com/trialjunkie" class="me-3 text-light h4 twitter-icon"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://t.me/trialjunkie" class="me-3 text-light h4 telegram-icon"><i class="bi bi-telegram"></i></a>
+            <a href="https://trialjunkie.gitbook.io/docs" class="text-light h4 gitbook-icon"><i class="bi bi-book"></i></a>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h3 class="h5">Quick Links</h3>
+          <ul class="list-unstyled">
+            <li><a href="/dashboard" class="text-white footer-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a href="/agents" class="text-white footer-link"><i class="bi bi-people me-2"></i>Our Agents</a></li>
+            <li><a href="/trials" class="text-white footer-link"><i class="bi bi-collection-play me-2"></i>My Trials</a></li>
+            <li><a href="/referrals" class="text-white footer-link"><i class="bi bi-share me-2"></i>Referral Program</a></li>
+            <li><a href="/roadmap" class="text-white footer-link"><i class="bi bi-map me-2"></i>Roadmap</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h3 class="h5">Resources</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white footer-link"><i class="bi bi-discord me-2"></i>Join Discord</a></li>
+            <li><a href="https://trialjunkie.gitbook.io/docs" class="text-white footer-link"><i class="bi bi-book me-2"></i>Documentation</a></li>
+            <li><a href="https://t.me/trialjunkie" class="text-white footer-link"><i class="bi bi-telegram me-2"></i>Telegram Group</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white footer-link"><i class="bi bi-envelope me-2"></i>Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4 footer-divider">
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents <span class="drug-glow">24/7/365</span></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .footer-link {
+      display: inline-block;
+      margin-bottom: 8px;
+      transition: transform 0.3s ease, color 0.3s ease;
+      opacity: 0.8;
+    }
+    
+    .footer-link:hover {
+      transform: translateX(5px);
+      opacity: 1;
+      color: var(--primary-purple) !important;
+    }
+    
+    .discord-icon:hover {
+      color: #5865F2 !important;
+      text-shadow: 0 0 10px #5865F2;
+    }
+    
+    .telegram-icon:hover {
+      color: #0088cc !important;
+      text-shadow: 0 0 10px #0088cc;
+    }
+    
+    .gitbook-icon:hover {
+      color: #3884FF !important;
+      text-shadow: 0 0 10px #3884FF;
+    }
+    
+    .twitter-icon:hover {
+      color: #1DA1F2 !important;
+      text-shadow: 0 0 10px #1DA1F2;
+    }
+    
+    .alert-purple {
+      background-color: rgba(111, 66, 193, 0.1);
+      border-color: rgba(111, 66, 193, 0.3);
+      color: #d2c2ff;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/psychedelic-bg.js"></script>
+</body>
+</html>

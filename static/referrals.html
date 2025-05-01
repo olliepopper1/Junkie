@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Program | Trial Junkie</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .navbar-brand, .display-3, .display-4, .display-5, h1, h2, h3 {
+      font-family: 'Audiowide', cursive;
+    }
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary-purple);
+      transition: width 0.3s ease, left 0.3s ease;
+    }
+    .nav-link:hover::before, .nav-link.active::before {
+      width: 100%;
+      left: 0;
+      box-shadow: 0 0 10px var(--primary-purple);
+    }
+    
+    /* Referral Program Styling */
+    .referral-card {
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: #212529;
+    }
+    
+    .referral-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(111, 66, 193, 0.3);
+    }
+    
+    .tier-card {
+      border: 2px solid;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .tier-standard {
+      border-color: #0dcaf0;
+    }
+    
+    .tier-premium {
+      border-color: #6f42c1;
+    }
+    
+    .tier-dealer {
+      border-color: #dc3545;
+    }
+    
+    .tier-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(111, 66, 193, 0.2);
+    }
+    
+    .tier-header {
+      border-radius: 8px 8px 0 0;
+      padding: 15px;
+    }
+    
+    .tier-standard .tier-header {
+      background: linear-gradient(135deg, #0dcaf0, #0d6efd);
+    }
+    
+    .tier-premium .tier-header {
+      background: linear-gradient(135deg, #6f42c1, #a370f7);
+    }
+    
+    .tier-dealer .tier-header {
+      background: linear-gradient(135deg, #dc3545, #fd7e14);
+    }
+    
+    .referral-link {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      padding: 10px 15px;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+    }
+    
+    .commission-table th, .commission-table td {
+      vertical-align: middle;
+    }
+    
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .progress-bar {
+      background: linear-gradient(to right, #6f42c1, #a370f7);
+    }
+    
+    .referral-stats {
+      display: inline-block;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      background-color: #212529;
+      width: 100%;
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+    
+    .commission-badge {
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top py-3">
+    <div class="container">
+      <a class="navbar-brand drug-glow" href="/">
+        <i class="bi bi-capsule-pill me-2"></i> Trial Junkie
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/agents">Agents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/trials">Trials</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/referrals">Referrals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/roadmap">Roadmap</a>
+          </li>
+          <li class="nav-item ms-lg-3">
+            <a class="btn btn-outline-light" href="/logout">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="py-5">
+    <div class="container">
+      <!-- Header -->
+      <div class="row mb-5">
+        <div class="col-12 text-center">
+          <h1 class="display-4 mb-3 drug-glow">Referral Program</h1>
+          <p class="lead">Refer friends to Trial Junkie and earn rewards, discounts, and real cash commissions.</p>
+        </div>
+      </div>
+      
+      <!-- Referral Stats -->
+      <div class="row mb-5">
+        <div class="col-md-3 mb-4 mb-md-0">
+          <div class="referral-stats text-center">
+            <h3 class="stat-value drug-glow">12</h3>
+            <p class="stat-label text-muted mb-0">Total Referrals</p>
+          </div>
+        </div>
+        <div class="col-md-3 mb-4 mb-md-0">
+          <div class="referral-stats text-center">
+            <h3 class="stat-value drug-glow">8</h3>
+            <p class="stat-label text-muted mb-0">Active Users</p>
+          </div>
+        </div>
+        <div class="col-md-3 mb-4 mb-md-0">
+          <div class="referral-stats text-center">
+            <h3 class="stat-value drug-glow">$37.50</h3>
+            <p class="stat-label text-muted mb-0">Total Earned</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="referral-stats text-center">
+            <h3 class="stat-value drug-glow">$22.00</h3>
+            <p class="stat-label text-muted mb-0">Available Now</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Referral Link Card -->
+      <div class="row mb-5">
+        <div class="col-12">
+          <div class="card bg-dark shadow referral-card">
+            <div class="card-header bg-dark border-0">
+              <h2 class="h4 mb-0">Your Referral Link</h2>
+            </div>
+            <div class="card-body p-4">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <p class="mb-3">Share this unique link with friends to earn rewards and commissions:</p>
+                  <div class="referral-link mb-3">
+                    https://trialjunkie.com/r/TJ42069XZ
+                  </div>
+                  <p class="text-muted small mb-0">Your referral code: <span class="badge bg-purple">TJ42069XZ</span></p>
+                </div>
+                <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                  <button class="btn btn-primary mb-2 w-100">
+                    <i class="bi bi-clipboard"></i> Copy Link
+                  </button>
+                  <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                      <i class="bi bi-share"></i> Share
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-discord me-2"></i>Discord</a></li>
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-twitter-x me-2"></i>Twitter</a></li>
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-telegram me-2"></i>Telegram</a></li>
+                      <li><a class="dropdown-item" href="#"><i class="bi bi-envelope me-2"></i>Email</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row mt-4">
+                <div class="col-12">
+                  <div class="progress-container">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="small">Next tier: Premium Tier (15 referrals)</span>
+                      <span class="small">12/15</span>
+                    </div>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Referral Tiers -->
+      <div class="row mb-5">
+        <div class="col-12 mb-4">
+          <h2 class="h3">Referral Tiers & Rewards</h2>
+          <p>The more friends you refer, the higher your tier and rewards!</p>
+        </div>
+        
+        <div class="col-md-4 mb-4 mb-md-0">
+          <div class="card bg-dark h-100 tier-card tier-standard">
+            <div class="tier-header text-center">
+              <h3 class="h4 mb-0">Standard Tier</h3>
+              <p class="small mb-0">1-14 Referrals</p>
+            </div>
+            <div class="card-body p-4">
+              <ul class="list-unstyled mb-0">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-info me-2"></i> 10% commission on all payments</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-info me-2"></i> +5 daily command limit</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-info me-2"></i> Exclusive Discord role</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-info me-2"></i> 10% discount on your subscription</li>
+                <li><i class="bi bi-check-circle-fill text-info me-2"></i> Custom trial URL support</li>
+              </ul>
+            </div>
+            <div class="card-footer border-0 bg-dark text-center">
+              <span class="badge bg-info">Current Tier</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-4 mb-md-0">
+          <div class="card bg-dark h-100 tier-card tier-premium">
+            <div class="tier-header text-center">
+              <h3 class="h4 mb-0">Premium Tier</h3>
+              <p class="small mb-0">15-49 Referrals</p>
+            </div>
+            <div class="card-body p-4">
+              <ul class="list-unstyled mb-0">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-purple me-2"></i> <strong>15%</strong> commission on all payments</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-purple me-2"></i> +15 daily command limit</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-purple me-2"></i> Priority Discord support</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-purple me-2"></i> <strong>20%</strong> discount on your subscription</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-purple me-2"></i> Custom trial URL support</li>
+                <li><i class="bi bi-check-circle-fill text-purple me-2"></i> Weekly commission payouts</li>
+              </ul>
+            </div>
+            <div class="card-footer border-0 bg-dark text-center">
+              <div class="progress-container">
+                <div class="progress mb-2">
+                  <div class="progress-bar" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <span class="small">12/15 referrals needed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card bg-dark h-100 tier-card tier-dealer">
+            <div class="tier-header text-center">
+              <h3 class="h4 mb-0">Dealer's Choice</h3>
+              <p class="small mb-0">50+ Referrals</p>
+            </div>
+            <div class="card-body p-4">
+              <ul class="list-unstyled mb-0">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> <strong>25%</strong> commission on all payments</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> Unlimited daily commands</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> VIP Discord support</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> <strong>50%</strong> discount on your subscription</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> Custom trial URL priority</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-danger me-2"></i> Daily commission payouts</li>
+                <li><i class="bi bi-check-circle-fill text-danger me-2"></i> Early access to new features</li>
+              </ul>
+            </div>
+            <div class="card-footer border-0 bg-dark text-center">
+              <div class="progress-container">
+                <div class="progress mb-2">
+                  <div class="progress-bar" role="progressbar" style="width: 24%" aria-valuenow="24" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <span class="small">12/50 referrals needed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Referral List -->
+      <div class="row mb-5">
+        <div class="col-12">
+          <div class="card bg-dark shadow border-0">
+            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+              <h2 class="h4 mb-0">Your Referrals</h2>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-funnel"></i> Filter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                  <li><a class="dropdown-item" href="#">All Referrals</a></li>
+                  <li><a class="dropdown-item" href="#">Active Only</a></li>
+                  <li><a class="dropdown-item" href="#">Paid Subscriptions</a></li>
+                  <li><a class="dropdown-item" href="#">Recent First</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Username</th>
+                      <th>Joined</th>
+                      <th>Status</th>
+                      <th>Subscription</th>
+                      <th>Commission</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar bg-purple rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>JD</span>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">JDoe#1234</h6>
+                            <small class="text-muted">john.doe@example.com</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Apr 28, 2025</td>
+                      <td><span class="badge bg-success">Active</span></td>
+                      <td>Standard Tier</td>
+                      <td><span class="commission-badge bg-info">$2.50 earned</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar bg-danger rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>MS</span>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">MSmith#5678</h6>
+                            <small class="text-muted">mary.smith@example.com</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Apr 26, 2025</td>
+                      <td><span class="badge bg-success">Active</span></td>
+                      <td>Premium Tier</td>
+                      <td><span class="commission-badge bg-primary">$7.50 earned</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>RJ</span>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">RJohnson#9012</h6>
+                            <small class="text-muted">robert.j@example.com</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Apr 23, 2025</td>
+                      <td><span class="badge bg-success">Active</span></td>
+                      <td>Dealer's Choice</td>
+                      <td><span class="commission-badge bg-danger">$12.50 earned</span></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar bg-info rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <span>AW</span>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">AWilliams#3456</h6>
+                            <small class="text-muted">anna.w@example.com</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>Apr 20, 2025</td>
+                      <td><span class="badge bg-secondary">Inactive</span></td>
+                      <td>Free Tier</td>
+                      <td><span class="commission-badge bg-secondary">$0.00 earned</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer bg-dark border-0 text-end py-3">
+              <a href="#" class="btn btn-sm btn-outline-light">View All (12)</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Commission History -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card bg-dark shadow border-0">
+            <div class="card-header bg-dark border-0 d-flex justify-content-between align-items-center">
+              <h2 class="h4 mb-0">Your Commission History</h2>
+              <button class="btn btn-primary">
+                <i class="bi bi-cash-coin me-2"></i> Withdraw $22.00
+              </button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table align-middle mb-0 commission-table">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Date</th>
+                      <th>Referred User</th>
+                      <th>Transaction</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Apr 29, 2025</td>
+                      <td>JDoe#1234</td>
+                      <td>Standard Tier Upgrade</td>
+                      <td>$2.50</td>
+                      <td><span class="badge bg-success">Available</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 27, 2025</td>
+                      <td>MSmith#5678</td>
+                      <td>Premium Tier Upgrade</td>
+                      <td>$7.50</td>
+                      <td><span class="badge bg-success">Available</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 25, 2025</td>
+                      <td>RJohnson#9012</td>
+                      <td>Dealer's Choice Upgrade</td>
+                      <td>$12.50</td>
+                      <td><span class="badge bg-success">Available</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 18, 2025</td>
+                      <td>LBrown#7890</td>
+                      <td>Standard Tier Upgrade</td>
+                      <td>$2.50</td>
+                      <td><span class="badge bg-info">Paid</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 16, 2025</td>
+                      <td>TDavis#2345</td>
+                      <td>Premium Tier Upgrade</td>
+                      <td>$7.50</td>
+                      <td><span class="badge bg-info">Paid</span></td>
+                    </tr>
+                    <tr>
+                      <td>Apr 12, 2025</td>
+                      <td>CMiller#6789</td>
+                      <td>Standard Tier Upgrade</td>
+                      <td>$2.50</td>
+                      <td><span class="badge bg-info">Paid</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer bg-dark border-0 text-end py-3">
+              <a href="#" class="btn btn-sm btn-outline-light">View Full History</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark py-5 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h3 class="h5 drug-glow">Trial Junkie</h3>
+          <p class="text-muted">Your one-stop solution for automated free trials across any service. Our specialized agents work 24/7 to ensure you never miss out on premium content.</p>
+          <div class="d-flex mt-4">
+            <a href="https://discord.gg/trialjunkie" class="me-3 text-light h4 discord-icon"><i class="bi bi-discord"></i></a>
+            <a href="https://twitter.com/trialjunkie" class="me-3 text-light h4 twitter-icon"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://t.me/trialjunkie" class="me-3 text-light h4 telegram-icon"><i class="bi bi-telegram"></i></a>
+            <a href="https://trialjunkie.gitbook.io/docs" class="text-light h4 gitbook-icon"><i class="bi bi-book"></i></a>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h3 class="h5">Quick Links</h3>
+          <ul class="list-unstyled">
+            <li><a href="/dashboard" class="text-white footer-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a href="/agents" class="text-white footer-link"><i class="bi bi-people me-2"></i>Our Agents</a></li>
+            <li><a href="/trials" class="text-white footer-link"><i class="bi bi-collection-play me-2"></i>My Trials</a></li>
+            <li><a href="/referrals" class="text-white footer-link"><i class="bi bi-share me-2"></i>Referral Program</a></li>
+            <li><a href="/roadmap" class="text-white footer-link"><i class="bi bi-map me-2"></i>Roadmap</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h3 class="h5">Resources</h3>
+          <ul class="list-unstyled">
+            <li><a href="https://discord.gg/trialjunkie" class="text-white footer-link"><i class="bi bi-discord me-2"></i>Join Discord</a></li>
+            <li><a href="https://trialjunkie.gitbook.io/docs" class="text-white footer-link"><i class="bi bi-book me-2"></i>Documentation</a></li>
+            <li><a href="https://t.me/trialjunkie" class="text-white footer-link"><i class="bi bi-telegram me-2"></i>Telegram Group</a></li>
+            <li><a href="mailto:support@trialjunkie.com" class="text-white footer-link"><i class="bi bi-envelope me-2"></i>Email Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4 footer-divider">
+      <div class="row">
+        <div class="col-md-6">
+          <p>&copy; 2025 Trial Junkie. All rights reserved.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p>Powered by our specialized agents <span class="drug-glow">24/7/365</span></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .footer-link {
+      display: inline-block;
+      margin-bottom: 8px;
+      transition: transform 0.3s ease, color 0.3s ease;
+      opacity: 0.8;
+    }
+    
+    .footer-link:hover {
+      transform: translateX(5px);
+      opacity: 1;
+      color: var(--primary-purple) !important;
+    }
+    
+    .discord-icon:hover {
+      color: #5865F2 !important;
+      text-shadow: 0 0 10px #5865F2;
+    }
+    
+    .telegram-icon:hover {
+      color: #0088cc !important;
+      text-shadow: 0 0 10px #0088cc;
+    }
+    
+    .gitbook-icon:hover {
+      color: #3884FF !important;
+      text-shadow: 0 0 10px #3884FF;
+    }
+    
+    .twitter-icon:hover {
+      color: #1DA1F2 !important;
+      text-shadow: 0 0 10px #1DA1F2;
+    }
+    
+    .bg-purple {
+      background-color: #6f42c1;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/psychedelic-bg.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Copy referral link to clipboard
+      const copyButton = document.querySelector('button.btn-primary');
+      const referralLink = document.querySelector('.referral-link').textContent.trim();
+      
+      copyButton.addEventListener('click', function() {
+        navigator.clipboard.writeText(referralLink).then(function() {
+          copyButton.innerHTML = '<i class="bi bi-check"></i> Copied!';
+          setTimeout(function() {
+            copyButton.innerHTML = '<i class="bi bi-clipboard"></i> Copy Link';
+          }, 2000);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
