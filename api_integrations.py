@@ -34,33 +34,39 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 API_CONFIG = {
     "personator": {
         "key": PERSONATOR_API_KEY,
-        "host": "fake-identity-generator-api.p.rapidapi.com",
-        "endpoint": "https://fake-identity-generator-api.p.rapidapi.com/api/v1/generate"
+        "host": "personator.melissadata.net",
+        "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify"
     },
     "virtual_number": {
         "key": VIRTUAL_NUMBER_API_KEY,
-        "host": "virtual-phone-verifier.p.rapidapi.com",
-        "endpoint": "https://virtual-phone-verifier.p.rapidapi.com/api/v1/numbers"
+        "host": "api.nexmo.com",
+        "endpoint": "https://api.nexmo.com/verify/json"
+    },
+    "virtual_number_backup": {
+        "key": VIRTUAL_NUMBER_API_KEY,
+        "host": "apilayer.net",
+        "endpoint": "https://apilayer.net/api/validate"
     },
     "fake_card": {
-        "key": FAKE_CARD_API_KEY, 
-        "host": "valid-card-generator.p.rapidapi.com",
-        "endpoint": "https://valid-card-generator.p.rapidapi.com/api/v1/generate"
+        # Using Stripe test cards API
+        "key": FAKE_CARD_API_KEY,
+        "host": "api.stripe.com",
+        "endpoint": "https://api.stripe.com/v1/test_helpers/test_cards"
     },
     "virtual_card": {
         "key": VIRTUAL_CARD_API_KEY,
-        "host": "trial-card-issuer.p.rapidapi.com",
-        "endpoint": "https://trial-card-issuer.p.rapidapi.com/api/v1/issue"
+        "host": "api.stripe.com",
+        "endpoint": "https://api.stripe.com/v1/issuing/cards"
     },
     "temp_email": {
         "key": TEMP_EMAIL_API_KEY,
-        "host": "disposable-email-service.p.rapidapi.com",
-        "endpoint": "https://disposable-email-service.p.rapidapi.com/api/v1/create"
+        "host": "api.temp-mail.io",
+        "endpoint": "https://api.temp-mail.io/request"
     },
     "temp_mail_backup": {
         "key": TEMP_MAIL_BACKUP_API_KEY,
-        "host": "temp-mail-service.p.rapidapi.com",
-        "endpoint": "https://temp-mail-service.p.rapidapi.com/api/v1/generate"
+        "host": "api.mail.tm",
+        "endpoint": "https://api.mail.tm/accounts"
     }
 }
 
