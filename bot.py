@@ -485,7 +485,7 @@ def setup_bot():
             inline=False
         )
         
-        embed.set_footer(text="Use !quote <agent> to hear from your favorite agent")
+        embed.set_footer(text="Use /quote <agent> to hear from your favorite agent")
         
         await ctx.send(embed=embed)
         
@@ -511,7 +511,7 @@ def setup_bot():
                       "• One-time free trial\n" +
                       "• No credit card required\n" +
                       "• Basic features only\n" +
-                      "• `!pay one_time_hit` to activate",
+                      "• `/pay one_time_hit` to activate",
                 inline=False
             )
             
@@ -522,7 +522,7 @@ def setup_bot():
                       "• Limited-time access\n" +
                       "• Multiple trials per day\n" +
                       "• Standard features\n" +
-                      "• `!pay five_dollar_rush` to purchase",
+                      "• `/pay five_dollar_rush` to purchase",
                 inline=False
             )
             
@@ -534,13 +534,13 @@ def setup_bot():
                       "• Priority support\n" +
                       "• All premium features\n" +
                       "• No daily limits\n" +
-                      "• `!pay junkified` to purchase",
+                      "• `/pay junkified` to purchase",
                 inline=False
             )
             
             # Add footer
             embed.set_footer(
-                text=f"Requested by {username} | All payments in SOL | Use !pay <plan_name> to subscribe",
+                text=f"Requested by {username} | All payments in SOL | Use /pay <plan_name> to subscribe",
                 icon_url="https://cdn.discordapp.com/embed/avatars/0.png"
             )
             
@@ -577,7 +577,7 @@ def setup_bot():
         valid_services = ["hit", "dose", "trip", "premium", "one_time_hit", "five_dollar_rush", "junkified"]
         if not service_type or service_type.lower() not in valid_services:
             services_str = ", ".join([f"`{s}`" for s in valid_services])
-            await ctx.send(f"Please specify a valid service type. Available types: {services_str}\n\nUse `!plans` to see details about our subscription plans.")
+            await ctx.send(f"Please specify a valid service type. Available types: {services_str}\n\nUse `/plans` to see details about our subscription plans.")
             return
         
         # Set cooldown
@@ -745,7 +745,7 @@ def setup_bot():
                 )
                 
                 embed.add_field(name="Your Referral Code", value=f"`{referral_code}`", inline=False)
-                embed.add_field(name="Refer Friends", value=f"Tell friends to use `!refer {referral_code}` to join with your referral", inline=False)
+                embed.add_field(name="Refer Friends", value=f"Tell friends to use `/refer {referral_code}` to join with your referral", inline=False)
                 embed.add_field(name="Total Referrals", value=str(total_referrals), inline=True)
                 embed.add_field(name="Earnings", value=f"{total_commission:.4f} SOL", inline=True)
                 embed.add_field(name="Pending", value=f"{pending_commission:.4f} SOL", inline=True)
@@ -770,7 +770,7 @@ def setup_bot():
         username = str(ctx.author)
         
         if not code:
-            await ctx.send("❌ Please provide a referral code. Usage: `!refer [code]`")
+            await ctx.send("❌ Please provide a referral code. Usage: `/refer [code]`")
             return
         
         # Show typing indicator
@@ -786,7 +786,7 @@ def setup_bot():
                         description=message,
                         color=discord.Color.green()
                     )
-                    embed.add_field(name="Your Referral Benefits", value="Refer others with `!referral` to earn 10% commission on their payments!")
+                    embed.add_field(name="Your Referral Benefits", value="Refer others with `/referral` to earn 10% commission on their payments!")
                 else:
                     # Failed to register
                     embed = discord.Embed(
@@ -857,7 +857,7 @@ def setup_bot():
                         inline=True
                     )
                 
-                embed.set_footer(text="Use !referral to get your referral code and earn more!")
+                embed.set_footer(text="Use /referral to get your referral code and earn more!")
                 
                 # Log command
                 cmd_logger.log_command(user_id, username, "commissions", "")
