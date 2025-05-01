@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Audiowide&family=Montserrat:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="/css/styles.css">
+  <script src="https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+  <script src="/js/phantom-wallet.js"></script>
+  <script src="/js/wallet-header.js"></script>
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -116,12 +119,17 @@
         </ul>
         <div class="d-flex align-items-center">
           <div class="user-profile d-flex align-items-center">
-            <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="User Avatar" class="rounded-circle me-2" width="32" height="32">
-            <span class="me-3 d-none d-md-inline">TrialJunkie#1234</span>
+            <div id="wallet-icon" class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-gradient" style="width: 32px; height: 32px; display: none;">
+              <i class="bi bi-wallet2 text-white"></i>
+            </div>
+            <span id="wallet-username" class="me-3 d-none d-md-inline">Not connected</span>
           </div>
-          <a href="/logout" class="btn btn-outline-light btn-sm">
+          <button id="nav-connect-wallet-btn" class="btn btn-primary btn-sm me-2">
+            <i class="bi bi-wallet2"></i> Connect Wallet
+          </button>
+          <button id="nav-disconnect-wallet-btn" class="btn btn-outline-light btn-sm" style="display: none;">
             <i class="bi bi-box-arrow-right"></i> Logout
-          </a>
+          </button>
         </div>
       </div>
     </div>
