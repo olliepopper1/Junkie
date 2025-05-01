@@ -112,15 +112,71 @@ Additionally, the system can attempt to automate trial creation on any website U
 
 ## Testing
 
-To test the trial creation functionality, you can run:
+The project includes a comprehensive test suite covering all major components:
+
+### API Tests
+
+These tests verify all API endpoints are functioning correctly:
+
+```
+python test_api_endpoints.py
+```
+
+Tests cover:
+- Authentication flows (registration, login, wallet connection)
+- Trial generation endpoints
+- Payment processing
+- Referral system functionality
+
+### Payment Flow Tests
+
+Tests for the Solana wallet payment integration:
+
+```
+python test_payment_flow.py
+```
+
+Tests cover:
+- Wallet connection
+- Payment creation and verification
+- Subscription activation and expiration
+- Error handling
+
+### Discord Bot Tests
+
+Test Discord bot commands and functionality:
+
+```
+python test_discord_commands.py
+```
+
+Tests cover:
+- Command availability and responses
+- Error handling
+- User permission checks
+- Integration with the database
+
+### Trial Automation Tests
+
+Test the browser automation for specific services:
 
 ```
 python test_hulu_trial.py
 ```
 
-This will run a comprehensive test of the Hulu trial creation process, including identity generation, card creation, and browser automation.
+This runs a comprehensive test of the Hulu trial creation process, including identity generation, card creation, and browser automation.
 
-To test the integration with the Discord bot, run:
+### API Integration Tests
+
+Test external API integrations for identity and card generation:
+
+```
+python test_api_integrations.py
+```
+
+### Manual Testing
+
+To simulate a complete user flow through the Discord bot:
 
 ```
 python simulate_hit_command.py
@@ -130,10 +186,26 @@ This simulates what happens when a user runs the `!hit hulu` command in Discord.
 
 ## Technical Details
 
-- **Browser Automation**: Uses Selenium with ChromeDriver for website interaction
-- **Payment System**: Integrated with Solana blockchain for secure payments
-- **Database**: SQLite for local development, PostgreSQL for production
-- **API Integration**: Uses various APIs for identity and card generation
+### Architecture
+
+- **Backend**: Flask-based Python application with RESTful API endpoints
+- **Frontend**: Responsive design built with modern HTML/CSS/JavaScript and character-driven UI
+- **Database**: SQLite for development, PostgreSQL for production with SQLAlchemy ORM
+- **Authentication**: Dual system with Solana wallet integration and traditional email/password
+
+### Key Components
+
+- **Browser Automation**: Selenium with ChromeDriver for website interaction
+- **Payment System**: Integrated with Solana blockchain for secure and decentralized payments
+- **API Integration**: Uses RapidAPI services for identity, phone verification, and card generation
+- **Discord Integration**: Seamless connection between web app and Discord bot functionality
+
+### Security
+
+- **Wallet Authentication**: Non-custodial wallet-based login with Phantom
+- **Encrypted Storage**: Sensitive user data and credentials are encrypted at rest
+- **Session Management**: Secure session handling with proper expiration and renewal
+- **Access Control**: Role-based permissions with subscription tier enforcement
 
 ## Responsible Usage
 
