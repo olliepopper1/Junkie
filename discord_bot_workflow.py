@@ -14,6 +14,31 @@ from datetime import datetime, timedelta
 import time
 from dotenv import load_dotenv
 
+# Subscription plans configuration - Matches web application plans
+SUBSCRIPTION_PLANS = {
+    "one_time_hit": {
+        "name": "One-Time Hit",
+        "price": 0.00,
+        "daily_limit": 1,
+        "description": "A quick blast of freedom, no strings attached",
+        "features": ["One-time free trial", "No credit card required", "Basic features only"]
+    },
+    "five_dollar_rush": {
+        "name": "Five Dollar Rush",
+        "price": 5.00,
+        "daily_limit": 25,
+        "description": "A rush of power for just five bucks",
+        "features": ["Limited-time access", "Multiple trials per day", "Standard features"]
+    },
+    "junkified": {
+        "name": "Junkified Premium",
+        "price": 13.00,
+        "daily_limit": 100,
+        "description": "Unlock unlimited possibilities—no limits, just freedom",
+        "features": ["Unlimited access", "Priority support", "All premium features", "No daily limits"]
+    }
+}
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -92,6 +117,12 @@ def run_bot():
             embed.add_field(
                 name="🧪 Stash",
                 value="`!stash` - View your saved credentials",
+                inline=True
+            )
+            
+            embed.add_field(
+                name="💰 Plans",
+                value="`!plans` - View subscription plans",
                 inline=True
             )
             
@@ -231,6 +262,27 @@ def run_bot():
                     color=0xdc3545
                 )
                 await processing_message.edit(embed=error_embed)
+        
+        @bot.command(name="plans")
+        async def plans_command(ctx):
+            """Display available subscription plans"""
+            embed = discord.Embed(
+                title="💰 Trial Junkie Subscription Plans",
+                description="Choose your digital trip level",
+                color=0xf1c40f  # Gold color for payment/money
+            )
+            
+            # Add fields for each plan
+            for plan_id, plan in SUBSCRIPTION_PLANS.items():
+                features_text = "\n".join([f"• {feature}" for feature in plan["features"]])
+                embed.add_field(
+                    name=f"{plan['name']} - ${plan['price']:.2f}",
+                    value=f"{plan['description']}\n\n{features_text}\n\nDaily limit: {plan['daily_limit']} trials\nUse `!pay {plan_id}` to subscribe",
+                    inline=False
+                )
+            
+            embed.set_footer(text="Trial Junkie | The Last Free Trial You'll Ever Need")
+            await ctx.send(embed=embed)
         
         @bot.command(name="stash")
         async def stash_command(ctx):
