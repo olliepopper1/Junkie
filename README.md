@@ -1,24 +1,27 @@
 # Trial Junkie
 
-A sophisticated multi-agent Discord bot for generating and managing digital service trials with real automation capabilities.
+A sophisticated multi-agent automation platform with dynamic web interface and Discord bot integration for generating and managing digital service trials with real automation capabilities.
 
 ## Overview
 
-Trial Junkie is a Discord bot that creates genuine trial accounts for various streaming and subscription services using advanced browser automation. The system consists of multiple specialized agents, each handling a different aspect of the trial creation process:
+Trial Junkie is a complete trial account generation solution that provides both a web application and Discord bot interface. The system creates genuine trial accounts for various streaming and subscription services using advanced browser automation. 
+
+The platform consists of multiple specialized agents, each handling a different aspect of the trial creation process:
 
 - **Identity Agent (Heroin Harry)**: Generates realistic user identities
-- **Card Agent (Meth Mandy)**: Creates valid credit card information for trial signups
-- **Email Agent (Xanny Xan)**: Generates email addresses
-- **Phone Agent (Cokehead Carl)**: Provides phone verification services
-- **Automation Agent (Shroomy Sal)**: Handles browser automation for trial creation
-- **Payment Agent (Crypto Craig)**: Manages payments and subscriptions
+- **Card Agent (Cash Carter)**: Creates valid credit card information for trial signups
+- **Email Agent (Vape Vince)**: Generates email addresses and handles verification
+- **Phone Agent (Molly Morphine)**: Provides phone verification services
+- **Automation Agent (Keta Kev)**: Handles browser automation and continuous trial generation
 
 ## Key Features
 
+- **Dual Interface**: Access via a modern web application or Discord bot
+- **Solana Wallet Integration**: Secure authentication and payment processing using Phantom wallet
 - **Real Trial Creation**: Automates browser interactions to create actual working trial accounts
 - **Modular Agent Architecture**: Each specialized agent handles a different aspect of the process
 - **Service Flexibility**: Works with predefined services or any custom trial website URL
-- **Payment Processing**: Integrated Solana-based payment system with tiered subscription levels
+- **Subscription Tiers**: Multiple membership levels with different access and usage limits
 - **Database Integration**: Stores user credentials and trial information securely
 - **Referral System**: Users can earn commissions by referring others
 
@@ -44,15 +47,41 @@ Trial Junkie is a Discord bot that creates genuine trial accounts for various st
    ```
 3. Set up environment variables in `.env`:
    ```
+   # Discord Bot
    DISCORD_BOT_TOKEN=your_discord_bot_token
+   
+   # Database
    DATABASE_URL=your_database_url
+   
+   # Solana Wallet
    SOLANA_WALLET_ADDRESS=your_solana_wallet
+   SOLANA_NETWORK=devnet  # or mainnet-beta for production
+   
+   # External APIs
    RAPIDAPI_KEY=your_rapidapi_key
+   
+   # Session security
+   SESSION_SECRET=your_session_secret
    ```
-4. Run the bot:
+
+4. Run the web application:
    ```
-   python main.py
+   gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
    ```
+
+5. Run the Discord bot (separate process):
+   ```
+   python discord_bot.py
+   ```
+
+### Solana Wallet Setup
+
+To receive payments through the application:
+
+1. Create a Solana wallet using [Phantom](https://phantom.app/)
+2. Set your wallet address in the `.env` file as `SOLANA_WALLET_ADDRESS`
+3. For testing, use Solana devnet
+4. For production, switch to mainnet-beta and ensure proper key management
 
 ## Real Trial Automation
 
