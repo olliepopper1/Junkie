@@ -144,6 +144,36 @@ def dashboard():
     # Check if user is logged in
     if 'user_id' not in session:
         return redirect('/login')
+        
+    # Check if the user has wallet connected
+    user_id = session['user_id']
+    user = WebUser.query.get(user_id)
+    
+    if not user:
+        logout_user()
+        session.clear()
+        return redirect('/login?error=user_not_found')
+    
+    # Check subscription status
+    from datetime import datetime
+    now = datetime.utcnow()
+    subscription_active = user.subscription_tier and user.subscription_expires_at and user.subscription_expires_at > now
+    
+    # Get subscription days remaining if active
+    days_remaining = 0
+    if subscription_active and user.subscription_expires_at:
+        days_remaining = (user.subscription_expires_at - now).days
+    
+    # If subscription is expiring soon (5 days or less), set a notification flag for frontend
+    subscription_expiring_soon = subscription_active and days_remaining <= 5
+    
+    # Set session variables for frontend access
+    session['subscription_active'] = subscription_active
+    session['subscription_tier'] = user.subscription_tier if subscription_active else None
+    session['subscription_expiring_soon'] = subscription_expiring_soon
+    session['subscription_days_remaining'] = days_remaining
+    
+    # Serve the dashboard HTML
     return send_from_directory('static', 'dashboard.html')
 
 @app.route('/agents')
@@ -173,8 +203,30 @@ def subscriptions():
 
 @app.route('/trials')
 def trials():
+    # Check if user is logged in
     if 'user_id' not in session:
         return redirect('/login')
+        
+    # Check subscription status - trials page is only for active subscribers
+    user_id = session['user_id']
+    user = WebUser.query.get(user_id)
+    
+    if not user:
+        logout_user()
+        session.clear()
+        return redirect('/login?error=user_not_found')
+    
+    # Check for active subscription
+    from datetime import datetime
+    now = datetime.utcnow()
+    subscription_active = user.subscription_tier and user.subscription_expires_at and user.subscription_expires_at > now
+    
+    # If no active subscription, redirect to subscriptions page
+    if not subscription_active:
+        # Add a flash message or query parameter to indicate why they're being redirected
+        return redirect('/subscriptions?error=subscription_required')
+    
+    # User has active subscription, show trials page
     return send_from_directory('static', 'trials.html')
 
 # Catch-all route for any dashboard pages that don't exist yet
@@ -716,10 +768,9 @@ def get_referral_stats_from_bot(user_id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/generate-trial', methods=['POST'])
+@subscription_required
 def generate_trial():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
-    
+    """Generate a trial for a service - requires active subscription"""
     data = request.get_json()
     service = data.get('service')
     trial_type = data.get('type', 'hit')
@@ -729,9 +780,43 @@ def generate_trial():
         return jsonify({'error': 'Service is required'}), 400
     
     try:
-        # Get user's subscription tier
+        # Get user info from session
         user_id = session['user_id']
         user = WebUser.query.get(user_id)
+        
+        # Get user's subscription tier for limits check
+        from datetime import datetime
+        now = datetime.utcnow()
+        
+        # Double-check subscription is active (belt and suspenders approach)
+        if not user.subscription_tier or not user.subscription_expires_at or user.subscription_expires_at < now:
+            return jsonify({
+                'error': 'Subscription required',
+                'message': 'You need an active subscription to generate trials',
+                'redirect': '/subscriptions'
+            }), 403
+        
+        # Check daily trial generation limits based on tier
+        tier_limits = {
+            'standard': 10,
+            'premium': 25,
+            'dealers_choice': 50
+        }
+        
+        # Get usage count for today
+        from database import Database
+        bot_db = Database()
+        daily_usage = bot_db.get_usage_count(user_id, 'generate_trial')
+        
+        # Get limit based on user's tier
+        tier_limit = tier_limits.get(user.subscription_tier, 10)  # Default to standard tier limit
+        
+        if daily_usage >= tier_limit:
+            return jsonify({
+                'error': 'Daily limit reached',
+                'message': f'You have reached your daily limit of {tier_limit} trial generations for your {user.subscription_tier} tier',
+                'upgrade_url': '/subscriptions'
+            }), 429  # 429 Too Many Requests
         
         # Import the trial generator
         from utils.trial_generator import TrialGenerator
@@ -740,21 +825,45 @@ def generate_trial():
         # Generate trial based on the service
         trial_info = asyncio.run(generator.generate_trial(service))
         
-        # Save the trial to the database (implementation would go here)
-        # ...
+        # Track this usage in the database
+        bot_db.track_usage(user_id, 'generate_trial')
         
-        # Return the trial info
+        # Save the trial to the database
+        try:
+            # Create a new trial record
+            trial = Trial(
+                user_id=user_id,
+                service=service,
+                trial_type=trial_type,
+                email=trial_info['user_info']['email'],
+                password=trial_info['user_info']['password'],
+                created_at=datetime.utcnow(),
+                expires_at=datetime.fromisoformat(trial_info['trial_end_date']) if 'trial_end_date' in trial_info else None
+            )
+            db.session.add(trial)
+            db.session.commit()
+            logger.info(f"Trial saved to database: {trial.id} for user {user_id}")
+        except Exception as e:
+            logger.error(f"Error saving trial to database: {str(e)}")
+            # Continue anyway since we have the trial info to return
+        
+        # Return the trial info with the database ID if available
+        trial_id = trial.id if 'trial' in locals() and trial.id else random.randint(1000, 9999)
+        
         return jsonify({
             'success': True,
             'trial': {
-                'id': random.randint(1000, 9999),
+                'id': trial_id,
                 'service': service,
                 'type': trial_type,
                 'automated': automate,
                 'email': trial_info['user_info']['email'],
                 'password': trial_info['user_info']['password'],
                 'created_at': trial_info['generated_at'],
-                'expires_at': trial_info['trial_end_date']
+                'expires_at': trial_info['trial_end_date'],
+                'subscription_tier': user.subscription_tier,
+                'usage_count': daily_usage + 1,
+                'daily_limit': tier_limit
             }
         })
     except Exception as e:

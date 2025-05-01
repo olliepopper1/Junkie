@@ -25,6 +25,15 @@ class WebUser(UserMixin, db.Model):
     referral_count = db.Column(db.Integer, default=0)
     reset_password_token = db.Column(db.String(100), unique=True, nullable=True)
     reset_password_expires = db.Column(db.DateTime, nullable=True)
+    
+    # Subscription fields
+    subscription_tier = db.Column(db.String(20), nullable=True)  # standard, premium, dealers_choice
+    subscription_starts_at = db.Column(db.DateTime, nullable=True)
+    subscription_expires_at = db.Column(db.DateTime, nullable=True)
+    last_payment_amount = db.Column(db.Float, nullable=True)
+    last_payment_date = db.Column(db.DateTime, nullable=True)
+    last_payment_reference = db.Column(db.String(100), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Self-referential relationship for referrals
