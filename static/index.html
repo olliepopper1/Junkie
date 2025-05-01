@@ -215,8 +215,8 @@
           <div class="card h-100 border-0 bg-dark-subtle">
             <div class="card-body text-center p-4">
               <div class="step-number mb-3">1</div>
-              <h3 class="h4">Join our Discord</h3>
-              <p>Connect with our community and access the Trial Junkie bot.</p>
+              <h3 class="h4">Connect Your Wallet</h3>
+              <p>Connect your Phantom wallet to authenticate and manage your Trial Junkie subscription.</p>
             </div>
           </div>
         </div>
@@ -473,8 +473,8 @@
                 <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i> Custom website support</li>
               </ul>
               <div class="d-grid mt-4">
-                <a href="https://discord.gg/f5Dqz69ZNt" class="btn btn-outline-primary">Join Discord</a> 
-                <div class="mt-2 small text-muted">Use <code>!pay basic</code> command in Discord</div>
+                <button class="btn btn-outline-primary subscribe-btn" data-tier="basic">Subscribe with Wallet</button>
+                <div class="mt-2 small text-muted">30-day subscription</div>
               </div>
             </div>
           </div>
@@ -496,8 +496,8 @@
                 <li class="mb-3 text-muted"><i class="bi bi-x-circle-fill me-2"></i> Custom website support</li>
               </ul>
               <div class="d-grid mt-4">
-                <a href="https://discord.gg/f5Dqz69ZNt" class="btn btn-danger">Join Discord</a>
-                <div class="mt-2 small text-muted">Use <code>!pay premium</code> command in Discord</div>
+                <button class="btn btn-danger subscribe-btn" data-tier="premium">Subscribe with Wallet</button>
+                <div class="mt-2 small text-muted">30-day subscription</div>
               </div>
             </div>
           </div>
@@ -518,8 +518,8 @@
                 <li class="mb-3"><i class="bi bi-check-circle-fill text-primary me-2"></i> Custom website support</li>
               </ul>
               <div class="d-grid mt-4">
-                <a href="https://discord.gg/f5Dqz69ZNt" class="btn btn-outline-light">Join Discord</a>
-                <div class="mt-2 small text-muted">Use <code>!pay dealer</code> command in Discord</div>
+                <button class="btn btn-outline-light subscribe-btn" data-tier="dealer">Subscribe with Wallet</button>
+                <div class="mt-2 small text-muted">30-day subscription</div>
               </div>
             </div>
           </div>
@@ -547,7 +547,7 @@
             <div class="floating-particles"></div>
             <h3 class="h4 mb-3">Your Referral Code</h3>
             <div class="display-6 mb-3 monospace">TJ2025</div>
-            <p class="mb-0">Join Discord and type <code>!referral</code> to get your own code</p>
+            <p class="mb-0">Connect your wallet to view your personalized referral code</p>
           </div>
         </div>
       </div>
@@ -785,6 +785,40 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/psychedelic-bg.js"></script>
-  <script src="/js/discord-integration.js"></script>
+  <script src="/js/phantom-wallet.js"></script>
+  <script src="/js/wallet-header.js"></script>
+  
+  <!-- Subscription Buttons Handler -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get all subscription buttons
+      const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+      
+      // Add click event handler to each button
+      subscribeButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+          const tier = this.getAttribute('data-tier');
+          
+          // First check if wallet is connected
+          if (!window.phantomWallet || !window.phantomWallet.status.connected) {
+            // Try to connect wallet
+            try {
+              const connectResult = await window.phantomWallet.connect();
+              if (!connectResult.success) {
+                alert('Please connect your Phantom wallet to subscribe.');
+                return;
+              }
+            } catch (error) {
+              alert('Error connecting to wallet: ' + (error.message || 'Unknown error'));
+              return;
+            }
+          }
+          
+          // If we have a connected wallet, redirect to subscription page with the tier
+          window.location.href = '/subscriptions?tier=' + tier;
+        });
+      });
+    });
+  </script>
 </body>
 </html>
