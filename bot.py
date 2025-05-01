@@ -24,8 +24,8 @@ def setup_bot():
     intents = discord.Intents.default()
     intents.message_content = True
     
-    # Create the bot
-    bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+    # Create the bot with slash commands enabled
+    bot = commands.Bot(command_prefix='/', intents=intents, help_command=None)
     
     # Create database connection
     db = Database()
@@ -43,13 +43,13 @@ def setup_bot():
     async def on_ready():
         """Called when the bot is ready and connected to Discord"""
         logger.info(f"Trial Junkie online as {bot.user}")
-        await bot.change_presence(activity=discord.Game(name="!hit | !dose | !stash | !help"))
+        await bot.change_presence(activity=discord.Game(name="/hit | /dose | /stash | /help"))
     
     @bot.event
     async def on_command_error(ctx, error):
         """Handle command errors"""
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send(f"Unknown command. Use `!help` to see available commands.")
+            await ctx.send(f"Unknown command. Use `/help` to see available commands.")
         elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(f"Missing required argument: {error.param}")
         else:
@@ -69,38 +69,38 @@ def setup_bot():
         # Main commands
         embed.add_field(
             name="🎯 Hit (Full Trial)",
-            value="`!hit <service>` - Generate all credentials for a trial\nExample: `!hit Netflix`",
+            value="`/hit <service>` - Generate all credentials for a trial\nExample: `/hit Netflix`",
             inline=False
         )
         
         embed.add_field(
             name="💊 Dose (Single Resource)",
-            value="`!dose <agent> <service>` - Generate a specific credential\nAgents: harry (identity), mandy (card), xan (email), carl (phone)\nExample: `!dose harry Spotify`",
+            value="`/dose <agent> <service>` - Generate a specific credential\nAgents: harry (identity), mandy (card), xan (email), carl (phone)\nExample: `/dose harry Spotify`",
             inline=False
         )
         
         embed.add_field(
             name="🍄 Trip (Automation)",
-            value="`!trip <script>` - Run an automation script\nExample: `!trip netflix_signup`\nUse `!trip help` for available scripts",
+            value="`/trip <script>` - Run an automation script\nExample: `/trip netflix_signup`\nUse `/trip help` for available scripts",
             inline=False
         )
         
         embed.add_field(
             name="🧪 Stash",
-            value="`!stash` - View your saved credentials",
+            value="`/stash` - View your saved credentials",
             inline=True
         )
         
         embed.add_field(
             name="🏥 Rehab",
-            value="`!rehab` - Clear all your data",
+            value="`/rehab` - Clear all your data",
             inline=True
         )
         
         # Fun commands
         embed.add_field(
             name="😜 Fun Commands",
-            value="`!quote <agent>` - Get a quote from an agent\n`!agents` - Meet the agents\n`!stats` - View usage statistics",
+            value="`/quote <agent>` - Get a quote from an agent\n`/agents` - Meet the agents\n`/stats` - View usage statistics",
             inline=False
         )
         
@@ -126,8 +126,8 @@ def setup_bot():
             services_list = ", ".join(f"`{service}`" for service in TRIAL_SERVICES.keys())
             
             await ctx.send("❌ **Missing service name or URL**. Use one of these options:")
-            await ctx.send(f"1️⃣ **Predefined services:** `!hit <service>` - Available: {services_list}")
-            await ctx.send("2️⃣ **Custom website:** `!hit url <website_url>` - Example: `!hit url https://www.example.com/trial`")
+            await ctx.send(f"1️⃣ **Predefined services:** `/hit <service>` - Available: {services_list}")
+            await ctx.send("2️⃣ **Custom website:** `/hit url <website_url>` - Example: `/hit url https://www.example.com/trial`")
             return
             
         # Check if it's a URL-based request
@@ -211,7 +211,7 @@ def setup_bot():
         
         # Check if required params were provided
         if not agent_type or not platform:
-            await ctx.send("❌ **Missing parameters**. Use `!dose <agent> <platform>` to get specific credentials.")
+            await ctx.send("❌ **Missing parameters**. Use `/dose <agent> <platform>` to get specific credentials.")
             await ctx.send("Available agents: `harry` (identity), `mandy` (card), `xan` (email), `phone` (SMS)")
             return
         
@@ -247,9 +247,9 @@ def setup_bot():
             services_list = ", ".join(f"`{service}`" for service in TRIAL_SERVICES.keys())
             
             await ctx.send("❌ **Missing service name or URL**. Use one of these options:")
-            await ctx.send(f"1️⃣ **Predefined services:** `!trip <service>` - Available: {services_list}")
-            await ctx.send("2️⃣ **Custom website:** `!trip url <website_url>` - Example: `!trip url https://www.example.com/trial`")
-            await ctx.send("3️⃣ **Basic scripts:** `!trip <script>` - Available: `signup`, `verify`, `cancel`")
+            await ctx.send(f"1️⃣ **Predefined services:** `/trip <service>` - Available: {services_list}")
+            await ctx.send("2️⃣ **Custom website:** `/trip url <website_url>` - Example: `/trip url https://www.example.com/trial`")
+            await ctx.send("3️⃣ **Basic scripts:** `/trip <script>` - Available: `signup`, `verify`, `cancel`")
             return
         
         # Check if it's a custom URL
@@ -381,7 +381,7 @@ def setup_bot():
     async def quote_command(ctx, agent: str = None):
         """Get a random quote from an agent"""
         if not agent:
-            await ctx.send("Please specify an agent. Example: `!quote harry` or use `!agents` to see all agents.")
+            await ctx.send("Please specify an agent. Example: `/quote harry` or use `/agents` to see all agents.")
             return
         
         # Standardize agent name
@@ -408,7 +408,7 @@ def setup_bot():
         
         std_agent = agent_aliases.get(agent.lower())
         if not std_agent:
-            await ctx.send(f"Unknown agent '{agent}'. Use `!agents` to see all agents.")
+            await ctx.send(f"Unknown agent '{agent}'. Use `/agents` to see all agents.")
             return
         
         # Generate quote about random topic
