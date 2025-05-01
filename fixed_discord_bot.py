@@ -248,40 +248,142 @@ def run_bot():
             await ctx.send(embed=embed)
         
         @bot.command(name="hit")
-        async def hit_command(ctx, service: str = None):
-            """Full trial setup command (all agents)"""
-            if not service:
-                await ctx.send("❌ Please specify a service, e.g. `!hit Netflix`")
+        async def hit_command(ctx, *, service_or_url: str = None):
+            """Full trial setup command (all agents) - Works with services or URLs"""
+            if not service_or_url:
+                await ctx.send("❌ Please specify a service (e.g., `!hit Netflix`) or URL (e.g., `!hit https://example.com/trial`)")
                 return
             
             # Save the user to the database
             save_user(str(ctx.author.id), ctx.author.name)
             
-            await ctx.send(f"🧪 Generating trial for {service}...")
+            # Check if URL or service name
+            is_url = service_or_url.startswith(("http://", "https://"))
             
-            # Mock credential generation (placeholder for API calls)
-            email = f"trial_user_{random.randint(1000, 9999)}@example.com"
-            password = "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=12))
+            # Create an initial message based on what was provided
+            if is_url:
+                embed = discord.Embed(
+                    title="🧪 Trial Generation Started",
+                    description=f"Running trial setup for URL: {service_or_url}",
+                    color=0x6f42c1
+                )
+            else:
+                embed = discord.Embed(
+                    title="🧪 Trial Generation Started",
+                    description=f"Running trial setup for service: {service_or_url.upper()}",
+                    color=0x6f42c1
+                )
             
-            # Save credentials to database
-            save_credential(str(ctx.author.id), service, "email", email)
-            save_credential(str(ctx.author.id), service, "password", password)
-            
-            # Create response
-            embed = discord.Embed(
-                title=f"🧪 {service} Trial Generated",
-                description="Your trial credentials are ready!",
-                color=0x28a745
+            # Add agent information
+            embed.add_field(
+                name="Agents Deployed",
+                value=(
+                    "💉 **Heroin Harry** - Identity generation\n"
+                    "💨 **Meth Mandy** - Card generation\n"
+                    "💊 **Xanny Xan** - Email creation\n"
+                    "❄️ **Cokehead Carl** - Phone verification\n"
+                    "🍄 **Shroomy Sal** - Browser automation\n"
+                ),
+                inline=False
             )
             
-            embed.add_field(name="Email", value=f"`{email}`", inline=False)
-            embed.add_field(name="Password", value=f"`{password}`", inline=False)
-            embed.add_field(name="Service", value=service, inline=True)
-            embed.add_field(name="Generated", value="Just now", inline=True)
+            embed.add_field(
+                name="Estimated Time",
+                value="⏱️ 30-60 seconds",
+                inline=False
+            )
             
-            embed.set_footer(text="Use !stash to view all your credentials")
+            embed.set_footer(text="Trial Junkie - Get your digital fix")
+            processing_message = await ctx.send(embed=embed)
             
-            await ctx.send(embed=embed)
+            try:
+                # Import API integrations here to avoid circular imports
+                sys.path.append('.')  # Ensure the current directory is in the path
+                from api_integrations import APIIntegrations
+                
+                # Generate trial data based on whether it's a URL or service
+                if is_url:
+                    # URL-based trial generation
+                    trial_data = APIIntegrations.create_trial_for_url(service_or_url)
+                    service_name = "Custom URL Trial"
+                else:
+                    # Service-based trial generation
+                    trial_data = APIIntegrations.generate_complete_trial_data(service_or_url)
+                    service_name = service_or_url.upper()
+                
+                # Extract user info
+                user_info = trial_data.get("user_info", {})
+                
+                # Save credentials to database
+                save_credential(str(ctx.author.id), service_or_url, "email", user_info.get("email", "N/A"))
+                save_credential(str(ctx.author.id), service_or_url, "password", user_info.get("password", "N/A"))
+                
+                if "card_number" in user_info.get("payment_info", {}):
+                    save_credential(str(ctx.author.id), service_or_url, "card_number", user_info["payment_info"]["card_number"])
+                
+                # Create success response
+                success_embed = discord.Embed(
+                    title=f"✅ {service_name} Trial Ready",
+                    description="Your trial credentials have been generated!",
+                    color=0x28a745
+                )
+                
+                # Add primary credentials
+                success_embed.add_field(name="📧 Email", value=f"`{user_info.get('email', 'N/A')}`", inline=True)
+                success_embed.add_field(name="🔑 Password", value=f"`{user_info.get('password', 'N/A')}`", inline=True)
+                
+                # Add payment info if available
+                payment_info = user_info.get("payment_info", {})
+                if payment_info:
+                    card_info = (
+                        f"Type: `{payment_info.get('card_type', 'N/A')}`\n"
+                        f"Number: `{payment_info.get('card_number', 'N/A')}`\n"
+                        f"Expiry: `{payment_info.get('expiry', 'N/A')}`\n"
+                        f"CVV: `{payment_info.get('cvv', 'N/A')}`\n"
+                        f"Name: `{payment_info.get('cardholder_name', 'N/A')}`"
+                    )
+                    success_embed.add_field(name="💳 Payment Details", value=card_info, inline=False)
+                
+                # Add verification info if available
+                verification_info = user_info.get("verification_info", {})
+                if verification_info:
+                    verify_info = (
+                        f"Phone: `{user_info.get('phone', 'N/A')}`\n"
+                        f"Email Inbox: [Check Inbox]({verification_info.get('email_inbox', '')})"
+                    )
+                    success_embed.add_field(name="📱 Verification", value=verify_info, inline=False)
+                
+                # Add trial end date if available
+                if "trial_end_date" in trial_data:
+                    success_embed.add_field(name="⏰ Trial Expires", value=f"`{trial_data['trial_end_date']}`", inline=True)
+                
+                # Add automation result info for URLs
+                if is_url and "automation_result" in trial_data:
+                    auto_result = trial_data.get("automation_result", {})
+                    result_status = "✅ Success" if trial_data.get("success", False) else "❌ Partial/Failed"
+                    score = auto_result.get("success_score", 0)
+                    
+                    auto_info = (
+                        f"Status: {result_status}\n"
+                        f"Score: {score}/8\n"
+                        f"Site Category: {trial_data.get('category', 'Unknown')}\n"
+                        f"Final URL: `{trial_data.get('final_url', 'N/A')}`"
+                    )
+                    success_embed.add_field(name="🤖 Automation Results", value=auto_info, inline=False)
+                
+                success_embed.set_footer(text="Use !stash to view all your credentials")
+                
+                # Update the original message with the success embed
+                await processing_message.edit(embed=success_embed)
+                
+            except Exception as e:
+                logger.error(f"Error generating trial: {str(e)}")
+                error_embed = discord.Embed(
+                    title="❌ Trial Generation Failed",
+                    description=f"There was an error generating your trial: ```{str(e)}```",
+                    color=0xdc3545
+                )
+                await processing_message.edit(embed=error_embed)
         
         @bot.command(name="stash")
         async def stash_command(ctx):

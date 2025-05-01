@@ -462,3 +462,49 @@ class APIIntegrations:
                 "phone_expires_at": phone.get("expires_at", "")
             }
         }
+        
+    @staticmethod
+    def create_trial_for_url(url):
+        """
+        Create a trial for any given URL using generic trial automation
+        
+        Args:
+            url (str): The URL of the website to create a trial for
+            
+        Returns:
+            dict: Trial data including automation results
+        """
+        logger.info(f"Creating trial for URL: {url}")
+        
+        # Generate all the necessary trial data
+        trial_data = APIIntegrations.generate_complete_trial_data()
+        user_info = trial_data["user_info"]
+        
+        try:
+            # Import the generic trial automator to handle any URL
+            from generic_trial_automation import GenericTrialAutomator
+            
+            # Create the automator (headless mode)
+            automator = GenericTrialAutomator(headless=True)
+            
+            # Attempt to create the trial
+            logger.info("Starting generic trial automation...")
+            result = automator.create_trial(url, user_info)
+            
+            # Add the result information to our trial data
+            trial_data["automation_result"] = result
+            trial_data["success"] = result.get("success", False)
+            trial_data["success_score"] = result.get("success_score", 0)
+            trial_data["final_url"] = result.get("final_url", "")
+            trial_data["category"] = result.get("category", "unknown")
+            trial_data["service"] = "custom_url"  # Mark as custom URL trial
+            
+            return trial_data
+            
+        except Exception as e:
+            logger.error(f"Error creating trial for URL {url}: {str(e)}")
+            # Still return the generated data even if automation failed
+            trial_data["success"] = False
+            trial_data["automation_result"] = {"error": str(e)}
+            trial_data["service"] = "custom_url"
+            return trial_data
