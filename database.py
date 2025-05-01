@@ -5,8 +5,7 @@ Handles database connections and operations
 import os
 import json
 import logging
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import sqlite3
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -15,31 +14,31 @@ class Database:
     def __init__(self, db_url=None):
         """Initialize the database connection"""
         if db_url is None:
-            db_url = os.getenv("DATABASE_URL")
+            db_url = os.getenv("DATABASE_URL", "sqlite:///trial_junkie.db")
         
-        self.db_url = db_url
+        # If it's a sqlite URL, extract the database path
+        if db_url.startswith("sqlite:///"):
+            self.db_path = db_url.replace("sqlite:///", "")
+        else:
+            # Default to a local SQLite database
+            self.db_path = "trial_junkie.db"
+            
         self._initialize_db()
     
     def _get_connection(self):
         """Get a database connection"""
         try:
-            # First try with SSL mode require
-            conn = psycopg2.connect(self.db_url, sslmode='require')
+            conn = sqlite3.connect(self.db_path)
+            # Enable row factory to return dictionaries
+            conn.row_factory = sqlite3.Row
             return conn
-        except psycopg2.OperationalError:
-            # If that fails, try with SSL mode prefer
-            try:
-                conn = psycopg2.connect(self.db_url, sslmode='prefer')
-                return conn
-            except psycopg2.OperationalError:
-                # If that fails too, try with SSL mode disable
-                logger.info("Retrying database connection with sslmode=disable")
-                conn = psycopg2.connect(self.db_url, sslmode='disable')
-                return conn
+        except sqlite3.Error as e:
+            logger.error(f"Error connecting to database: {e}")
+            raise
     
     def _get_cursor(self, conn):
-        """Get a database cursor that returns dictionaries"""
-        return conn.cursor(cursor_factory=RealDictCursor)
+        """Get a database cursor"""
+        return conn.cursor()
     
     def _initialize_db(self):
         """Initialize the database with necessary tables"""
@@ -167,8 +166,8 @@ class Database:
         conn = self._get_connection()
         cursor = self._get_cursor(conn)
         
-        # Cast user_id to TEXT to handle different types (PostgreSQL requires explicit casting)
-        cursor.execute("SELECT 1 FROM users WHERE user_id::TEXT = %s", (str(user_id),))
+        # No need for casting in SQLite
+        cursor.execute("SELECT 1 FROM users WHERE user_id = ?", (str(user_id),))
         result = cursor.fetchone() is not None
         
         conn.close()
@@ -184,7 +183,7 @@ class Database:
         
         now = datetime.now().isoformat()
         cursor.execute(
-            "INSERT INTO users (user_id, username, created_at, last_active) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (user_id, username, created_at, last_active) VALUES (?, ?, ?, ?)",
             (user_id, username, now, now)
         )
         

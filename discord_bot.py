@@ -182,15 +182,6 @@ TRIAL_SERVICES = {
         "supports_automation": True,
         "cancellation_path": "Account > Cancel Subscription"
     },
-    "netflix": {
-        "url": "https://www.netflix.com/",
-        "trial_period_days": 30,
-        "price": "$15.49/month",
-        "plan_name": "Netflix Standard",
-        "required_fields": ["identity", "email", "card"],
-        "supports_automation": True,
-        "cancellation_path": "Account > Cancel Membership"
-    },
     "disney": {
         "url": "https://www.disneyplus.com/",
         "trial_period_days": 7,
