@@ -61,24 +61,15 @@ API_CONFIG = {
     
     # Credit Card Generation API (Primary)
     "fake_card": {
-        "key": RAPIDAPI_KEY,
-        "host": "credit-card-generator2.p.rapidapi.com",
-        "endpoint": "https://credit-card-generator2.p.rapidapi.com/generate-card",
-        "auth_type": "rapidapi",
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "random.api.randomkey.io",
+        "endpoint": "https://random.api.randomkey.io/v1/ccn",
+        "auth_type": "apikey",
         "content_type": "application/json"
     },
     
     # Credit Card Generation API (Backup)
     "fake_card_backup": {
-        "key": RAPIDAPI_KEY,
-        "host": "generator-credit-card.p.rapidapi.com",
-        "endpoint": "https://generator-credit-card.p.rapidapi.com/creditcard/generate",
-        "auth_type": "rapidapi",
-        "content_type": "application/json"
-    },
-    
-    # Virtual Card Issuing API
-    "virtual_card": {
         "key": RAPIDAPI_KEY,
         "host": "creditcards.p.rapidapi.com",
         "endpoint": "https://creditcards.p.rapidapi.com/creditcard/generate",
@@ -86,12 +77,21 @@ API_CONFIG = {
         "content_type": "application/json"
     },
     
-    # Email Validation API
-    "email_validator": {
-        "key": RAPIDAPI_KEY,
-        "host": "email-validator8.p.rapidapi.com",
-        "endpoint": "https://email-validator8.p.rapidapi.com/api/v2.0/email",
+    # Virtual Card Issuing API
+    "virtual_card": {
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "random.api.randomkey.io",
+        "endpoint": "https://random.api.randomkey.io/v1/virtualcard",
         "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Email Validation API - ZeroBounce
+    "email_validator": {
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "api.zerobounce.net",
+        "endpoint": "https://api.zerobounce.net/v2/validate",
+        "auth_type": "apikey",
         "content_type": "application/json"
     },
     
@@ -113,12 +113,21 @@ API_CONFIG = {
         "content_type": "application/json"
     },
     
-    # Web Scraping with simple HTTP requests
+    # Web Scraping with ScrapeNinja
     "scrape_ninja": {
-        "key": RAPIDAPI_KEY,
-        "host": "httpbin.p.rapidapi.com",
-        "endpoint": "https://httpbin.p.rapidapi.com/get",
-        "auth_type": "rapidapi",
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "scrapeninja.net",
+        "endpoint": "https://scrapeninja.net/api/scrape",
+        "auth_type": "apikey",
+        "content_type": "application/json"
+    },
+    
+    # Web Scraping with JavaScript rendering via ScrapeNinja
+    "scrape_ninja_js": {
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "scrapeninja.net",
+        "endpoint": "https://scrapeninja.net/api/scrape-js",
+        "auth_type": "apikey",
         "content_type": "application/json"
     }
 }
@@ -418,10 +427,19 @@ class APIIntegrations:
     
     @staticmethod
     def generate_card(card_type="visa"):
-        """Generate a valid credit card for verification using Credit Card Generator API"""
+        """Generate a valid credit card for verification"""
         logger.info(f"Generating card of type: {card_type}")
         normalized_type = card_type.lower()
         
+        # First try to use our specialized card generator
+        try:
+            from utils.card_generator import CreditCardGenerator
+            logger.info("Using enhanced card generator")
+            return CreditCardGenerator.generate_card(normalized_type)
+        except ImportError:
+            logger.warning("Enhanced card generator not available, trying APIs...")
+        
+        # If enhanced generator is not available, try APIs
         try:
             # Use the primary Credit Card Generator API
             url = API_CONFIG["fake_card"]["endpoint"]
@@ -443,7 +461,7 @@ class APIIntegrations:
             if not data:
                 raise ValueError("Empty response from Credit Card Generator API")
                 
-            logger.info("Credit card generated successfully")
+            logger.info("Credit card generated successfully via API")
             
             # Format for our standard output
             card_info = {}
@@ -499,7 +517,7 @@ class APIIntegrations:
                         card_info["expiry_year"] = parts[1].strip()
             else:
                 logger.warning("Unexpected response format from Credit Card API")
-                return APIIntegrations._generate_fallback_card(card_type)
+                raise ValueError("Unexpected response format")
             
             # Validate the card data
             if not card_info.get("card_number"):
@@ -592,53 +610,76 @@ class APIIntegrations:
     @staticmethod
     def _generate_fallback_card(card_type="visa"):
         """Generate a fallback credit card when API call fails"""
-        card_types = {
-            "visa": {
-                "prefix": "4",
-                "length": 16,
-                "cvv_length": 3
-            },
-            "mastercard": {
-                "prefix": "5",
-                "length": 16,
-                "cvv_length": 3
-            },
-            "amex": {
-                "prefix": "3",
-                "length": 15,
-                "cvv_length": 4
+        try:
+            # Try to use the enhanced card generator utility
+            from utils.card_generator import CreditCardGenerator
+            return CreditCardGenerator.generate_card(card_type)
+        except ImportError:
+            # If the utility is not available, use the basic generation method
+            logger.warning("Enhanced card generator not found, using basic generation")
+            
+            card_types = {
+                "visa": {
+                    "prefix": "4",
+                    "length": 16,
+                    "cvv_length": 3
+                },
+                "mastercard": {
+                    "prefix": "5",
+                    "length": 16,
+                    "cvv_length": 3
+                },
+                "amex": {
+                    "prefix": "3",
+                    "length": 15,
+                    "cvv_length": 4
+                },
+                "discover": {
+                    "prefix": "6",
+                    "length": 16,
+                    "cvv_length": 3
+                }
             }
-        }
-        
-        card_info = card_types.get(card_type.lower(), card_types["visa"])
-        
-        # Generate card number
-        card_number = card_info["prefix"]
-        remaining_digits = card_info["length"] - len(card_info["prefix"])
-        card_number += ''.join(random.choices(string.digits, k=remaining_digits))
-        
-        # Generate CVV
-        cvv = ''.join(random.choices(string.digits, k=card_info["cvv_length"]))
-        
-        # Generate expiry date (1-5 years in the future)
-        current_year = datetime.now().year
-        current_month = datetime.now().month
-        future_year = current_year + random.randint(1, 5)
-        future_month = random.randint(1, 12)
-        expiry = f"{future_month:02d}/{future_year % 100:02d}"
-        
-        # Generate cardholder name
-        first_names = ["John", "Jane", "Michael", "Sarah", "David"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones"]
-        cardholder_name = f"{random.choice(first_names)} {random.choice(last_names)}"
-        
-        return {
-            "card_number": card_number,
-            "card_type": card_type,
-            "cvv": cvv,
-            "expiry": expiry,
-            "cardholder_name": cardholder_name
-        }
+            
+            card_info = card_types.get(card_type.lower(), card_types["visa"])
+            
+            # Generate card number with basic algorithm
+            card_number = card_info["prefix"]
+            remaining_digits = card_info["length"] - len(card_info["prefix"]) - 1
+            card_number += ''.join(random.choices(string.digits, k=remaining_digits))
+            
+            # Add simple check digit (not full Luhn algorithm)
+            last_digit = str(random.randint(0, 9))
+            card_number += last_digit
+            
+            # Generate CVV
+            cvv = ''.join(random.choices(string.digits, k=card_info["cvv_length"]))
+            
+            # Generate expiry date (1-5 years in the future)
+            current_year = datetime.now().year
+            future_year = current_year + random.randint(1, 5)
+            future_month = random.randint(1, 12)
+            
+            # Format month and year
+            month_str = f"{future_month:02d}"
+            year_str = f"{future_year % 100:02d}"
+            
+            # Generate cardholder name
+            first_names = ["John", "Jane", "Michael", "Sarah", "David", "Lisa", 
+                         "Robert", "Emily", "Daniel", "Jessica", "Matthew"]
+            last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", 
+                         "Davis", "Garcia", "Rodriguez", "Wilson", "Martinez"]
+            cardholder_name = f"{random.choice(first_names)} {random.choice(last_names)}"
+            
+            return {
+                "card_number": card_number,
+                "card_type": card_type,
+                "cvv": cvv,
+                "expiry_month": month_str,
+                "expiry_year": year_str,
+                "expiry": f"{month_str}/{year_str}",
+                "cardholder_name": cardholder_name
+            }
     
     @staticmethod
     def generate_virtual_card(amount=0.00, currency="USD"):

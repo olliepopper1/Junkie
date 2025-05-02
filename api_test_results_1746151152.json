@@ -1,0 +1,107 @@
+[
+  {
+    "host": "credit-card-generator2.p.rapidapi.com",
+    "endpoint": "https://credit-card-generator2.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "generator-credit-card.p.rapidapi.com",
+    "endpoint": "https://generator-credit-card.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "creditcards.p.rapidapi.com",
+    "endpoint": "https://creditcards.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "random-data-api.p.rapidapi.com",
+    "endpoint": "https://random-data-api.p.rapidapi.com/api",
+    "status": "not_subscribed",
+    "status_code": 403,
+    "message": "{\"message\":\"You are not subscribed to this API.\"}"
+  },
+  {
+    "host": "credit-card-checker.p.rapidapi.com",
+    "endpoint": "https://credit-card-checker.p.rapidapi.com/validate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "credit-card-generator-faker.p.rapidapi.com",
+    "endpoint": "https://credit-card-generator-faker.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "bin-ip-checker.p.rapidapi.com",
+    "endpoint": "https://bin-ip-checker.p.rapidapi.com/validate",
+    "status": "not_subscribed",
+    "status_code": 403,
+    "message": "{\"message\":\"You are not subscribed to this API.\"}"
+  },
+  {
+    "host": "luhn-validator.p.rapidapi.com",
+    "endpoint": "https://luhn-validator.p.rapidapi.com/validate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "fake-credit-card-generator.p.rapidapi.com",
+    "endpoint": "https://fake-credit-card-generator.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "valfirm-bin-and-credit-card-validation.p.rapidapi.com",
+    "endpoint": "https://valfirm-bin-and-credit-card-validation.p.rapidapi.com/api",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "credit-card-numbers.p.rapidapi.com",
+    "endpoint": "https://credit-card-numbers.p.rapidapi.com/api",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "verified-creditcard.p.rapidapi.com",
+    "endpoint": "https://verified-creditcard.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "namso-ccgen.p.rapidapi.com",
+    "endpoint": "https://namso-ccgen.p.rapidapi.com/api",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "cardgenerator.p.rapidapi.com",
+    "endpoint": "https://cardgenerator.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  },
+  {
+    "host": "creditcardgenerator.p.rapidapi.com",
+    "endpoint": "https://creditcardgenerator.p.rapidapi.com/generate",
+    "status": "not_subscribed",
+    "status_code": 404,
+    "message": "{\"message\":\"API doesn't exists\"}"
+  }
+]
