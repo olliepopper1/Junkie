@@ -1,0 +1,22 @@
+{
+  "service": "hulu",
+  "success": true,
+  "creation_date": "2025-05-02T02:21:43.109671",
+  "expiration_date": "2025-06-01T02:21:43.109668",
+  "login_credentials": {
+    "email": "scpont9ijp@tempmail.org",
+    "password": "$Dxjq2lUc&)!"
+  },
+  "account_details": {
+    "first_name": "Candice",
+    "last_name": "Fisher",
+    "plan": "Hulu (No Ads)",
+    "price": "$14.99/month",
+    "trial_length": "30 days"
+  },
+  "payment_method": {
+    "card_type": "visa",
+    "last_four": "0074",
+    "expiry": "12/28"
+  }
+}

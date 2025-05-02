@@ -1,0 +1,27 @@
+{
+  "service": "hulu",
+  "success": true,
+  "creation_date": "2025-05-02T02:22:30.463810",
+  "expiration_date": "2025-06-01T02:22:30.463810",
+  "login_credentials": {
+    "email": {
+      "email": "4ohdhp8n@fakeemail.net",
+      "password": "Ve&@46Evs3U6",
+      "inbox_url": "https://fakeemail.net/inbox/4ohdhp8n",
+      "expires_at": "2025-05-03T02:22:30.463339"
+    },
+    "password": "t2*48YBTi+xC"
+  },
+  "account_details": {
+    "first_name": "Daisy",
+    "last_name": "Patterson",
+    "plan": "Hulu (No Ads)",
+    "price": "$14.99/month",
+    "trial_length": "30 days"
+  },
+  "payment_method": {
+    "card_type": "visa",
+    "last_four": "9941",
+    "expiry": "04/29"
+  }
+}
