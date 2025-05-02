@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16", "nodejs-20", "python3"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["chromedriver", "chromium", "geckodriver", "libyaml", "openssl", "postgresql", "sqlite"]
+packages = ["chromedriver", "chromium", "geckodriver", "libsodium", "libyaml", "openssl", "postgresql", "sqlite"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -40,6 +40,24 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py"
+
+[[workflows.workflow]]
+name = "Setup"
+author = 42183639
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python setup_trialjunkie.py --check all"
+
+[[workflows.workflow]]
+name = "Discord Bot"
+author = 42183639
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python discord_bot.py"
 
 [[ports]]
 localPort = 5000

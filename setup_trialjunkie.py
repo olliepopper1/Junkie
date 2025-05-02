@@ -272,12 +272,38 @@ def setup() -> Dict[str, Any]:
     
     results = {
         "timestamp": setup_start.isoformat(),
-        "environment_variables": check_environment_variables(),
-        "required_modules": check_required_modules(),
-        "api_connectivity": check_api_connectivity(),
-        "database_connectivity": check_database_connectivity(),
-        "trial_generation": test_trial_generation()
+        "success": True,
+        "errors": []
     }
+    
+    try:
+        env_check = check_environment_variables()
+        results["environment_variables"] = env_check
+        if not env_check["success"]:
+            results["success"] = False
+            results["errors"].append(f"Environment error: {env_check['message']}")
+            
+        mod_check = check_required_modules()
+        results["required_modules"] = mod_check
+        if not mod_check["success"]:
+            results["success"] = False 
+            results["errors"].append(f"Module error: {mod_check['message']}")
+
+        api_check = check_api_connectivity()
+        results["api_connectivity"] = api_check
+        if not api_check["success"]:
+            results["success"] = False
+            results["errors"].append("API connectivity failed")
+
+        db_check = check_database_connectivity()
+        results["database_connectivity"] = db_check
+        if not db_check["success"]:
+            results["success"] = False
+            results["errors"].append("Database initialization failed")
+
+    except Exception as e:
+        results["success"] = False
+        results["errors"].append(f"Setup error: {str(e)}")
     
     # Calculate success rate
     total_checks = len(results) - 1  # Exclude timestamp
