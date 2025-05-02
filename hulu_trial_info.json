@@ -1,25 +1,25 @@
 {
   "user_info": {
-    "email": "josephsmith1214@gmail.com",
-    "password": "OEIh@G!3N9$F",
-    "first_name": "Joseph",
-    "last_name": "Smith",
-    "gender": "male",
-    "address": "6691 Washington Street",
-    "city": "San Antonio",
-    "state": "OK",
-    "zipcode": "13439",
-    "phone": "350-706-7538",
+    "email": "marymiller7729@icloud.com",
+    "password": "M*vZ))bP)%zO",
+    "first_name": "Mary",
+    "last_name": "Miller",
+    "gender": "female",
+    "address": "2261 Washington Boulevard",
+    "city": "Los Angeles",
+    "state": "MT",
+    "zipcode": "76243",
+    "phone": "947-766-9847",
     "card_type": "mastercard",
-    "card_number": "5271509702064731",
-    "card_expiry": "08/27",
-    "card_cvv": "184",
-    "card_holder": "Joseph Smith"
+    "card_number": "5064000210945022",
+    "card_expiry": "12/30",
+    "card_cvv": "715",
+    "card_holder": "Mary Miller"
   },
-  "trial_start_date": "2025-05-02T00:36:15.451254",
-  "trial_end_date": "2025-06-01T00:36:15.451254",
+  "trial_start_date": "2025-05-02T00:37:47.575722",
+  "trial_end_date": "2025-06-01T00:37:47.575722",
   "service": "hulu",
   "plan": "Hulu (No Ads)",
   "monthly_price": "$12.99",
-  "generated_at": "2025-05-02T00:36:15.451513"
+  "generated_at": "2025-05-02T00:37:47.576034"
 }
