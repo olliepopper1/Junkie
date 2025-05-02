@@ -158,64 +158,72 @@ class APIIntegrations:
     
     @staticmethod
     def generate_identity(country="US"):
-        """Generate a realistic identity using Random User Generator API"""
+        """Generate a realistic identity using RandomUser.me API"""
         logger.info(f"Generating identity for country: {country}")
         
         try:
-            # Use the RapidAPI Random User Generator
+            # Use the public RandomUser.me API
             url = API_CONFIG["personator"]["endpoint"]
-            headers = APIIntegrations.get_headers("personator")
             
             # Format query parameters for the API
-            querystring = {"nationality": country.lower() if len(country) == 2 else "us"}
+            querystring = {"nat": country.lower() if len(country) == 2 else "us"}
             
             # Initialize response variable to avoid 'possibly unbound'
             response = None
             try:
-                response = requests.get(url, headers=headers, params=querystring, timeout=10)
+                response = requests.get(url, params=querystring, timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 
-                # Parse the response - the new API returns a different structure
+                # Parse the response
                 data = response.json()
-                if not data:
-                    raise ValueError("Invalid response from Random Data API")
                 
-                # This API returns a single user object directly
-                user = data
+                # Basic validation
+                if not data or "results" not in data or not data["results"]:
+                    raise ValueError("Invalid response from RandomUser.me API")
                 
-                # Extract components from the user object
-                first_name = user.get("first_name", "")
-                last_name = user.get("last_name", "")
-                address = user.get("address", {})
+                # RandomUser.me returns data in the 'results' array
+                user = data["results"][0]
                 
-                # Extract address components
-                street_address = address.get("street_address", "")
-                city = address.get("city", "")
-                state = address.get("state", "")
-                zip_code = address.get("zip_code", "")
+                # Extract name components
+                name = user.get("name", {})
+                first_name = name.get("first", "")
+                last_name = name.get("last", "")
+                
+                # Extract location components
+                location = user.get("location", {})
+                
+                # Extract street address
+                street = location.get("street", {})
+                street_number = street.get("number", "")
+                street_name = street.get("name", "")
+                address = f"{street_number} {street_name}".strip()
+                
+                # Extract other location components
+                city = location.get("city", "")
+                state = location.get("state", "")
+                zipcode = location.get("postcode", "")
                 
                 # Format the date of birth
-                dob_raw = user.get("date_of_birth", "")
-                # Convert date format if needed
-                dob = dob_raw
+                dob = user.get("dob", {})
+                dob_date = dob.get("date", "").split("T")[0] if "date" in dob else ""
                 
                 # Extract contact information
                 email = user.get("email", "")
-                phone = user.get("phone_number", "")
+                phone = user.get("phone", "")
                 
                 logger.info("Identity generated successfully")
                 
                 return {
                     "first_name": first_name,
                     "last_name": last_name,
-                    "address": street_address,
+                    "address": address,
                     "city": city,
                     "state": state,
-                    "zipcode": zip_code,
+                    "zipcode": zipcode,
                     "phone": phone,
                     "email": email,
-                    "dob": dob,
-                    "ssn": user.get("social_insurance_number", "")  # This API might provide this
+                    "dob": dob_date,
+                    "ssn": user.get("id", {}).get("value", "")  # RandomUser.me provides SSN in id.value for some nationalities
                 }
             except ValueError as e:
                 # JSON parsing error

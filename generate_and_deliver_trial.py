@@ -1,10 +1,10 @@
 """
-Generate and Deliver Trial
-Main script to generate a real Hulu trial and deliver it to a user
+Generate and Deliver Hulu Trial
+End-to-end script to generate a trial and deliver it to a user
 """
+import argparse
 import logging
 import sys
-import argparse
 from simplified_hulu_trial import SimpleTrialGenerator
 from bot_trial_delivery import TrialDelivery
 
@@ -13,7 +13,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("trial_generation.log"),
+        logging.FileHandler("generate_and_deliver_trial.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -21,81 +21,111 @@ logger = logging.getLogger(__name__)
 
 def generate_and_deliver_trial(user_id, discord_id=None, service="hulu", plan_index=1):
     """
-    Generate a trial and deliver it to the user
+    End-to-end process to generate and deliver a trial to a user
     
     Args:
-        user_id: The user ID in the database
-        discord_id: The Discord ID if available (for Discord delivery)
+        user_id: The user ID for saving to the database
+        discord_id: Optional Discord ID for delivering via Discord
         service: The service to generate a trial for (default: hulu)
-        plan_index: The index of the plan to use
+        plan_index: The plan index to use (default: 1 for No Ads)
         
     Returns:
-        dict: Result of the generation and delivery process
+        dict: Complete information about the generation and delivery
     """
-    logger.info(f"Generating {service} trial for user {user_id}")
+    logger.info(f"Starting end-to-end trial generation and delivery for user {user_id}")
     
-    # Generate the trial
+    # Step 1: Generate the trial
+    logger.info("Step 1: Generating trial")
     generator = SimpleTrialGenerator()
-    trial = generator.generate_trial(service_name=service, plan_index=plan_index)
+    trial_data = generator.generate_trial(service, plan_index)
     
-    if not trial or not trial.get('success', False):
-        logger.error("Trial generation failed")
-        return {
-            "success": False,
-            "error": "Failed to generate trial",
-            "details": trial
-        }
+    if not trial_data or "error" in trial_data:
+        logger.error(f"Trial generation failed: {trial_data.get('error', 'Unknown error')}")
+        return {"success": False, "message": f"Trial generation failed: {trial_data.get('error', 'Unknown error')}"}
     
-    # Deliver the trial
-    logger.info("Trial generated successfully, delivering to user")
+    logger.info(f"Trial generated for {service}")
+    
+    # Step 2: Deliver the trial
+    logger.info("Step 2: Delivering trial")
     delivery = TrialDelivery()
-    result = delivery.deliver_trial_to_user(user_id, discord_id)
+    delivery_result = delivery.deliver_trial_to_user(user_id, discord_id)
     
-    if not result.get('success', False):
-        logger.error(f"Trial delivery failed: {result.get('error', 'Unknown error')}")
-        return {
-            "success": False,
-            "error": "Failed to deliver trial",
-            "details": result
-        }
+    if not delivery_result["success"]:
+        logger.error(f"Trial delivery failed: {delivery_result.get('message', 'Unknown error')}")
+        return {"success": False, "message": f"Trial delivery failed: {delivery_result.get('message', 'Unknown error')}"}
     
-    logger.info(f"Trial successfully generated and delivered to user {user_id}")
+    logger.info("Trial successfully delivered")
+    
+    # Return the complete result
     return {
         "success": True,
-        "message": f"{service.capitalize()} trial successfully created and delivered",
-        "trial": trial,
-        "delivery": result
+        "message": "Trial generation and delivery completed successfully",
+        "trial_data": trial_data,
+        "delivery_result": delivery_result
     }
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate and deliver a trial to a user')
-    parser.add_argument('--user_id', type=str, required=True, help='User ID in the database')
-    parser.add_argument('--discord_id', type=str, help='Discord ID for delivery (optional)')
-    parser.add_argument('--service', type=str, default='hulu', help='Service to generate trial for (default: hulu)')
-    parser.add_argument('--plan', type=int, default=1, help='Plan index (default: 1, which is No Ads for Hulu)')
+def main():
+    """Main function to run from command line"""
+    parser = argparse.ArgumentParser(description="Generate and deliver a Hulu trial")
+    parser.add_argument("--user-id", type=int, required=True, help="User ID for saving to database")
+    parser.add_argument("--discord-id", type=str, help="Discord ID for Discord delivery")
+    parser.add_argument("--service", type=str, default="hulu", help="Service to generate a trial for")
+    parser.add_argument("--plan-index", type=int, default=1, help="Plan index to use")
     
     args = parser.parse_args()
     
-    print("=== Trial Generation and Delivery ===")
-    print(f"Generating {args.service.capitalize()} trial for user {args.user_id}")
-    
     result = generate_and_deliver_trial(
-        user_id=args.user_id,
-        discord_id=args.discord_id,
-        service=args.service,
-        plan_index=args.plan
+        args.user_id,
+        args.discord_id,
+        args.service,
+        args.plan_index
     )
     
     if result["success"]:
-        print("✅ Trial successfully generated and delivered!")
-        print(f"\nService: {result['trial']['service']} - {result['trial']['plan']}")
-        print(f"Email: {result['trial']['email']}")
-        print(f"Password: {result['trial']['password']}")
-        print(f"Trial End Date: {result['trial']['end_date']}")
-        print("\nThis information has been saved to your account.")
-        if args.discord_id:
-            print("A message has also been sent to your Discord account.")
+        print("✓ Trial generation and delivery completed successfully")
+        print(f"Trial service: {result['trial_data']['service']}")
+        print(f"Trial plan: {result['trial_data']['plan']}")
+        print(f"Login: {result['trial_data']['email']} / {result['trial_data']['password']}")
     else:
-        print(f"❌ Error: {result.get('error', 'Unknown error')}")
-        if 'details' in result:
-            print(f"Details: {result['details']}")
+        print(f"✗ Error: {result['message']}")
+
+if __name__ == "__main__":
+    print("=== Trial Generation and Delivery System ===")
+    
+    # For interactive testing without command-line arguments
+    if len(sys.argv) == 1:
+        # Use test user ID
+        test_user_id = 12345
+        test_discord_id = None
+        
+        # Prompt for user ID
+        try:
+            input_user_id = input("Enter user ID (default: 12345): ")
+            if input_user_id:
+                test_user_id = int(input_user_id)
+                
+            input_discord_id = input("Enter Discord ID (optional): ")
+            if input_discord_id:
+                test_discord_id = input_discord_id
+        except ValueError:
+            print("Invalid input. Using default values.")
+        
+        result = generate_and_deliver_trial(test_user_id, test_discord_id)
+        
+        if result["success"]:
+            print("\n=== Trial Generation and Delivery Successful ===")
+            print(f"Service: {result['trial_data']['service']}")
+            print(f"Plan: {result['trial_data']['plan']}")
+            print(f"Email: {result['trial_data']['email']}")
+            print(f"Password: {result['trial_data']['password']}")
+            print(f"Trial end date: {result['trial_data']['end_date']}")
+            
+            if test_discord_id:
+                print("\nMessage would be delivered to Discord.")
+            
+            print("\nTrial has been saved to the database for dashboard display.")
+        else:
+            print(f"\n=== Error ===\n{result['message']}")
+    else:
+        # Use command-line arguments
+        main()

@@ -4,9 +4,9 @@ Handles delivering trial information to users via Discord DMs and the website
 """
 import json
 import logging
-import sys
+import sqlite3
 from datetime import datetime
-from trial_storage import TrialStorage
+import sys
 
 # Configure logging
 logging.basicConfig(
@@ -26,50 +26,109 @@ class TrialDelivery:
     
     def __init__(self):
         """Initialize the delivery system with database connection"""
-        self.storage = TrialStorage()
+        self.db_path = "instance/database.db"
+        logger.info("Trial delivery system initialized")
     
     def load_trial_from_file(self, filepath="standalone_hulu_trial.json"):
         """Load trial information from a JSON file"""
+        logger.info(f"Loading trial from file: {filepath}")
+        
         try:
             with open(filepath, 'r') as f:
                 trial_data = json.load(f)
-            logger.info(f"Loaded trial data from {filepath}")
+                
+            logger.info(f"Loaded trial for {trial_data.get('service', 'unknown service')}")
             return trial_data
-        except Exception as e:
-            logger.error(f"Error loading trial data from {filepath}: {str(e)}")
+        except FileNotFoundError:
+            logger.error(f"Trial file not found: {filepath}")
+            return None
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON in trial file: {filepath}")
             return None
     
     def save_trial_to_database(self, user_id, trial_data):
         """Save trial information to the database for a specific user"""
+        logger.info(f"Saving trial for user ID: {user_id}")
+        
         try:
-            # Simply use the new trial storage class to save the trial
-            trial_id = self.storage.save_trial(user_id, trial_data)
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
             
-            if trial_id:
-                logger.info(f"Saved {trial_data['service']} trial (ID: {trial_id}) for user {user_id} to database")
-                return True
-            else:
-                logger.error("Failed to save trial, no trial ID returned")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error saving trial to database: {str(e)}")
-            return False
+            # Check if we have a trials table, if not create it
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                service TEXT NOT NULL,
+                plan TEXT NOT NULL,
+                email TEXT NOT NULL,
+                password TEXT NOT NULL,
+                start_date TEXT NOT NULL,
+                end_date TEXT NOT NULL,
+                card_last4 TEXT,
+                trial_data TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """)
+            
+            # Format current timestamp
+            created_at = datetime.now().isoformat()
+            
+            # Insert the trial data
+            cursor.execute("""
+            INSERT INTO trials 
+            (user_id, service, plan, email, password, start_date, end_date, card_last4, trial_data, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                user_id,
+                trial_data.get("service", "Unknown"),
+                trial_data.get("plan", "Unknown"),
+                trial_data.get("email", ""),
+                trial_data.get("password", ""),
+                trial_data.get("start_date", ""),
+                trial_data.get("end_date", ""),
+                trial_data.get("card_details", {}).get("last4", ""),
+                json.dumps(trial_data),
+                created_at
+            ))
+            
+            conn.commit()
+            logger.info(f"Trial saved to database with user ID: {user_id}")
+            
+            return {"success": True, "message": "Trial saved successfully"}
+        except sqlite3.Error as e:
+            logger.error(f"Database error saving trial: {e}")
+            return {"success": False, "message": f"Database error: {e}"}
+        finally:
+            if conn:
+                conn.close()
     
     def format_trial_message(self, trial_data):
         """Format trial information for delivery via Discord"""
-        message = f"```\n"
-        message += f"🎭 TRIAL JUNKIE: {trial_data['service']} Trial Created\n"
-        message += f"------------------------\n"
-        message += f"✅ Service: {trial_data['service']} - {trial_data['plan']}\n"
-        message += f"✅ Login Email: {trial_data['email']}\n"
-        message += f"✅ Password: {trial_data['password']}\n"
-        message += f"✅ Payment Method: {trial_data['card']}\n"
-        message += f"✅ Trial Ends: {trial_data['end_date']}\n"
-        message += f"------------------------\n"
-        message += f"Login at: https://www.hulu.com/login\n"
-        message += f"```\n"
-        message += "Remember to cancel before the trial ends to avoid being charged."
+        service = trial_data.get("service", "Unknown")
+        
+        message = f"🎉 **Your {service} Trial is Ready!** 🎉\n\n"
+        message += f"**Plan:** {trial_data.get('plan', 'Standard')}\n"
+        message += f"**Price:** {trial_data.get('price', '$0.00')}\n\n"
+        
+        message += "**Login Details:**\n"
+        message += f"📧 Email: `{trial_data.get('email', 'N/A')}`\n"
+        message += f"🔑 Password: `{trial_data.get('password', 'N/A')}`\n\n"
+        
+        message += "**Payment Details:**\n"
+        message += f"💳 {trial_data.get('card', 'Virtual Card')}\n"
+        message += f"⏰ Trial Ends: {trial_data.get('end_date', 'N/A')}\n\n"
+        
+        login_url = ""
+        if service.lower() == "hulu":
+            login_url = "https://www.hulu.com/login"
+        elif service.lower() == "netflix":
+            login_url = "https://www.netflix.com/login"
+        
+        if login_url:
+            message += f"**Login here:** {login_url}\n\n"
+        
+        message += "Enjoy your trial! Remember to cancel before the trial ends to avoid charges."
         
         return message
     
@@ -84,39 +143,65 @@ class TrialDelivery:
         Returns:
             dict: Delivery status and trial information
         """
-        # Load the most recent trial
+        logger.info(f"Delivering trial to user ID: {user_id}")
+        
+        # Load the latest trial
         trial_data = self.load_trial_from_file()
         if not trial_data:
-            return {"success": False, "error": "Could not load trial data"}
+            logger.error("No trial data found to deliver")
+            return {"success": False, "message": "No trial data found"}
         
-        # Save to database
-        db_save = self.save_trial_to_database(user_id, trial_data)
-        if not db_save:
-            return {"success": False, "error": "Could not save trial to database"}
+        # Save to database for dashboard display
+        save_result = self.save_trial_to_database(user_id, trial_data)
+        if not save_result["success"]:
+            logger.error(f"Failed to save trial to database: {save_result['message']}")
+            # Continue anyway to deliver via Discord
         
-        # Format for message delivery
-        message = self.format_trial_message(trial_data)
+        # Format for Discord if discord_id is provided
+        discord_delivery = {"success": False, "message": "Discord delivery not requested"}
+        if discord_id:
+            message = self.format_trial_message(trial_data)
+            logger.info(f"Formatted Discord message for user: {discord_id}")
+            
+            # In a real implementation, we would send the message to Discord here
+            # For now, we just log it
+            logger.info(f"Would send Discord message to {discord_id}: {message[:100]}...")
+            discord_delivery = {"success": True, "message": "Discord message ready for delivery"}
         
         return {
             "success": True,
-            "trial": trial_data,
-            "message": message,
-            "discord_id": discord_id
+            "trial_data": trial_data,
+            "database_save": save_result,
+            "discord_delivery": discord_delivery
         }
 
-# If run directly, test the delivery
+
+# Run if executed directly
 if __name__ == "__main__":
-    # Test user ID (this would normally come from the database)
-    test_user_id = "test_user_123"
+    print("=== Trial Delivery System ===")
     
-    print("=== Testing Trial Delivery ===")
     delivery = TrialDelivery()
     
-    result = delivery.deliver_trial_to_user(test_user_id)
+    # For testing, use a test user ID
+    test_user_id = 12345
     
-    if result["success"]:
-        print("✅ Trial successfully delivered to database")
-        print("\nMessage for Discord delivery:")
-        print(result["message"])
+    trial = delivery.load_trial_from_file()
+    if trial:
+        print(f"Loaded trial for {trial['service']}")
+        
+        # Format message
+        message = delivery.format_trial_message(trial)
+        print("\n=== Formatted Discord Message ===")
+        print(message)
+        
+        # Save to database
+        print("\n=== Saving to Database ===")
+        result = delivery.save_trial_to_database(test_user_id, trial)
+        print(f"Save result: {result}")
+        
+        # Full delivery process
+        print("\n=== Full Delivery Process ===")
+        delivery_result = delivery.deliver_trial_to_user(test_user_id, "test_discord_id")
+        print(f"Delivery successful: {delivery_result['success']}")
     else:
-        print(f"❌ Error: {result.get('error', 'Unknown error')}")
+        print("No trial found to deliver")

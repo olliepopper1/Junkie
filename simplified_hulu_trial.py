@@ -1,6 +1,6 @@
 """
 Simplified Hulu Trial Generator
-Creates realistic trial credentials that will work for login
+Creates realistic trial credentials that will work for login using authentic APIs
 """
 import json
 import random
@@ -8,6 +8,9 @@ import string
 import sys
 import logging
 from datetime import datetime, timedelta
+
+# Import the API integrations
+from api_integrations import APIIntegrations
 
 # Configure logging
 logging.basicConfig(
@@ -22,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class SimpleTrialGenerator:
     """
-    Generates a simplified but realistic trial account
+    Generates a simplified but realistic trial account using real API data
     """
     
     def __init__(self):
@@ -37,9 +40,24 @@ class SimpleTrialGenerator:
                 "trial_days": 30
             }
         }
+        self.api = APIIntegrations()
     
     def generate_email(self):
-        """Generate a realistic email address"""
+        """Generate a realistic email address using API"""
+        logger.info("Generating email address using API")
+        
+        try:
+            # Call the API to get an email
+            email_data = APIIntegrations.generate_email()
+            
+            if email_data and "email" in email_data and email_data["email"]:
+                logger.info(f"Generated email: {email_data['email']}")
+                return email_data["email"]
+        except Exception as e:
+            logger.error(f"Error generating email via API: {e}")
+        
+        # Fallback to a basic method if API fails
+        logger.info("Using fallback email generation")
         domains = ["gmail.com", "outlook.com", "yahoo.com", "icloud.com"]
         first_names = ["james", "john", "robert", "michael", "william", "david", "mary", "patricia", "jennifer", "linda", "elizabeth", "susan"]
         last_names = ["smith", "johnson", "williams", "brown", "jones", "garcia", "miller", "davis", "rodriguez", "martinez", "hernandez", "lopez"]
@@ -55,11 +73,35 @@ class SimpleTrialGenerator:
     
     def generate_password(self, length=12):
         """Generate a strong password"""
-        chars = string.ascii_letters + string.digits + "!@#$%^&*"
-        return ''.join(random.choice(chars) for _ in range(length))
+        logger.info("Generating secure password")
+        
+        try:
+            # Use the secure password generation method from API integrations
+            return APIIntegrations._generate_secure_password(length)
+        except Exception as e:
+            logger.error(f"Error generating secure password: {e}")
+            # Fallback to basic method
+            chars = string.ascii_letters + string.digits + "!@#$%^&*"
+            return ''.join(random.choice(chars) for _ in range(length))
     
     def generate_name(self):
-        """Generate a random full name"""
+        """Generate a random full name using API"""
+        logger.info("Generating identity using API")
+        
+        try:
+            # Call the API to get an identity
+            identity = APIIntegrations.generate_identity()
+            
+            if identity and "first_name" in identity and "last_name" in identity:
+                first = identity["first_name"]
+                last = identity["last_name"]
+                logger.info(f"Generated name: {first} {last}")
+                return {"first": first, "last": last, "full": f"{first} {last}"}
+        except Exception as e:
+            logger.error(f"Error generating identity via API: {e}")
+        
+        # Fallback to basic method if API fails
+        logger.info("Using fallback name generation")
         first_names = ["James", "John", "Robert", "Michael", "William", "David", "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Susan"]
         last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez"]
         
@@ -69,71 +111,56 @@ class SimpleTrialGenerator:
         return {"first": first, "last": last, "full": f"{first} {last}"}
     
     def generate_card(self):
-        """Generate credit card details"""
-        card_types = ["Visa", "Mastercard", "American Express"]
-        card_type = random.choice(card_types)
+        """Generate credit card details using API"""
+        logger.info("Generating credit card using API")
         
-        # Generate a somewhat realistic looking but fake card number
-        if card_type == "American Express":
-            prefix = "37"
-            length = 15
-        elif card_type == "Visa":
-            prefix = "4"
-            length = 16
-        else:  # Mastercard
-            prefix = "51"
-            length = 16
+        try:
+            # Call the API to get a card
+            card_data = APIIntegrations.generate_card()
+            
+            if card_data and "card_number" in card_data:
+                # Format the results to match our expected output
+                card_type = card_data.get("card_type", "Visa").capitalize()
+                number = card_data.get("card_number", "")
+                last4 = number[-4:] if len(number) >= 4 else "0000"
+                
+                # Extract expiry information
+                expiry_month = card_data.get("expiry_month", "")
+                expiry_year = card_data.get("expiry_year", "")
+                expiry = f"{expiry_month}/{expiry_year}" if expiry_month and expiry_year else card_data.get("expiry", "12/25")
+                
+                cvv = card_data.get("cvv", "123")
+                
+                logger.info(f"Generated {card_type} card ending in {last4}")
+                
+                return {
+                    "type": card_type,
+                    "number": number,
+                    "last4": last4,
+                    "expiry": expiry,
+                    "cvv": cvv,
+                    "display": f"{card_type} **** **** **** {last4}"
+                }
+        except Exception as e:
+            logger.error(f"Error generating card via API: {e}")
         
-        # Generate number
-        remaining = length - len(prefix)
-        number = prefix + ''.join(random.choice(string.digits) for _ in range(remaining))
-        
-        # Last 4 digits for display
-        last4 = number[-4:]
-        
-        # Generate expiry date (future date)
-        current_year = datetime.now().year
-        current_month = datetime.now().month
-        
-        # Generate a date 1-3 years in future
-        expiry_year = current_year + random.randint(1, 3)
-        expiry_month = random.randint(1, 12)
-        
-        # Ensure date is in future
-        if expiry_year == current_year and expiry_month <= current_month:
-            expiry_month = current_month + 1
-            if expiry_month > 12:
-                expiry_month = 1
-                expiry_year += 1
-        
-        expiry = f"{expiry_month:02d}/{expiry_year % 100:02d}"
-        
-        # CVV
-        cvv_length = 4 if card_type == "American Express" else 3
-        cvv = ''.join(random.choice(string.digits) for _ in range(cvv_length))
-        
-        return {
-            "type": card_type,
-            "number": number,
-            "last4": last4,
-            "expiry": expiry,
-            "cvv": cvv,
-            "display": f"{card_type} **** **** **** {last4}"
-        }
+        # If API fails, use our fallback method
+        logger.info("Using fallback card generation")
+        return self.create_working_card()
     
     def create_working_card(self):
-        """Create a card that works for trials"""
+        """Create a card that works for trials (fallback)"""
         # Create a card that typically works for trial sign-ups
         card = {
             "type": "Visa",
-            "number": "4242424242424242",
+            "number": "4242424242424242", # This is a widely used test card number
             "last4": "4242",
             "expiry": f"12/{(datetime.now().year + 1) % 100:02d}",
             "cvv": "123",
             "display": "Visa **** **** **** 4242"
         }
         
-        logger.info(f"Created working card ending in {card['last4']}")
+        logger.info(f"Created working test card ending in {card['last4']}")
         return card
     
     def generate_trial(self, service_name="hulu", plan_index=1):
@@ -163,12 +190,12 @@ class SimpleTrialGenerator:
         start_date = datetime.now().strftime("%Y-%m-%d")
         end_date = (datetime.now() + timedelta(days=service["trial_days"])).strftime("%Y-%m-%d")
         
-        # Generate payment information - Use a card type that works for trials
-        # Option 1: Random card (less reliable for actual trial sign-ups)
-        # card = self.generate_card()
+        # Generate payment information from API
+        # Use real card data from API for a more authentic experience
+        card = self.generate_card()
         
-        # Option 2: Card known to work with trials (more reliable)
-        card = self.create_working_card()
+        # For production, we'd switch to option 2 for reliability
+        # card = self.create_working_card()
         
         # Create the trial object
         trial = {
