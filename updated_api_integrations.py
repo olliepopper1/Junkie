@@ -60,14 +60,12 @@ API_CONFIG = {
         "auth_type": "rapidapi"
     },
     
-    # Personator by Melissa Data for contact verification
-    "personator": {
+    # Random Identity Generator API
+    "random_identity": {
         "key": RAPIDAPI_KEY,
-        "endpoint": "https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify",
-        "auth_type": "apikey",
-        "params": {
-            "id": RAPIDAPI_KEY
-        }
+        "host": "random-identity-generator.p.rapidapi.com",
+        "endpoint": "https://random-identity-generator.p.rapidapi.com/",
+        "auth_type": "rapidapi"
     },
     
     # Web Scraping API for bypassing protections
@@ -136,69 +134,98 @@ class UpdatedAPIIntegrations:
     @staticmethod
     def generate_identity():
         """
-        Generate a realistic identity using Personator by Melissa Data
+        Generate a realistic identity using Random Identity Generator API
         """
-        logger.info("Generating identity using Personator API")
+        logger.info("Generating identity using Random Identity Generator API")
         
         try:
-            # Use the Personator API from Melissa Data
-            api_config = API_CONFIG["personator"]
+            # Use the Random Identity Generator API
+            api_config = API_CONFIG["random_identity"]
             url = api_config["endpoint"]
-            
-            # Prepare parameters - we'll use this to verify random data
-            # Note: For a real implementation, you'd use more fields
-            params = api_config["params"].copy()
-            params.update({
-                "act": "Check"
-            })
-            
-            # Generate some basic information to verify
-            first_name = random.choice([
-                "John", "Michael", "David", "James", "Robert", 
-                "Mary", "Jennifer", "Linda", "Patricia", "Elizabeth"
-            ])
-            
-            last_name = random.choice([
-                "Smith", "Johnson", "Williams", "Jones", "Brown",
-                "Davis", "Miller", "Wilson", "Moore", "Taylor"
-            ])
-            
-            # Add the generated data to the parameters
-            params.update({
-                "first": first_name,
-                "last": last_name,
-                "ctry": "US"
-            })
+            headers = UpdatedAPIIntegrations.get_headers("random_identity")
             
             # Make the API request
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
             # Parse the response
-            if response.text:
-                # Extract identity information from the response
-                # In a real implementation, we'd parse the XML response properly
-                logger.info("Identity verified successfully")
-                
-                # For now, return the basic identity with the generated first and last name
-                return {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": f"{first_name.lower()}.{last_name.lower()}{random.randint(1, 999)}@example.com",
-                    "address": "123 Main St",
-                    "city": "New York",
-                    "state": "NY",
-                    "zipcode": "10001",
-                    "phone": "2125551234",
-                    "dob": "1990-01-01"
-                }
-            else:
-                logger.error("Empty response from Personator API")
-                raise ValueError("Empty response from Personator API")
-        
+            user_data = response.json()
+            logger.info("Random identity received")
+            
+            # Format the identity data - map fields from the API response to our expected format
+            identity = {
+                "first_name": user_data.get("firstName", ""),
+                "last_name": user_data.get("lastName", ""),
+                "email": user_data.get("email", ""),
+                "phone": user_data.get("phone", ""),
+                "address": user_data.get("street", ""),
+                "city": user_data.get("city", ""),
+                "state": user_data.get("state", ""),
+                "zipcode": user_data.get("zipCode", ""),
+                "dob": user_data.get("dateOfBirth", ""),
+                "country": user_data.get("country", "USA")
+            }
+            
+            logger.info(f"Identity generated: {identity['first_name']} {identity['last_name']}")
+            return identity
+            
         except requests.RequestException as e:
-            logger.error(f"Error calling Personator API: {str(e)}")
-            raise
+            logger.error(f"Error with Random Identity Generator API: {str(e)}")
+            logger.info("Using fallback method for identity generation")
+            
+            # Fallback to generating a basic identity
+            first_names = ["John", "Michael", "David", "James", "Robert", 
+                           "Mary", "Jennifer", "Linda", "Patricia", "Elizabeth"]
+            last_names = ["Smith", "Johnson", "Williams", "Jones", "Brown",
+                          "Davis", "Miller", "Wilson", "Moore", "Taylor"]
+            cities = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", 
+                      "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+            states = ["NY", "CA", "IL", "TX", "AZ", "PA", "FL", "OH", "MI", "GA"]
+            
+            first_name = random.choice(first_names)
+            last_name = random.choice(last_names)
+            
+            # Generate a unique number for the email
+            unique_num = random.randint(100, 999)
+            email = f"{first_name.lower()}.{last_name.lower()}{unique_num}@example.com"
+            
+            # Generate a random US phone number
+            area_code = random.randint(200, 999)
+            prefix = random.randint(200, 999)
+            line = random.randint(1000, 9999)
+            phone = f"{area_code}-{prefix}-{line}"
+            
+            # Generate a random address
+            street_num = random.randint(1, 9999)
+            street_names = ["Main St", "Oak Ave", "Maple Dr", "Washington Blvd", "Park Rd"]
+            street = f"{street_num} {random.choice(street_names)}"
+            
+            # Generate a random zipcode
+            zipcode = f"{random.randint(10000, 99999)}"
+            
+            # Generate a random date of birth (21-65 years old)
+            current_year = datetime.now().year
+            birth_year = current_year - random.randint(21, 65)
+            birth_month = random.randint(1, 12)
+            birth_day = random.randint(1, 28) # Simplified to avoid month length issues
+            dob = f"{birth_year}-{birth_month:02d}-{birth_day:02d}"
+            
+            # Return the fallback identity
+            fallback_identity = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "phone": phone,
+                "address": street,
+                "city": random.choice(cities),
+                "state": random.choice(states),
+                "zipcode": zipcode,
+                "dob": dob,
+                "fallback": True # Flag to indicate this is fallback data
+            }
+            
+            logger.info(f"Fallback identity generated: {first_name} {last_name}")
+            return fallback_identity
     
     @staticmethod
     def validate_phone(phone_number, country_code="US"):
