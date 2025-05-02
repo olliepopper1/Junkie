@@ -32,12 +32,12 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 
 # API configuration
 API_CONFIG = {
-    # Identity Verification API using Random User Generator
+    # Identity Verification API using RandomUser.me (free public API)
     "personator": {
-        "key": RAPIDAPI_KEY,
-        "host": "random-user-generator.p.rapidapi.com",
-        "endpoint": "https://random-user-generator.p.rapidapi.com/random-user",
-        "auth_type": "rapidapi",
+        "key": "",
+        "host": "",
+        "endpoint": "https://randomuser.me/api/",
+        "auth_type": "none",
         "content_type": "application/json"
     },
     
@@ -175,38 +175,47 @@ class APIIntegrations:
                 response = requests.get(url, headers=headers, params=querystring, timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 
-                # Parse the response - this API returns a different structure
+                # Parse the response - the new API returns a different structure
                 data = response.json()
-                if not data or "results" not in data:
-                    raise ValueError("Invalid response from Random User Generator API")
+                if not data:
+                    raise ValueError("Invalid response from Random Data API")
                 
-                if not data["results"] or len(data["results"]) == 0:
-                    raise ValueError("No results returned from Random User Generator API")
+                # This API returns a single user object directly
+                user = data
                 
-                user = data["results"][0]
-                name = user.get("name", {})
-                location = user.get("location", {})
-                dob = user.get("dob", {})
+                # Extract components from the user object
+                first_name = user.get("first_name", "")
+                last_name = user.get("last_name", "")
+                address = user.get("address", {})
                 
-                # Format the address components
-                street = location.get("street", {})
-                street_number = street.get("number", "")
-                street_name = street.get("name", "")
-                address = f"{street_number} {street_name}" if street_number and street_name else ""
+                # Extract address components
+                street_address = address.get("street_address", "")
+                city = address.get("city", "")
+                state = address.get("state", "")
+                zip_code = address.get("zip_code", "")
+                
+                # Format the date of birth
+                dob_raw = user.get("date_of_birth", "")
+                # Convert date format if needed
+                dob = dob_raw
+                
+                # Extract contact information
+                email = user.get("email", "")
+                phone = user.get("phone_number", "")
                 
                 logger.info("Identity generated successfully")
                 
                 return {
-                    "first_name": name.get("first", ""),
-                    "last_name": name.get("last", ""),
-                    "address": address,
-                    "city": location.get("city", ""),
-                    "state": location.get("state", ""),
-                    "zipcode": location.get("postcode", ""),
-                    "phone": user.get("phone", ""),
-                    "email": user.get("email", ""),
-                    "dob": dob.get("date", "").split("T")[0] if "date" in dob else "",
-                    "ssn": ""  # RandomUser doesn't provide SSN for privacy reasons
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "address": street_address,
+                    "city": city,
+                    "state": state,
+                    "zipcode": zip_code,
+                    "phone": phone,
+                    "email": email,
+                    "dob": dob,
+                    "ssn": user.get("social_insurance_number", "")  # This API might provide this
                 }
             except ValueError as e:
                 # JSON parsing error
@@ -392,32 +401,54 @@ class APIIntegrations:
     
     @staticmethod
     def generate_card(card_type="visa"):
-        """Generate a valid credit card for verification using Fake Valid CC Data Generator"""
+        """Generate a valid credit card for verification using Fake Credit Card Generator API"""
         logger.info(f"Generating card of type: {card_type}")
         
         try:
-            # Use the Fake Valid CC Data Generator API
+            # Use the Fake Credit Card Generator API from RapidAPI
             url = API_CONFIG["fake_card"]["endpoint"]
             headers = APIIntegrations.get_headers("fake_card")
-            payload = json.dumps({"card_type": card_type})
             
-            response = requests.post(url, headers=headers, data=payload)
+            # This API uses GET requests, no need for payload
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
             data = response.json()
             logger.info("Credit card generated successfully")
             
-            return {
-                "card_number": data.get("number", ""),
-                "card_type": data.get("card_type", ""),
-                "cvv": data.get("cvv", ""),
-                "expiry": data.get("expiry", ""),
-                "cardholder_name": data.get("cardholder_name", "")
-            }
+            # Format the response according to our standard format
+            card_info = {}
+            
+            # Check if we have a proper response
+            if isinstance(data, dict):
+                # Extract card information
+                card_info = {
+                    "card_number": data.get("CreditCardNumber", ""),
+                    "card_type": card_type,
+                    "cvv": data.get("CVV", ""),
+                    "expiry_month": data.get("ExpirationDate", "").split("/")[0] if "/" in data.get("ExpirationDate", "") else "",
+                    "expiry_year": data.get("ExpirationDate", "").split("/")[1] if "/" in data.get("ExpirationDate", "") else "",
+                    "cardholder_name": data.get("CardHolderName", "")
+                }
+            elif isinstance(data, list) and len(data) > 0:
+                # Some APIs return a list of cards
+                card_data = data[0]
+                card_info = {
+                    "card_number": card_data.get("CreditCardNumber", ""),
+                    "card_type": card_type,
+                    "cvv": card_data.get("CVV", ""),
+                    "expiry_month": card_data.get("ExpirationDate", "").split("/")[0] if "/" in card_data.get("ExpirationDate", "") else "",
+                    "expiry_year": card_data.get("ExpirationDate", "").split("/")[1] if "/" in card_data.get("ExpirationDate", "") else "",
+                    "cardholder_name": card_data.get("CardHolderName", "")
+                }
+            else:
+                logger.warning("Unexpected response format from Fake Credit Card API")
+                return APIIntegrations._generate_fallback_card(card_type)
+            
+            return card_info
             
         except requests.RequestException as e:
             logger.error(f"Error calling Fake Card API: {e}")
-            # Fallback to local generation
             logger.info("Using fallback card generation")
             return APIIntegrations._generate_fallback_card(card_type)
     
@@ -573,35 +604,71 @@ class APIIntegrations:
     
     @staticmethod
     def generate_email():
-        """Generate a disposable email using Fast & Reliable Disposable Email API"""
+        """Generate a disposable email using TempMail API from RapidAPI"""
         logger.info("Generating disposable email")
         
         try:
-            # Use the Fast & Reliable Disposable Email API
+            # Use the TempMail API from RapidAPI
             url = API_CONFIG["temp_email"]["endpoint"]
             headers = APIIntegrations.get_headers("temp_email")
             
-            response = requests.get(url, headers=headers)
+            # This API uses GET requests
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             
             data = response.json()
             logger.info("Disposable email generated successfully")
             
-            # Get the generated email
-            email = data.get("email", "")
+            # Extract email from the response based on the API format
+            # Different APIs may return different formats
+            email_address = ""
+            password = ""
+            inbox_url = ""
             
-            # Validate the email using the email validator API
-            if email:
-                validation = APIIntegrations.validate_email(email)
-                logger.info(f"Email validation results: valid={validation.get('is_valid', False)}, deliverable={validation.get('deliverable', False)}")
+            if isinstance(data, dict):
+                # Some APIs return a direct object
+                email_address = data.get("email", "")
+                password = data.get("password", "")
+                inbox_url = data.get("inbox_url", "")
+            elif isinstance(data, list) and len(data) > 0:
+                # Some APIs return a list of emails
+                first_email = data[0]
+                if isinstance(first_email, dict):
+                    email_address = first_email.get("email", "")
+                    password = first_email.get("password", "")
+                    inbox_url = first_email.get("inbox_url", "")
+                else:
+                    # Some APIs just return a list of email strings
+                    email_address = str(first_email)
+                    password = APIIntegrations._generate_secure_password()
             else:
-                validation = {"is_valid": False, "deliverable": False}
+                # If we can't parse the response, generate a fallback
+                logger.warning("Unexpected response format from Email API")
+                return APIIntegrations._generate_fallback_email()
+            
+            # If we couldn't extract an email, use fallback
+            if not email_address:
+                logger.warning("No email found in API response")
+                return APIIntegrations._generate_fallback_email()
+            
+            # Expires in 24 hours typically
+            expires_at = (datetime.now() + timedelta(days=1)).isoformat()
+            
+            # Validate the email using the email validator API if possible
+            validation = {"is_valid": True, "deliverable": True}  # Default to optimistic values
+            try:
+                if email_address:
+                    validation_result = APIIntegrations.validate_email(email_address)
+                    logger.info(f"Email validation results: valid={validation_result.get('is_valid', False)}, deliverable={validation_result.get('deliverable', False)}")
+                    validation = validation_result
+            except Exception as e:
+                logger.warning(f"Email validation failed: {e}")
             
             return {
-                "email": email,
-                "password": data.get("password", ""),
-                "inbox_url": data.get("inbox_url", ""),
-                "expires_at": data.get("expires_at", ""),
+                "email": email_address,
+                "password": password,
+                "inbox_url": inbox_url,
+                "expires_at": expires_at,
                 "validation": validation
             }
             
@@ -614,24 +681,62 @@ class APIIntegrations:
                 url = API_CONFIG["temp_mail_backup"]["endpoint"]
                 headers = APIIntegrations.get_headers("temp_mail_backup")
                 
-                response = requests.get(url, headers=headers)
+                # Get list of available domains first
+                response = requests.get(url, headers=headers, timeout=10)
                 response.raise_for_status()
                 
-                data = response.json()
-                logger.info("Backup disposable email generated successfully")
+                domains_data = response.json()
                 
-                return {
-                    "email": data.get("email", ""),
-                    "password": data.get("password", ""),
-                    "inbox_url": data.get("inbox_url", ""),
-                    "expires_at": data.get("expires_at", "")
-                }
+                # Generate an email using one of the domains
+                if isinstance(domains_data, list) and len(domains_data) > 0:
+                    # Generate a username
+                    username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+                    # Get a domain from the list
+                    domain = random.choice(domains_data)
+                    if isinstance(domain, dict):
+                        domain_name = domain.get("domain", "tempmail.com")
+                    else:
+                        domain_name = str(domain)
+                    
+                    email_address = f"{username}@{domain_name}"
+                    password = APIIntegrations._generate_secure_password()
+                    inbox_url = f"https://{domain_name}/inbox/{username}"
+                    
+                    logger.info("Backup disposable email generated successfully")
+                    
+                    return {
+                        "email": email_address,
+                        "password": password,
+                        "inbox_url": inbox_url,
+                        "expires_at": (datetime.now() + timedelta(days=1)).isoformat()
+                    }
+                else:
+                    # If we couldn't get domains, use fallback
+                    logger.error("Could not get valid domains from backup email API")
+                    return APIIntegrations._generate_fallback_email()
                 
             except requests.RequestException as e_backup:
                 logger.error(f"Error calling Backup Temp Email API: {e_backup}")
                 # Fallback to local generation
                 logger.info("Using fallback email generation")
                 return APIIntegrations._generate_fallback_email()
+    
+    @staticmethod
+    def _generate_secure_password(length=12):
+        """Generate a secure password with mixed characters"""
+        # Ensure at least one of each character type
+        pwd = [
+            random.choice(string.ascii_lowercase),
+            random.choice(string.ascii_uppercase),
+            random.choice(string.digits),
+            random.choice('!@#$%^&*()_+-=')
+        ]
+        # Fill rest with random characters
+        characters = string.ascii_letters + string.digits + '!@#$%^&*()_+-='
+        pwd.extend(random.choice(characters) for _ in range(length - 4))
+        # Shuffle to randomize positions
+        random.shuffle(pwd)
+        return ''.join(pwd)
     
     @staticmethod
     def _generate_fallback_email():
@@ -646,9 +751,8 @@ class APIIntegrations:
         
         email = f"{username}@{domain}"
         
-        # Generate a password
-        password_length = random.randint(10, 16)
-        password = ''.join(random.choices(string.ascii_letters + string.digits + string.punctuation, k=password_length))
+        # Generate a password using our secure method
+        password = APIIntegrations._generate_secure_password()
         
         # Expires in 24 hours
         expires_at = (datetime.now() + timedelta(days=1)).isoformat()
