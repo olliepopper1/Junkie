@@ -12,6 +12,8 @@ import discord
 from discord.ext import commands
 from database import Database
 from utils.trial_generator import TrialGenerator
+from simplified_hulu_trial import SimpleTrialGenerator
+from bot_trial_delivery import TrialDelivery
 
 # Configure logging
 logger = logging.getLogger(__name__)

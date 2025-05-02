@@ -50,6 +50,7 @@ class TrialDelivery:
         """Save trial information to the database for a specific user"""
         logger.info(f"Saving trial for user ID: {user_id}")
         
+        conn = None
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()

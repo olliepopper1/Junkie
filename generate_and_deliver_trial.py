@@ -94,21 +94,12 @@ if __name__ == "__main__":
     
     # For interactive testing without command-line arguments
     if len(sys.argv) == 1:
-        # Use test user ID
+        # Use test user ID and discord_id without prompting
         test_user_id = 12345
         test_discord_id = None
         
-        # Prompt for user ID
-        try:
-            input_user_id = input("Enter user ID (default: 12345): ")
-            if input_user_id:
-                test_user_id = int(input_user_id)
-                
-            input_discord_id = input("Enter Discord ID (optional): ")
-            if input_discord_id:
-                test_discord_id = input_discord_id
-        except ValueError:
-            print("Invalid input. Using default values.")
+        print(f"Using default user ID: {test_user_id}")
+        print(f"Using default Discord ID: {test_discord_id if test_discord_id else 'None'}")
         
         result = generate_and_deliver_trial(test_user_id, test_discord_id)
         
