@@ -12,8 +12,10 @@ import random
 from datetime import datetime, timedelta
 import traceback
 
-import undetected_chromedriver as uc
+from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -67,17 +69,32 @@ class HuluAccountCreator:
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--window-size=1920,1080")
         
-        # Run headless only in production environments
-        if os.environ.get("ENVIRONMENT") == "production":
-            chrome_options.add_argument("--headless")
+        # Always run headless in Replit
+        chrome_options.add_argument("--headless")
         
         try:
-            self.browser = uc.Chrome(options=chrome_options)
+            # Create a service with ChromeDriverManager to manage driver installation
+            service = Service(ChromeDriverManager().install())
+            
+            # Setup seleniumwire options for proxy and request capture if needed
+            seleniumwire_options = {
+                'disable_encoding': True,  # Disable response encoding for better inspection
+                'verify_ssl': False  # Ignore SSL errors
+            }
+            
+            # Initialize the browser
+            self.browser = webdriver.Chrome(
+                service=service,
+                options=chrome_options,
+                seleniumwire_options=seleniumwire_options
+            )
+            
             self.browser.set_page_load_timeout(self.page_load_timeout)
             logger.info("Browser set up successfully")
             return True
         except Exception as e:
             logger.error(f"Error setting up browser: {e}")
+            traceback.print_exc()
             return False
     
     def _load_page(self, url):

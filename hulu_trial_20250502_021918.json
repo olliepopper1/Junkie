@@ -1,0 +1,22 @@
+{
+  "service": "hulu",
+  "success": true,
+  "creation_date": "2025-05-02T02:19:18.597780",
+  "expiration_date": "2025-06-01T02:19:18.597777",
+  "login_credentials": {
+    "email": "bblfpa@disposable.com",
+    "password": "Ipw7_&ITox31"
+  },
+  "account_details": {
+    "first_name": "Joel",
+    "last_name": "Stevens",
+    "plan": "Hulu (No Ads)",
+    "price": "$14.99/month",
+    "trial_length": "30 days"
+  },
+  "payment_method": {
+    "card_type": "visa",
+    "last_four": "0976",
+    "expiry": "08/26"
+  }
+}
