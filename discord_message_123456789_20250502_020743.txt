@@ -1,0 +1,16 @@
+To Discord User: 123456789
+Timestamp: 2025-05-02T02:07:43.251086
+Message:
+
+🎉 Your Test_Service trial is ready! 🎉
+
+**Login Information**
+📧 Email: test@example.com
+🔑 Password: test_password
+
+**Plan Details**
+📋 Plan: Test Plan
+💰 Price: $9.99/month
+⏱️ Expires: 2025-05-02T02:07:43.247842
+
+Enjoy your trial! Remember to cancel before the trial ends to avoid charges.

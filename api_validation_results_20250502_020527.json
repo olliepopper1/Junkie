@@ -1,0 +1,131 @@
+{
+  "identity": {
+    "success": true,
+    "validation": {
+      "first_name": true,
+      "last_name": true,
+      "address": true,
+      "city": true,
+      "state": true,
+      "zipcode": true,
+      "phone": true,
+      "email": true,
+      "dob": true
+    },
+    "identity_sample": {
+      "first_name": "Manuel",
+      "last_name": "Harris",
+      "city": "Richardson",
+      "state": "Oregon"
+    }
+  },
+  "card": {
+    "success": true,
+    "results": {
+      "visa": {
+        "success": true,
+        "validation": {
+          "card_number": true,
+          "card_type": true,
+          "cvv": true,
+          "expiry_month": true,
+          "expiry_year": true,
+          "cardholder_name": true,
+          "type_match": true
+        },
+        "card_sample": {
+          "type": "visa",
+          "number_prefix": "482795******",
+          "expiry": "05/30"
+        }
+      },
+      "mastercard": {
+        "success": true,
+        "validation": {
+          "card_number": true,
+          "card_type": true,
+          "cvv": true,
+          "expiry_month": true,
+          "expiry_year": true,
+          "cardholder_name": true,
+          "type_match": true
+        },
+        "card_sample": {
+          "type": "mastercard",
+          "number_prefix": "541357******",
+          "expiry": "03/30"
+        }
+      },
+      "amex": {
+        "success": true,
+        "validation": {
+          "card_number": true,
+          "card_type": true,
+          "cvv": true,
+          "expiry_month": true,
+          "expiry_year": true,
+          "cardholder_name": true,
+          "type_match": true
+        },
+        "card_sample": {
+          "type": "amex",
+          "number_prefix": "372742******",
+          "expiry": "12/26"
+        }
+      },
+      "discover": {
+        "success": true,
+        "validation": {
+          "card_number": true,
+          "card_type": true,
+          "cvv": true,
+          "expiry_month": true,
+          "expiry_year": true,
+          "cardholder_name": true,
+          "type_match": true
+        },
+        "card_sample": {
+          "type": "discover",
+          "number_prefix": "656642******",
+          "expiry": "11/29"
+        }
+      }
+    }
+  },
+  "email": {
+    "success": true,
+    "validation": {
+      "email": true,
+      "password": true
+    },
+    "email_sample": "btxo5fbsznok@tempmail.org"
+  },
+  "web_scraper": {
+    "success": true,
+    "method": "direct_request",
+    "status_code": 200,
+    "content_length": 172
+  },
+  "trial_data": {
+    "success": true,
+    "validation": {
+      "user_info": true,
+      "payment_info": true,
+      "verification_info": true,
+      "user_info_fields": true,
+      "payment_info_fields": true
+    },
+    "sample": {
+      "user": {
+        "name": "Melvin May",
+        "email": "kvp4ivl@fakeemail.net"
+      },
+      "payment": {
+        "card_type": "visa",
+        "cardholder": "Melvin May"
+      }
+    }
+  },
+  "timestamp": "2025-05-02T02:05:31.677014",
+  "overall_success": true
+}
