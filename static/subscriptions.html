@@ -717,16 +717,60 @@
       // Connect to Phantom wallet
       async function connectPhantomWallet() {
         try {
-          if (!window.phantomWallet) {
+          if (!window.phantomWallet || !window.phantomWallet.isInstalled) {
             console.error('Phantom wallet integration not available');
-            alert('Phantom wallet not available. Please make sure you have the Phantom browser extension installed.');
+            // Create a more user-friendly error message with download link
+            const message = document.createElement('div');
+            message.innerHTML = `
+              <div class="alert alert-warning">
+                <h5><i class="bi bi-exclamation-triangle"></i> Phantom Wallet Not Installed</h5>
+                <p>To connect your wallet, you need to install the Phantom browser extension.</p>
+                <a href="https://phantom.app/download" target="_blank" class="btn btn-primary btn-sm mt-2">
+                  <i class="bi bi-download"></i> Download Phantom
+                </a>
+              </div>
+            `;
+            
+            document.body.appendChild(message);
+            setTimeout(() => {
+              document.body.removeChild(message);
+            }, 10000);
             return;
           }
           
+          console.log('Requesting connection to Phantom wallet...');
           const result = await window.phantomWallet.connect();
           
           if (result.success) {
+            console.log('Wallet connected successfully:', result);
             updateUIForConnectedWallet(result.address, result.balance);
+            
+            // Show a success message
+            const connectedMessage = document.createElement('div');
+            connectedMessage.className = 'position-fixed bottom-0 end-0 p-3';
+            connectedMessage.style.zIndex = '5';
+            connectedMessage.innerHTML = `
+              <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-success text-white">
+                  <i class="bi bi-wallet2 me-2"></i>
+                  <strong class="me-auto">Wallet Connected</strong>
+                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                  <p class="mb-0">Your Phantom wallet has been connected successfully!</p>
+                  <p class="mb-0 small text-muted">${result.address.substring(0, 6)}...${result.address.substring(result.address.length - 4)}</p>
+                </div>
+              </div>
+            `;
+            
+            document.body.appendChild(connectedMessage);
+            setTimeout(() => {
+              try {
+                document.body.removeChild(connectedMessage);
+              } catch (err) {
+                // Element might have been removed by user closing the toast
+              }
+            }, 5000);
             
             // Also register the connection with the backend
             await fetch('/api/wallet/connect', {
@@ -735,14 +779,34 @@
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                wallet_address: result.address
+                address: result.address
               })
             });
+            
+            // After connecting wallet, check subscription status
+            await checkSubscriptionStatus();
+            
+            // If we're in the checkout modal, update the UI
+            if (walletIsConnected && modalWalletAddress) {
+              walletNotConnected.style.display = 'none';
+              walletIsConnected.style.display = 'block';
+              modalWalletAddress.textContent = result.address.substring(0, 6) + '...' + result.address.substring(result.address.length - 4);
+              
+              if (confirmPaymentBtn) {
+                confirmPaymentBtn.disabled = false;
+              }
+              
+              // Mark step 1 as completed and activate step 2
+              paymentStep1.classList.add('step-completed');
+              paymentStep2.classList.add('step-active');
+            }
           } else {
             console.error('Failed to connect wallet:', result.message);
+            alert('Failed to connect wallet: ' + (result.message || 'Unknown error'));
           }
         } catch (error) {
           console.error('Error connecting wallet:', error);
+          alert('Error connecting wallet: ' + (error.message || 'Unknown error'));
         }
       }
       
@@ -997,8 +1061,57 @@
         savingsPercent.textContent = `That's a ${savingsPercentValue.toFixed(0)}% savings!`;
       });
       
+      // Check subscription status
+      async function checkSubscriptionStatus() {
+        try {
+          const response = await fetch('/api/subscription/status');
+          const data = await response.json();
+          
+          if (data.status === 'success' && data.subscription) {
+            // Check if user has an active subscription
+            if (data.subscription.active) {
+              const subscriptionSection = document.querySelector('.subscription-notice');
+              
+              // Create subscription status alert
+              const statusAlert = document.createElement('div');
+              statusAlert.className = 'alert alert-success mt-4';
+              statusAlert.innerHTML = `
+                <h4 class="mb-3"><i class="bi bi-check-circle"></i> Active Subscription</h4>
+                <p class="mb-2">You have an active <strong>${data.subscription.tier}</strong> subscription.</p>
+                <p class="mb-2">Expires: <strong>${new Date(data.subscription.expires_at).toLocaleDateString()}</strong> (${data.subscription.days_remaining} days remaining)</p>
+                ${data.subscription.expiring_soon ? '<p class="text-warning mb-0"><i class="bi bi-exclamation-triangle"></i> Your subscription is expiring soon. Consider renewing.</p>' : ''}
+              `;
+              
+              // Insert after the existing alert
+              const existingAlert = subscriptionSection.querySelector('.alert');
+              existingAlert.after(statusAlert);
+              
+              // Disable subscription buttons if subscription is active
+              document.querySelectorAll('.subscribe-btn').forEach(btn => {
+                // If button is for current plan, change text
+                if (btn.getAttribute('data-plan').toLowerCase() === data.subscription.tier.toLowerCase()) {
+                  btn.textContent = 'Current Plan';
+                  btn.classList.remove('btn-primary', 'btn-danger');
+                  btn.classList.add('btn-success');
+                  btn.disabled = true;
+                } else {
+                  btn.textContent = 'Change Plan';
+                }
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error checking subscription status:', error);
+        }
+      }
+
       // Initialize
-      checkWalletConnection();
+      async function initialize() {
+        await checkWalletConnection();
+        await checkSubscriptionStatus();
+      }
+      
+      initialize();
     });
   </script>
 </body>
