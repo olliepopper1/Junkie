@@ -927,10 +927,10 @@ def generate_trial():
         # Check if user has Discord linked in the database
         discord_id = None
         try:
-            # Check for linked Discord account
-            discord_users = db.session.query(DiscordUser).filter_by(web_user_id=user_id).all()
-            if discord_users and len(discord_users) > 0:
-                discord_id = discord_users[0].discord_id
+            # Check for linked Discord account in the WebUser model
+            user = WebUser.query.get(user_id)
+            if user and user.discord_id:
+                discord_id = user.discord_id
         except Exception as e:
             logger.error(f"Error checking for linked Discord account: {str(e)}")
         
