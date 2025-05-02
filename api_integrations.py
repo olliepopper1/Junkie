@@ -32,47 +32,47 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 
 # API configuration
 API_CONFIG = {
-    # Identity Verification API
+    # Identity Verification API using Random User Generator
     "personator": {
         "key": RAPIDAPI_KEY,
-        "host": "randomuser.me",
-        "endpoint": "https://randomuser.me/api/",
-        "auth_type": "none",
-        "content_type": "application/json"
-    },
-    
-    # Phone Verification API
-    "virtual_number": {
-        "key": RAPIDAPI_KEY,
-        "host": "api.veriphone.io",
-        "endpoint": "https://api.veriphone.io/v2/verify",
-        "auth_type": "apikey",
-        "content_type": "application/json"
-    },
-    
-    # Backup Phone Verification
-    "virtual_number_backup": {
-        "key": RAPIDAPI_KEY,
-        "host": "api.veriphone.io",
-        "endpoint": "https://api.veriphone.io/v2/verify",
-        "auth_type": "apikey",
-        "content_type": "application/json"
-    },
-    
-    # Credit Card Generation API
-    "fake_card": {
-        "key": RAPIDAPI_KEY,
-        "host": "fake-valid-cc-data-generator.p.rapidapi.com",
-        "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/v1/card/generate",
+        "host": "random-user-generator.p.rapidapi.com",
+        "endpoint": "https://random-user-generator.p.rapidapi.com/random-user",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
     
-    # Virtual Card Issuing
+    # Phone Verification API using NumVerify
+    "virtual_number": {
+        "key": RAPIDAPI_KEY,
+        "host": "numverify.p.rapidapi.com",
+        "endpoint": "https://numverify.p.rapidapi.com/validate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Backup Phone Verification using Phone Number Validation
+    "virtual_number_backup": {
+        "key": RAPIDAPI_KEY,
+        "host": "phone-number-validation-api.p.rapidapi.com",
+        "endpoint": "https://phone-number-validation-api.p.rapidapi.com/validate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Credit Card Generation API using Fake Credit Card Generator
+    "fake_card": {
+        "key": RAPIDAPI_KEY,
+        "host": "fake-credit-card-generator.p.rapidapi.com",
+        "endpoint": "https://fake-credit-card-generator.p.rapidapi.com/creditcard/generate",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Virtual Card Issuing API
     "virtual_card": {
         "key": RAPIDAPI_KEY,
-        "host": "free-trial-virtual-card-issuing.p.rapidapi.com",
-        "endpoint": "https://free-trial-virtual-card-issuing.p.rapidapi.com/v1/generate",
+        "host": "visa-credit-card-generator-api.p.rapidapi.com",
+        "endpoint": "https://visa-credit-card-generator-api.p.rapidapi.com/visa",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -80,17 +80,17 @@ API_CONFIG = {
     # Email Validation API
     "email_validator": {
         "key": RAPIDAPI_KEY,
-        "host": "api.advancedemailverifier.com",
-        "endpoint": "https://api.advancedemailverifier.com/verify",
-        "auth_type": "apikey",
+        "host": "email-validator8.p.rapidapi.com",
+        "endpoint": "https://email-validator8.p.rapidapi.com/api/v2.0/email",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     },
     
     # Disposable Email Generator
     "temp_email": {
         "key": RAPIDAPI_KEY,
-        "host": "disposable-email-generator.p.rapidapi.com",
-        "endpoint": "https://disposable-email-generator.p.rapidapi.com/api/v1/email/generate",
+        "host": "tempmail42.p.rapidapi.com",
+        "endpoint": "https://tempmail42.p.rapidapi.com/generate",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -98,8 +98,8 @@ API_CONFIG = {
     # Backup Disposable Email
     "temp_mail_backup": {
         "key": RAPIDAPI_KEY,
-        "host": "temp-mail-service.p.rapidapi.com",
-        "endpoint": "https://temp-mail-service.p.rapidapi.com/create",
+        "host": "temp-mail17.p.rapidapi.com",
+        "endpoint": "https://temp-mail17.p.rapidapi.com/api/v1/email/domain/list",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -107,9 +107,9 @@ API_CONFIG = {
     # Web Scraping with simple HTTP requests
     "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "httpbin.org",
-        "endpoint": "https://httpbin.org/get",
-        "auth_type": "none",
+        "host": "httpbin.p.rapidapi.com",
+        "endpoint": "https://httpbin.p.rapidapi.com/get",
+        "auth_type": "rapidapi",
         "content_type": "application/json"
     }
 }
@@ -158,28 +158,30 @@ class APIIntegrations:
     
     @staticmethod
     def generate_identity(country="US"):
-        """Generate a realistic identity using RandomUser API"""
+        """Generate a realistic identity using Random User Generator API"""
         logger.info(f"Generating identity for country: {country}")
         
         try:
-            # Use the RandomUser API to generate an identity
+            # Use the RapidAPI Random User Generator
             url = API_CONFIG["personator"]["endpoint"]
-            params = {
-                "nat": country.lower() if len(country) == 2 else "us",
-                "results": 1,
-                "inc": "name,location,dob,phone"
-            }
+            headers = APIIntegrations.get_headers("personator")
+            
+            # Format query parameters for the API
+            querystring = {"nationality": country.lower() if len(country) == 2 else "us"}
             
             # Initialize response variable to avoid 'possibly unbound'
             response = None
             try:
-                response = requests.get(url, params=params, timeout=10)
+                response = requests.get(url, headers=headers, params=querystring, timeout=10)
                 response.raise_for_status()  # Raise an exception for HTTP errors
                 
-                # Parse the response
+                # Parse the response - this API returns a different structure
                 data = response.json()
-                if not data.get("results") or len(data["results"]) == 0:
-                    raise ValueError("No results returned from RandomUser API")
+                if not data or "results" not in data:
+                    raise ValueError("Invalid response from Random User Generator API")
+                
+                if not data["results"] or len(data["results"]) == 0:
+                    raise ValueError("No results returned from Random User Generator API")
                 
                 user = data["results"][0]
                 name = user.get("name", {})
@@ -202,12 +204,13 @@ class APIIntegrations:
                     "state": location.get("state", ""),
                     "zipcode": location.get("postcode", ""),
                     "phone": user.get("phone", ""),
-                    "dob": "",  # DOB parsing disabled due to format issues
+                    "email": user.get("email", ""),
+                    "dob": dob.get("date", "").split("T")[0] if "date" in dob else "",
                     "ssn": ""  # RandomUser doesn't provide SSN for privacy reasons
                 }
             except ValueError as e:
                 # JSON parsing error
-                logger.error(f"Error parsing RandomUser API response: {e}")
+                logger.error(f"Error parsing Random User Generator API response: {e}")
                 if response is not None:
                     logger.error(f"Response content: {response.text[:200]}...")
                 raise
