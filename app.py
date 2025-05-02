@@ -1208,6 +1208,105 @@ def subscription_status():
         logger.error(f"Error getting subscription status: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/referral-code')
+def get_referral_code():
+    """Get the referral code for the current user"""
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "User not authenticated"
+        }), 401
+    
+    # Get user ID
+    user_id = session['user_id']
+    
+    try:
+        # Initialize database connection
+        bot_db = Database()
+        
+        # Get or create referral code
+        referral_code = bot_db.get_referral_code(user_id)
+        
+        return jsonify({
+            "success": True,
+            "code": referral_code
+        })
+    except Exception as e:
+        logger.error(f"Error getting referral code: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": "Error retrieving referral code"
+        }), 500
+
+@app.route('/api/referral-stats')
+def get_referral_stats():
+    """Get referral statistics for the current user"""
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "User not authenticated"
+        }), 401
+    
+    # Get user ID
+    user_id = session['user_id']
+    
+    try:
+        # Initialize database connection
+        bot_db = Database()
+        
+        # Get referral statistics
+        referrals = bot_db.get_user_referrals(user_id)
+        commissions = bot_db.get_user_commissions(user_id)
+        total_commission = bot_db.get_total_commission(user_id)
+        
+        # Calculate active users (those who have logged in within the last 30 days)
+        active_users = sum(1 for ref in referrals if ref.get('last_active') and 
+                         (datetime.utcnow() - datetime.fromisoformat(ref['last_active'])).days < 30)
+        
+        # Get all commissions
+        paid_commissions = sum(float(comm['amount']) for comm in commissions if comm.get('status') == 'paid')
+        pending_commissions = sum(float(comm['amount']) for comm in commissions if comm.get('status') == 'pending')
+        
+        # Calculate tier and next tier
+        tier = "Standard"
+        next_tier_target = 15
+        
+        if len(referrals) >= 50:
+            tier = "Dealer's Choice"
+            next_tier_target = 100  # Just a higher target for progress bar
+        elif len(referrals) >= 15:
+            tier = "Premium"
+            next_tier_target = 50
+        
+        # Determine progress to next tier
+        if tier == "Standard":
+            next_tier_progress = (len(referrals) / 15) * 100  # Progress to Premium
+        elif tier == "Premium":
+            next_tier_progress = (len(referrals) / 50) * 100  # Progress to Dealer's Choice
+        else:
+            next_tier_progress = (len(referrals) / 100) * 100  # Progress beyond Dealer's Choice
+        
+        return jsonify({
+            "success": True,
+            "total_referrals": len(referrals),
+            "active_users": active_users,
+            "total_earned": float(total_commission) if total_commission else 0.0,
+            "total_paid": paid_commissions,
+            "available_balance": pending_commissions,
+            "tier": tier,
+            "next_tier_progress": min(next_tier_progress, 100),
+            "next_tier_target": next_tier_target,
+            "referrals": referrals  # List of referral details
+        })
+    except Exception as e:
+        logger.error(f"Error getting referral stats: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": "Error retrieving referral statistics"
+        }), 500
+
 if __name__ == '__main__':
     print("Starting Trial Junkie Web Application...")
     # Use the environment variable for PORT if available

@@ -28,42 +28,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const yourReferrals = document.getElementById('your-referrals');
   const yourEarnings = document.getElementById('your-earnings');
   
-  // Mock referral code generator (in a real app, this would come from the API)
-  function generateReferralCode(discordId) {
-    // Create a deterministic but random-looking code based on Discord ID
-    let hash = 0;
-    for (let i = 0; i < discordId.length; i++) {
-      hash = ((hash << 5) - hash) + discordId.charCodeAt(i);
-      hash = hash & hash; // Convert to 32bit integer
+  // Get referral code from the server
+  async function fetchReferralCode() {
+    try {
+      const response = await fetch('/api/referral-code');
+      const data = await response.json();
+      
+      if (data.success) {
+        return data.code;
+      } else {
+        console.error("Error fetching referral code:", data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching referral code:", error);
+      return null;
     }
-    
-    // Convert to alphanumeric code with drug theme
-    const prefixes = ['TJ', 'HIGH', 'DOSE', 'TRIP', 'JUNKIE'];
-    const prefix = prefixes[Math.abs(hash) % prefixes.length];
-    const numbers = Math.abs(hash).toString().substring(0, 4);
-    
-    return `${prefix}${numbers}`;
   }
   
-  // Generate mock stats (in a real app, this would come from the API)
-  function generateMockStats(discordId) {
-    // Create deterministic but realistic-looking stats
-    const hash = discordId.split('').reduce((a, b) => {
-      return a + b.charCodeAt(0);
-    }, 0);
-    
-    const referrals = (hash % 50) + 1; // 1-50
-    const earningsPerReferral = ((hash % 30) + 10) * 1.5; // $15-$60 per referral
-    const totalEarned = referrals * earningsPerReferral;
-    const paid = totalEarned * 0.7; // 70% already paid out
-    const available = totalEarned * 0.3; // 30% available to withdraw
-    
-    return {
-      referrals,
-      totalEarned: totalEarned.toFixed(2),
-      paid: paid.toFixed(2),
-      available: available.toFixed(2)
-    };
+  // Get referral stats from the server
+  async function fetchReferralStats() {
+    try {
+      const response = await fetch('/api/referral-stats');
+      const data = await response.json();
+      
+      if (data.success) {
+        return {
+          referrals: data.total_referrals || 0,
+          totalEarned: data.total_earned?.toFixed(2) || "0.00",
+          paid: data.total_paid?.toFixed(2) || "0.00",
+          available: data.available_balance?.toFixed(2) || "0.00",
+          active_users: data.active_users || 0,
+          tier: data.tier || "Standard",
+          next_tier_progress: data.next_tier_progress || 0,
+          next_tier_target: data.next_tier_target || 15
+        };
+      } else {
+        console.error("Error fetching referral stats:", data.message);
+        return {
+          referrals: 0,
+          totalEarned: "0.00",
+          paid: "0.00",
+          available: "0.00",
+          active_users: 0,
+          tier: "Standard",
+          next_tier_progress: 0,
+          next_tier_target: 15
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching referral stats:", error);
+      return {
+        referrals: 0,
+        totalEarned: "0.00",
+        paid: "0.00",
+        available: "0.00",
+        active_users: 0,
+        tier: "Standard",
+        next_tier_progress: 0,
+        next_tier_target: 15
+      };
+    }
   }
   
   // Update UI with referral stats
@@ -123,71 +148,97 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // UI Event Handlers
   if (getRefCodeBtn) {
-    getRefCodeBtn.addEventListener('click', () => {
-      // Show Discord ID input if no ID is entered
-      if (!discordIdInput.value.trim()) {
-        // Scroll to the Discord ID input
-        discordIdInput.scrollIntoView({ behavior: 'smooth' });
-        discordIdInput.focus();
+    getRefCodeBtn.addEventListener('click', async () => {
+      // Don't need Discord ID input anymore since we'll get the code from the server
+      // Disable the button while processing
+      getRefCodeBtn.disabled = true;
+      getRefCodeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+      
+      try {
+        // Fetch the referral code from the server
+        const code = await fetchReferralCode();
+        if (!code) {
+          console.error("Failed to get referral code");
+          getRefCodeBtn.disabled = false;
+          getRefCodeBtn.textContent = 'Get Referral Code';
+          return;
+        }
         
-        // Add pulsate animation to highlight the input
-        discordIdInput.classList.add('pulsate');
+        // Display the referral code
+        referralCodeDisplay.textContent = code;
+        
+        // Show the referral code section with a fade-in effect
+        referralCodeSection.classList.remove('d-none');
+        referralCodeSection.style.opacity = '0';
         setTimeout(() => {
-          discordIdInput.classList.remove('pulsate');
-        }, 2000);
+          referralCodeSection.style.transition = 'opacity 0.5s ease-in-out';
+          referralCodeSection.style.opacity = '1';
+        }, 50);
         
-        return;
+        // Scroll to the referral code section
+        referralCodeSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Load stats too
+        const stats = await fetchReferralStats();
+        updateReferralStats(stats);
+        
+        // Show the stats section
+        referralStatsSection.classList.remove('d-none');
+        
+        // Add pill-themed effects
+        document.querySelectorAll('.card').forEach(card => {
+          card.classList.add('glow-effect');
+        });
+      } catch (error) {
+        console.error("Error getting referral information:", error);
+      } finally {
+        // Re-enable button
+        getRefCodeBtn.disabled = false;
+        getRefCodeBtn.textContent = 'Get Referral Code';
       }
-      
-      // Generate and display the referral code
-      const code = generateReferralCode(discordIdInput.value);
-      referralCodeDisplay.textContent = code;
-      
-      // Show the referral code section with a fade-in effect
-      referralCodeSection.classList.remove('d-none');
-      referralCodeSection.style.opacity = '0';
-      setTimeout(() => {
-        referralCodeSection.style.transition = 'opacity 0.5s ease-in-out';
-        referralCodeSection.style.opacity = '1';
-      }, 50);
-      
-      // Scroll to the referral code section
-      referralCodeSection.scrollIntoView({ behavior: 'smooth' });
-      
-      // Load stats too
-      const stats = generateMockStats(discordIdInput.value);
-      updateReferralStats(stats);
-      
-      // Show the stats section
-      referralStatsSection.classList.remove('d-none');
     });
   }
   
   if (loadReferralsBtn) {
-    loadReferralsBtn.addEventListener('click', () => {
-      if (!discordIdInput.value.trim()) {
-        discordIdInput.focus();
-        return;
+    loadReferralsBtn.addEventListener('click', async () => {
+      // Disable the button while processing
+      loadReferralsBtn.disabled = true;
+      loadReferralsBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+      
+      try {
+        // Fetch the referral code from the server
+        const code = await fetchReferralCode();
+        if (!code) {
+          console.error("Failed to get referral code");
+          loadReferralsBtn.disabled = false;
+          loadReferralsBtn.textContent = 'Load My Referrals';
+          return;
+        }
+        
+        // Display the referral code
+        referralCodeDisplay.textContent = code;
+        
+        // Show the referral code section
+        referralCodeSection.classList.remove('d-none');
+        
+        // Load stats from server
+        const stats = await fetchReferralStats();
+        updateReferralStats(stats);
+        
+        // Show the stats section
+        referralStatsSection.classList.remove('d-none');
+        
+        // Add pill-themed effects
+        document.querySelectorAll('.card').forEach(card => {
+          card.classList.add('glow-effect');
+        });
+      } catch (error) {
+        console.error("Error loading referral information:", error);
+      } finally {
+        // Re-enable button
+        loadReferralsBtn.disabled = false;
+        loadReferralsBtn.textContent = 'Load My Referrals';
       }
-      
-      // Generate and display the referral code
-      const code = generateReferralCode(discordIdInput.value);
-      referralCodeDisplay.textContent = code;
-      
-      // Show the referral code section
-      referralCodeSection.classList.remove('d-none');
-      
-      // Generate and display stats
-      const stats = generateMockStats(discordIdInput.value);
-      updateReferralStats(stats);
-      
-      // Show the stats section
-      referralStatsSection.classList.remove('d-none');
-      
-      // Add drug-themed effects
-      document.querySelectorAll('.card').forEach(card => {
-        card.classList.add('glow-effect');
-      });
     });
   }
   
