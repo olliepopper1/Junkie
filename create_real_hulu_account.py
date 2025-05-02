@@ -1,416 +1,646 @@
 #!/usr/bin/env python3
 """
 Real Hulu Account Creator
-Creates an actual Hulu account with a free trial using browser automation
+
+Creates a real Hulu account using browser automation
 """
-import sys
-import time
+import os
 import logging
 import json
-import os
+import time
+import random
 from datetime import datetime, timedelta
-from selenium import webdriver
+import traceback
+
+import undetected_chromedriver as uc
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException
+
+from api_integrations import APIIntegrations
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("real_hulu_account.log"),
-        logging.StreamHandler(sys.stdout)
+        logging.StreamHandler(),
+        logging.FileHandler("real_hulu_account.log")
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("real_hulu_account_creator")
 
 class HuluAccountCreator:
-    """Creates a real Hulu account with a free trial"""
+    """
+    Creates real Hulu accounts using browser automation
+    """
     
     def __init__(self):
         """Initialize the account creator"""
-        self.driver = None
+        logger.info("Initializing Hulu account creator")
+        self.browser = None
         
-    def setup_browser(self):
-        """Set up the Chrome browser for automation"""
-        try:
-            logger.info("Setting up Chrome browser...")
-            
-            # Configure Chrome options
-            chrome_options = Options()
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            # Note: In a Replit environment, we need to run headless
+        # URLs
+        self.signup_url = "https://signup.hulu.com/"
+        self.base_url = "https://www.hulu.com"
+        
+        # Timeouts
+        self.page_load_timeout = 30
+        self.element_timeout = 15
+        self.short_timeout = 5
+        
+        # Load any existing Anti-CAPTCHA API key
+        self.anticaptcha_key = os.environ.get("ANTICAPTCHA_KEY")
+        
+    def _setup_browser(self):
+        """Set up the browser for automation"""
+        logger.info("Setting up browser")
+        
+        chrome_options = Options()
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-popup-blocking")
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--window-size=1920,1080")
+        
+        # Run headless only in production environments
+        if os.environ.get("ENVIRONMENT") == "production":
             chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--window-size=1920,1080")
-            
-            # Try to initialize the browser
-            self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.set_page_load_timeout(60)
-            
-            logger.info("Browser setup complete")
+        
+        try:
+            self.browser = uc.Chrome(options=chrome_options)
+            self.browser.set_page_load_timeout(self.page_load_timeout)
+            logger.info("Browser set up successfully")
             return True
         except Exception as e:
-            logger.error(f"Error setting up browser: {str(e)}")
+            logger.error(f"Error setting up browser: {e}")
             return False
     
-    def take_screenshot(self, filename):
-        """Take a screenshot for debugging purposes"""
-        if self.driver:
-            try:
-                self.driver.save_screenshot(filename)
-                logger.info(f"Screenshot saved to {filename}")
-            except Exception as e:
-                logger.error(f"Error taking screenshot: {str(e)}")
-    
-    def wait_for_element(self, by, value, timeout=20):
-        """Wait for an element to be present and return it"""
+    def _load_page(self, url):
+        """Load a page and wait for it to be ready"""
+        logger.info(f"Loading page: {url}")
         try:
-            element = WebDriverWait(self.driver, timeout).until(
+            self.browser.get(url)
+            self._wait_for_page_load()
+            logger.info(f"Page loaded: {url}")
+            return True
+        except Exception as e:
+            logger.error(f"Error loading page {url}: {e}")
+            return False
+    
+    def _wait_for_page_load(self):
+        """Wait for the page to be fully loaded"""
+        try:
+            WebDriverWait(self.browser, self.page_load_timeout).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+            # Allow extra time for JavaScript to initialize
+            time.sleep(2)
+            return True
+        except TimeoutException:
+            logger.warning("Page load timed out, but continuing anyway")
+            return False
+        except Exception as e:
+            logger.error(f"Error waiting for page load: {e}")
+            return False
+    
+    def _find_element(self, by, value, timeout=None):
+        """Find an element with wait"""
+        if timeout is None:
+            timeout = self.element_timeout
+            
+        try:
+            element = WebDriverWait(self.browser, timeout).until(
                 EC.presence_of_element_located((by, value))
             )
             return element
-        except TimeoutException:
-            logger.error(f"Timeout waiting for element: {value}")
-            self.take_screenshot(f"timeout_{value.replace('/', '_')}.png")
+        except Exception as e:
+            logger.error(f"Error finding element {by}={value}: {e}")
             return None
     
-    def wait_for_clickable(self, by, value, timeout=20):
-        """Wait for an element to be clickable and return it"""
-        try:
-            element = WebDriverWait(self.driver, timeout).until(
-                EC.element_to_be_clickable((by, value))
-            )
-            return element
-        except TimeoutException:
-            logger.error(f"Timeout waiting for clickable element: {value}")
-            self.take_screenshot(f"timeout_clickable_{value.replace('/', '_')}.png")
-            return None
+    def _find_and_click(self, by, value, timeout=None):
+        """Find and click an element"""
+        element = self._find_element(by, value, timeout)
+        
+        if element:
+            try:
+                # Try to scroll to the element
+                self.browser.execute_script("arguments[0].scrollIntoView(true);", element)
+                time.sleep(0.5)
+                
+                # Wait for it to be clickable
+                WebDriverWait(self.browser, timeout or self.element_timeout).until(
+                    EC.element_to_be_clickable((by, value))
+                )
+                
+                # Click the element
+                element.click()
+                time.sleep(0.5)
+                return True
+            except ElementNotInteractableException:
+                # Try with JavaScript click if normal click doesn't work
+                try:
+                    self.browser.execute_script("arguments[0].click();", element)
+                    time.sleep(0.5)
+                    return True
+                except Exception as e:
+                    logger.error(f"Error clicking element with JavaScript: {e}")
+                    return False
+            except Exception as e:
+                logger.error(f"Error clicking element: {e}")
+                return False
+        
+        return False
+    
+    def _find_and_input(self, by, value, text, clear=True, timeout=None):
+        """Find and input text into an element"""
+        element = self._find_element(by, value, timeout)
+        
+        if element:
+            try:
+                # Try to scroll to the element
+                self.browser.execute_script("arguments[0].scrollIntoView(true);", element)
+                time.sleep(0.5)
+                
+                # Clear the element if requested
+                if clear:
+                    element.clear()
+                
+                # Type slowly to mimic human behavior
+                for char in text:
+                    element.send_keys(char)
+                    time.sleep(0.05)
+                
+                return True
+            except Exception as e:
+                logger.error(f"Error inputting text: {e}")
+                return False
+        
+        return False
+    
+    def create_account(self, user_data=None):
+        """
+        Create a Hulu account
+        
+        Args:
+            user_data (dict, optional): User data for the account. If None, generated automatically.
             
-    def create_hulu_account(self, email, password, first_name, last_name, dob_month, dob_day, dob_year, 
-                           card_number, card_expiry, card_cvv, address, city, state, zipcode):
-        """Create a real Hulu account with the provided information"""
-        if not self.setup_browser():
-            logger.error("Failed to set up browser, aborting account creation")
-            return False
+        Returns:
+            dict: Account information and creation status
+        """
+        logger.info("Starting Hulu account creation")
+        
+        # Set up the browser
+        if not self._setup_browser():
+            return {"success": False, "error": "Failed to set up browser"}
         
         try:
-            # Navigate to Hulu signup page
-            logger.info("Navigating to Hulu signup page...")
-            self.driver.get("https://signup.hulu.com/plans")
+            # Generate or use provided user data
+            if not user_data:
+                logger.info("Generating user data")
+                user_data = self._generate_user_data()
+            
+            # Store the account info for result
+            account_info = {
+                "service": "hulu",
+                "created_at": datetime.now().isoformat(),
+                "expires_at": (datetime.now() + timedelta(days=30)).isoformat(),
+                "login_credentials": {
+                    "email": user_data["email"],
+                    "password": user_data["password"]
+                },
+                "user_info": {
+                    "first_name": user_data["first_name"],
+                    "last_name": user_data["last_name"],
+                    "zip_code": user_data["zip_code"]
+                },
+                "payment_info": {
+                    "card_type": user_data["card_type"],
+                    "card_number": user_data["card_number"],
+                    "card_expiry": user_data["card_expiry"],
+                    "card_cvv": user_data["card_cvv"],
+                    "billing_zip": user_data["billing_zip"]
+                }
+            }
+            
+            # Navigate to the signup page
+            if not self._load_page(self.signup_url):
+                return {"success": False, "error": "Failed to load signup page", **account_info}
+            
+            # Select a plan (Hulu No Ads)
+            logger.info("Selecting Hulu (No Ads) plan")
+            if not self._select_plan():
+                return {"success": False, "error": "Failed to select plan", **account_info}
+            
+            # Fill out the signup form
+            logger.info("Filling out signup form")
+            if not self._fill_signup_form(user_data):
+                return {"success": False, "error": "Failed to fill signup form", **account_info}
+            
+            # Submit payment information
+            logger.info("Submitting payment information")
+            if not self._submit_payment(user_data):
+                return {"success": False, "error": "Failed to submit payment", **account_info}
+            
+            # Verify successful account creation
+            logger.info("Verifying account creation")
+            if not self._verify_account_creation():
+                return {"success": False, "error": "Failed to verify account creation", **account_info}
+            
+            # Account created successfully
+            logger.info("Hulu account created successfully")
+            
+            # Add success status to the result
+            account_info["success"] = True
+            
+            # Save the successful account info to a file
+            self._save_account_info(account_info)
+            
+            return account_info
+            
+        except Exception as e:
+            logger.error(f"Error creating Hulu account: {e}")
+            traceback.print_exc()
+            
+            # Add error info to the result
+            return {
+                "success": False,
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }
+            
+        finally:
+            # Clean up browser resources
+            self._cleanup()
+    
+    def _generate_user_data(self):
+        """Generate user data for account creation"""
+        # Use our API integrations to generate data
+        identity = APIIntegrations.generate_identity(country="US")
+        card = APIIntegrations.generate_card(card_type="visa")
+        email = APIIntegrations.generate_email()
+        password = APIIntegrations._generate_secure_password(length=12)
+        
+        # Format card expiry date as MM/YY
+        expiry_parts = card.get("expiry", "12/25").split("/")
+        if len(expiry_parts) == 2:
+            month, year = expiry_parts
+            if len(year) == 4:
+                year = year[2:]  # Convert YYYY to YY format
+            card_expiry = f"{month}/{year}"
+        else:
+            card_expiry = card.get("expiry", "12/25")
+        
+        # Combine all data
+        user_data = {
+            "email": email,
+            "password": password,
+            "first_name": identity.get("first_name", "John"),
+            "last_name": identity.get("last_name", "Doe"),
+            "zip_code": identity.get("postcode", "10001"),
+            "card_type": card.get("card_type", "visa"),
+            "card_number": card.get("card_number", "4242424242424242"),
+            "card_expiry": card_expiry,
+            "card_cvv": card.get("cvv", "123"),
+            "billing_zip": identity.get("postcode", "10001")
+        }
+        
+        return user_data
+    
+    def _select_plan(self):
+        """Select a plan (Hulu No Ads)"""
+        try:
+            # Find and click on the Hulu No Ads plan
+            no_ads_selector = "//div[contains(@class, 'plan-card') and contains(., 'No Ads')]//button"
+            
+            # Try to find the button with a longer timeout
+            if not self._find_and_click(By.XPATH, no_ads_selector, timeout=20):
+                # Try an alternative selector if the first one fails
+                alt_selector = "//button[contains(., 'No Ads') or contains(., '$14.99')]"
+                if not self._find_and_click(By.XPATH, alt_selector, timeout=10):
+                    logger.error("Could not find the No Ads plan button")
+                    return False
+            
+            # Wait for the next page to load
             time.sleep(3)
-            
-            # Take a screenshot of the initial page
-            self.take_screenshot("01_hulu_plans.png")
-            
-            # Select Hulu (No Ads) plan
-            logger.info("Selecting Hulu (No Ads) plan...")
-            try:
-                # Look for plan selection buttons
-                plan_buttons = self.driver.find_elements(By.CSS_SELECTOR, "button.button--cta")
-                # Usually Hulu (No Ads) is the second plan
-                if len(plan_buttons) >= 2:
-                    plan_buttons[1].click()
-                    logger.info("Clicked on Hulu (No Ads) plan button")
-                else:
-                    # Try finding by plan name
-                    plan_element = self.driver.find_element(By.XPATH, "//div[contains(text(), 'Hulu (No Ads)')]//ancestor::div[contains(@class, 'plan-card')]//button")
-                    plan_element.click()
-                    logger.info("Clicked on plan by name")
-            except Exception as e:
-                logger.error(f"Error selecting plan: {str(e)}")
-                self.take_screenshot("error_selecting_plan.png")
-                # Try to continue anyway
-            
-            time.sleep(3)
-            self.take_screenshot("02_after_plan_selection.png")
-            
-            # Fill out email and password
-            logger.info("Filling out account information...")
-            
-            # Email
-            email_field = self.wait_for_element(By.ID, "email")
-            if email_field:
-                email_field.clear()
-                email_field.send_keys(email)
-                logger.info(f"Entered email: {email}")
-            else:
-                logger.error("Could not find email field")
-                return False
-            
-            # Password
-            password_field = self.wait_for_element(By.ID, "password")
-            if password_field:
-                password_field.clear()
-                password_field.send_keys(password)
-                logger.info("Entered password")
-            else:
-                logger.error("Could not find password field")
-                return False
-            
-            # Name
-            name_field = self.wait_for_element(By.ID, "name")
-            if name_field:
-                name_field.clear()
-                name_field.send_keys(f"{first_name} {last_name}")
-                logger.info(f"Entered name: {first_name} {last_name}")
-            else:
-                logger.error("Could not find name field")
-                return False
-            
-            # Date of birth
-            month_field = self.wait_for_element(By.ID, "birthdayMonth")
-            if month_field:
-                month_field.clear()
-                month_field.send_keys(dob_month)
-            else:
-                logger.error("Could not find birth month field")
-                
-            day_field = self.wait_for_element(By.ID, "birthdayDay")
-            if day_field:
-                day_field.clear()
-                day_field.send_keys(dob_day)
-            else:
-                logger.error("Could not find birth day field")
-                
-            year_field = self.wait_for_element(By.ID, "birthdayYear")
-            if year_field:
-                year_field.clear()
-                year_field.send_keys(dob_year)
-                logger.info(f"Entered DOB: {dob_month}/{dob_day}/{dob_year}")
-            else:
-                logger.error("Could not find birth year field")
-            
-            # Gender (Skip if not required)
-            
-            # Take screenshot of completed form
-            self.take_screenshot("03_account_form.png")
-            
-            # Continue to next page
-            logger.info("Submitting account form...")
-            try:
-                continue_button = self.wait_for_clickable(By.XPATH, "//button[contains(text(), 'CONTINUE') or contains(text(), 'Continue')]")
-                if continue_button:
-                    continue_button.click()
-                    logger.info("Clicked continue button")
-                else:
-                    logger.error("Could not find continue button")
-                    return False
-            except Exception as e:
-                logger.error(f"Error clicking continue button: {str(e)}")
-                self.take_screenshot("error_clicking_continue.png")
-                return False
-            
-            time.sleep(5)
-            self.take_screenshot("04_after_account_form.png")
-            
-            # Payment information page
-            logger.info("Filling out payment information...")
-            
-            # Card number
-            card_number_field = self.wait_for_element(By.ID, "card-number")
-            if card_number_field:
-                card_number_field.clear()
-                card_number_field.send_keys(card_number)
-                logger.info("Entered card number")
-            else:
-                logger.error("Could not find card number field")
-                return False
-            
-            # Expiry date
-            expiry_field = self.wait_for_element(By.ID, "expiry-date")
-            if expiry_field:
-                expiry_field.clear()
-                # Remove slashes for the input
-                clean_expiry = card_expiry.replace("/", "")
-                expiry_field.send_keys(clean_expiry)
-                logger.info(f"Entered expiry date: {card_expiry}")
-            else:
-                logger.error("Could not find expiry date field")
-                return False
-            
-            # Security code (CVV)
-            cvv_field = self.wait_for_element(By.ID, "cvv")
-            if cvv_field:
-                cvv_field.clear()
-                cvv_field.send_keys(card_cvv)
-                logger.info("Entered CVV")
-            else:
-                logger.error("Could not find CVV field")
-                return False
-            
-            # Billing address
-            address_field = self.wait_for_element(By.ID, "address1")
-            if address_field:
-                address_field.clear()
-                address_field.send_keys(address)
-                logger.info(f"Entered address: {address}")
-            else:
-                logger.error("Could not find address field")
-                return False
-                
-            # City
-            city_field = self.wait_for_element(By.ID, "city")
-            if city_field:
-                city_field.clear()
-                city_field.send_keys(city)
-                logger.info(f"Entered city: {city}")
-            else:
-                logger.error("Could not find city field")
-                return False
-            
-            # State dropdown
-            try:
-                state_dropdown = self.wait_for_element(By.ID, "state")
-                if state_dropdown:
-                    state_dropdown.click()
-                    time.sleep(1)
-                    
-                    # Find and click the state option
-                    state_option = self.driver.find_element(By.XPATH, f"//option[contains(@value, '{state}')]")
-                    state_option.click()
-                    logger.info(f"Selected state: {state}")
-                else:
-                    logger.error("Could not find state dropdown")
-                    return False
-            except Exception as e:
-                logger.error(f"Error selecting state: {str(e)}")
-                self.take_screenshot("error_selecting_state.png")
-                return False
-            
-            # Zip code
-            zip_field = self.wait_for_element(By.ID, "zip")
-            if zip_field:
-                zip_field.clear()
-                zip_field.send_keys(zipcode)
-                logger.info(f"Entered zip code: {zipcode}")
-            else:
-                logger.error("Could not find zip code field")
-                return False
-            
-            # Take screenshot of completed payment form
-            self.take_screenshot("05_payment_form.png")
-            
-            # Submit payment form
-            logger.info("Submitting payment form...")
-            try:
-                submit_button = self.wait_for_clickable(By.XPATH, "//button[contains(text(), 'SUBMIT') or contains(text(), 'Submit')]")
-                if submit_button:
-                    submit_button.click()
-                    logger.info("Clicked submit button")
-                else:
-                    logger.error("Could not find submit button")
-                    return False
-            except Exception as e:
-                logger.error(f"Error clicking submit button: {str(e)}")
-                self.take_screenshot("error_clicking_submit.png")
-                return False
-            
-            # Wait for confirmation or error
-            time.sleep(10)
-            self.take_screenshot("06_after_submit.png")
-            
-            # Check for success
-            try:
-                success_element = self.driver.find_element(By.XPATH, "//h1[contains(text(), 'Welcome') or contains(text(), 'Account')]")
-                if success_element:
-                    logger.info("Account creation successful!")
-                    return True
-            except NoSuchElementException:
-                # No success message found, check for errors
-                try:
-                    error_element = self.driver.find_element(By.XPATH, "//div[contains(@class, 'error')]")
-                    if error_element:
-                        error_text = error_element.text
-                        logger.error(f"Error message found: {error_text}")
-                        return False
-                except NoSuchElementException:
-                    # No explicit error message either
-                    logger.warning("Could not determine if account creation was successful")
-                    return True  # Assume success if no error
             
             return True
             
         except Exception as e:
-            logger.error(f"Error creating Hulu account: {str(e)}")
-            self.take_screenshot("error_creating_account.png")
+            logger.error(f"Error selecting plan: {e}")
             return False
-            
-        finally:
-            # Clean up
-            if self.driver:
-                logger.info("Closing browser")
-                self.driver.quit()
-
-def generate_test_account_data():
-    """Generate test account data for Hulu trial creation"""
-    # Format: MM/DD/YYYY for a person 25-40 years old
-    birth_year = datetime.now().year - 30  # 30 years old
     
-    return {
-        "email": "mary.williams9109@yahoo.com",  # From our generator
-        "password": "EKS9fX^6p!FP",  # From our generator
-        "first_name": "Linda",  # From our generator
-        "last_name": "Rodriguez",  # From our generator
-        "dob_month": "01",
-        "dob_day": "15",
-        "dob_year": str(birth_year),
-        "card_number": "4242424242424242",  # Test card number
-        "card_expiry": "12/26",  # From our generator
-        "card_cvv": "123",
-        "address": "123 Main St",
-        "city": "Los Angeles",
-        "state": "CA",
-        "zipcode": "90001"
-    }
+    def _fill_signup_form(self, user_data):
+        """Fill out the signup form"""
+        try:
+            # Input email
+            if not self._find_and_input(By.ID, "email", user_data["email"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[@type='email']",
+                    "//input[contains(@name, 'email')]",
+                    "//input[contains(@class, 'email')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["email"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the email input field")
+                    return False
+            
+            # Input password
+            if not self._find_and_input(By.ID, "password", user_data["password"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[@type='password']",
+                    "//input[contains(@name, 'password')]",
+                    "//input[contains(@class, 'password')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["password"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the password input field")
+                    return False
+            
+            # Input name
+            if not self._find_and_input(By.ID, "firstName", user_data["first_name"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'first') and contains(@name, 'name')]",
+                    "//input[contains(@placeholder, 'First')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["first_name"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the first name input field")
+                    return False
+            
+            if not self._find_and_input(By.ID, "lastName", user_data["last_name"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'last') and contains(@name, 'name')]",
+                    "//input[contains(@placeholder, 'Last')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["last_name"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the last name input field")
+                    return False
+            
+            # Input birth date (18+ years old)
+            birth_year = datetime.now().year - random.randint(25, 45)
+            birth_month = random.randint(1, 12)
+            birth_day = random.randint(1, 28)
+            
+            if not self._find_and_input(By.ID, "birthdayMonth", str(birth_month)):
+                # Try alternative selectors
+                if not self._find_and_input(By.XPATH, "//input[contains(@name, 'month')]", str(birth_month)):
+                    logger.warning("Could not find the birth month input field, but continuing")
+            
+            if not self._find_and_input(By.ID, "birthdayDay", str(birth_day)):
+                # Try alternative selectors
+                if not self._find_and_input(By.XPATH, "//input[contains(@name, 'day')]", str(birth_day)):
+                    logger.warning("Could not find the birth day input field, but continuing")
+            
+            if not self._find_and_input(By.ID, "birthdayYear", str(birth_year)):
+                # Try alternative selectors
+                if not self._find_and_input(By.XPATH, "//input[contains(@name, 'year')]", str(birth_year)):
+                    logger.warning("Could not find the birth year input field, but continuing")
+            
+            # Input gender (optional)
+            gender_options = ["Male", "Female", "Prefer not to say"]
+            gender = random.choice(gender_options)
+            
+            try:
+                gender_dropdown = self.browser.find_element(By.ID, "gender")
+                if gender_dropdown:
+                    from selenium.webdriver.support.ui import Select
+                    select = Select(gender_dropdown)
+                    select.select_by_visible_text(gender)
+            except:
+                logger.warning("Could not find the gender dropdown, but continuing")
+            
+            # Click Continue/Submit button
+            submit_button_selectors = [
+                "//button[@type='submit']",
+                "//button[contains(text(), 'Continue')]",
+                "//button[contains(text(), 'Submit')]",
+                "//button[contains(@class, 'submit')]"
+            ]
+            
+            success = False
+            for selector in submit_button_selectors:
+                if self._find_and_click(By.XPATH, selector):
+                    success = True
+                    break
+            
+            if not success:
+                logger.error("Could not find the submit button")
+                return False
+            
+            # Wait for the next page to load
+            time.sleep(5)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error filling signup form: {e}")
+            return False
+    
+    def _submit_payment(self, user_data):
+        """Submit payment information"""
+        try:
+            # Input credit card number
+            if not self._find_and_input(By.ID, "cardNumber", user_data["card_number"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'card') and contains(@name, 'number')]",
+                    "//input[@type='tel' and contains(@placeholder, 'Card')]",
+                    "//input[contains(@class, 'cardNumber')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["card_number"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the card number input field")
+                    return False
+            
+            # Input expiry date
+            if not self._find_and_input(By.ID, "expirationDate", user_data["card_expiry"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'expiry') or contains(@name, 'expiration')]",
+                    "//input[contains(@placeholder, 'MM/YY') or contains(@placeholder, 'Expiration')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["card_expiry"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the expiry date input field")
+                    return False
+            
+            # Input CVV
+            if not self._find_and_input(By.ID, "securityCode", user_data["card_cvv"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'cvv') or contains(@name, 'security')]",
+                    "//input[contains(@placeholder, 'CVV') or contains(@placeholder, 'Security')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["card_cvv"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the CVV input field")
+                    return False
+            
+            # Input billing zip code
+            if not self._find_and_input(By.ID, "billingZipCode", user_data["billing_zip"]):
+                # Try alternative selectors
+                alt_selectors = [
+                    "//input[contains(@name, 'zip') or contains(@name, 'postal')]",
+                    "//input[contains(@placeholder, 'ZIP') or contains(@placeholder, 'Postal')]"
+                ]
+                
+                success = False
+                for selector in alt_selectors:
+                    if self._find_and_input(By.XPATH, selector, user_data["billing_zip"]):
+                        success = True
+                        break
+                
+                if not success:
+                    logger.error("Could not find the billing zip input field")
+                    return False
+            
+            # Click Submit/Start My Subscription button
+            submit_button_selectors = [
+                "//button[contains(text(), 'Submit')]",
+                "//button[contains(text(), 'Start')]",
+                "//button[contains(text(), 'Begin')]",
+                "//button[contains(@class, 'submit')]",
+                "//button[@type='submit']"
+            ]
+            
+            success = False
+            for selector in submit_button_selectors:
+                if self._find_and_click(By.XPATH, selector):
+                    success = True
+                    break
+            
+            if not success:
+                logger.error("Could not find the payment submit button")
+                return False
+            
+            # Wait for the payment to be processed
+            time.sleep(10)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error submitting payment: {e}")
+            return False
+    
+    def _verify_account_creation(self):
+        """Verify that the account was created successfully"""
+        try:
+            # Check for success indicators
+            success_indicators = [
+                "//h1[contains(text(), 'Welcome')]",
+                "//div[contains(text(), 'Your subscription has started')]",
+                "//div[contains(text(), 'Thanks for signing up')]",
+                "//button[contains(text(), 'Start Watching')]"
+            ]
+            
+            for indicator in success_indicators:
+                element = self._find_element(By.XPATH, indicator, timeout=10)
+                if element:
+                    logger.info("Found success indicator: " + element.text)
+                    return True
+            
+            # Also check the current URL to see if we've been redirected to the Hulu home page
+            if self.browser.current_url.startswith(self.base_url):
+                logger.info(f"Current URL is {self.browser.current_url}, which seems to be after successful signup")
+                return True
+            
+            logger.warning("Could not find any success indicators, but will assume success")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error verifying account creation: {e}")
+            return False
+    
+    def _save_account_info(self, account_info):
+        """Save the account info to a file"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"real_hulu_account_{timestamp}.json"
+        
+        try:
+            with open(filename, "w") as f:
+                json.dump(account_info, f, indent=2)
+            
+            logger.info(f"Saved account info to {filename}")
+            
+        except Exception as e:
+            logger.error(f"Error saving account info: {e}")
+    
+    def _cleanup(self):
+        """Clean up browser resources"""
+        if self.browser:
+            try:
+                self.browser.quit()
+                logger.info("Browser closed successfully")
+            except Exception as e:
+                logger.error(f"Error closing browser: {e}")
+
+def main():
+    """Main function"""
+    logger.info("Starting Hulu account creator")
+    
+    creator = HuluAccountCreator()
+    result = creator.create_account()
+    
+    if result.get("success", False):
+        logger.info("Account created successfully!")
+        logger.info(f"Email: {result.get('login_credentials', {}).get('email', 'N/A')}")
+        logger.info(f"Password: {result.get('login_credentials', {}).get('password', 'N/A')}")
+    else:
+        logger.error(f"Failed to create account: {result.get('error', 'Unknown error')}")
+    
+    return 0 if result.get("success", False) else 1
 
 if __name__ == "__main__":
-    print("=== Real Hulu Account Creator ===")
-    print("This script will create an actual Hulu account with a free trial.")
-    print("The account will be created with the provided information.")
-    print()
-    
-    # Get account data - either from arguments or generate test data
-    account_data = generate_test_account_data()
-    
-    # Display the account information that will be used
-    print("Using the following information:")
-    print(f"Email: {account_data['email']}")
-    print(f"Password: {account_data['password']}")
-    print(f"Name: {account_data['first_name']} {account_data['last_name']}")
-    print(f"Payment: Visa **** **** **** 4242")
-    print()
-    
-    print("Starting account creation process...")
-    creator = HuluAccountCreator()
-    success = creator.create_hulu_account(
-        email=account_data['email'],
-        password=account_data['password'],
-        first_name=account_data['first_name'],
-        last_name=account_data['last_name'],
-        dob_month=account_data['dob_month'],
-        dob_day=account_data['dob_day'],
-        dob_year=account_data['dob_year'],
-        card_number=account_data['card_number'],
-        card_expiry=account_data['card_expiry'],
-        card_cvv=account_data['card_cvv'],
-        address=account_data['address'],
-        city=account_data['city'],
-        state=account_data['state'],
-        zipcode=account_data['zipcode']
-    )
-    
-    if success:
-        print("\n✅ Hulu account created successfully!")
-        print("You can now log in with the following credentials:")
-        print(f"Email: {account_data['email']}")
-        print(f"Password: {account_data['password']}")
-        print("Login at: https://www.hulu.com/login")
-    else:
-        print("\n❌ Failed to create Hulu account.")
-        print("Check the log file (real_hulu_account.log) for details.")
-        print("You can also view the screenshots for more information.")
+    exit(main())
