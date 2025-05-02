@@ -67,27 +67,27 @@ API_CONFIG = {
         }
     },
     
-    # ScrapeNinja for web scraping with protection bypass
+    # Web Scraping API for bypassing protections
     "scrape_ninja": {
         "key": RAPIDAPI_KEY,
-        "host": "scrapeninja.p.rapidapi.com",
-        "endpoint": "https://scrapeninja.p.rapidapi.com/scrape",
+        "host": "website-scraper-api.p.rapidapi.com",
+        "endpoint": "https://website-scraper-api.p.rapidapi.com/scrape",
         "auth_type": "rapidapi"
     },
     
-    # Fake Valid CC Data Generator
+    # Credit Card Generator API
     "fake_cc_generator": {
         "key": RAPIDAPI_KEY,
-        "host": "fake-valid-cc-data-generator.p.rapidapi.com",
-        "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/generate",
+        "host": "cardgenerator.p.rapidapi.com",
+        "endpoint": "https://cardgenerator.p.rapidapi.com/generateCard",
         "auth_type": "rapidapi"
     },
     
-    # Advanced Email Validator
+    # Email Validator API
     "email_validator": {
         "key": RAPIDAPI_KEY,
-        "host": "advanced-email-validator.p.rapidapi.com",
-        "endpoint": "https://advanced-email-validator.p.rapidapi.com/validate",
+        "host": "email-validator8.p.rapidapi.com",
+        "endpoint": "https://email-validator8.p.rapidapi.com/api/v2/validate",
         "auth_type": "rapidapi"
     },
     
@@ -304,20 +304,30 @@ class UpdatedAPIIntegrations:
     @staticmethod
     def generate_card(card_type="visa"):
         """
-        Generate a valid credit card using the Fake Valid CC Data Generator API
+        Generate a valid credit card using the Card Generator API
         """
         logger.info(f"Generating card of type: {card_type}")
         
         try:
-            # Use the Fake Valid CC Data Generator API
+            # Use the Card Generator API
             api_config = API_CONFIG["fake_cc_generator"]
             url = api_config["endpoint"]
             headers = UpdatedAPIIntegrations.get_headers("fake_cc_generator")
             
+            # Map our card type to API expected format
+            card_type_map = {
+                "visa": "visa",
+                "mastercard": "mastercard",
+                "amex": "americanexpress",
+                "discover": "discover"
+            }
+            
+            api_card_type = card_type_map.get(card_type.lower(), "visa")
+            
             # Prepare query parameters
             params = {
-                "brand": card_type.lower(),
-                "format": "json"
+                "type": api_card_type,
+                "safe": "true"  # Get a card with valid CVV and expiry date
             }
             
             # Make the API request
@@ -328,22 +338,48 @@ class UpdatedAPIIntegrations:
             data = response.json()
             logger.info("Card generation response received")
             
-            # Extract and format the card information
-            card_number = data.get("credit_card_number", "")
-            expiry = data.get("credit_card_expiry_date", "")
-            cvv = data.get("credit_card_cvv", "")
+            # This API returns an array of cards, get the first one
+            if isinstance(data, list) and len(data) > 0:
+                card_data = data[0]
+            else:
+                card_data = data  # Some APIs return a single object
             
-            # Parse expiry date (format MM/YY or MM/YYYY)
-            expiry_month = ""
-            expiry_year = ""
-            if expiry and "/" in expiry:
-                parts = expiry.split("/")
-                if len(parts) == 2:
-                    expiry_month = parts[0].strip()
-                    expiry_year = parts[1].strip()
+            # Extract card details with proper key mappings
+            card_number = card_data.get("number", "")
+            
+            # Get expiry month and year, format as needed
+            expiry_month = card_data.get("expirationMonth", "")
+            if not expiry_month and "expiry" in card_data:
+                # Try alternative field names
+                expiry_parts = card_data.get("expiry", "").split("/")
+                if len(expiry_parts) >= 1:
+                    expiry_month = expiry_parts[0].strip()
+            
+            expiry_year = card_data.get("expirationYear", "")
+            if not expiry_year and "expiry" in card_data:
+                # Try alternative field names
+                expiry_parts = card_data.get("expiry", "").split("/")
+                if len(expiry_parts) >= 2:
+                    expiry_year = expiry_parts[1].strip()
                     # Convert 2-digit year to 4-digit if needed
                     if len(expiry_year) == 2:
                         expiry_year = f"20{expiry_year}"
+            
+            # Get CVV/security code
+            cvv = card_data.get("cvv", "")
+            if not cvv:
+                cvv = card_data.get("securityCode", "")
+            
+            # Format the expiry date
+            expiry = f"{expiry_month}/{expiry_year[-2:]}" if expiry_month and expiry_year else ""
+            
+            # Get or generate cardholder name
+            cardholder_name = card_data.get("cardHolderName", "")
+            if not cardholder_name:
+                # Generate a random name if none provided
+                first_names = ["John", "Jane", "Michael", "Emily", "David", "Sarah"]
+                last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller"]
+                cardholder_name = f"{random.choice(first_names)} {random.choice(last_names)}"
             
             # Format the card information
             return {
@@ -353,7 +389,7 @@ class UpdatedAPIIntegrations:
                 "expiry_month": expiry_month,
                 "expiry_year": expiry_year,
                 "expiry": expiry,
-                "cardholder_name": data.get("credit_card_holder_name", "")
+                "cardholder_name": cardholder_name
             }
         
         except requests.RequestException as e:
@@ -460,57 +496,61 @@ class UpdatedAPIIntegrations:
     @staticmethod
     def web_scrape(url, render_js=True, use_proxy=False, custom_headers=None):
         """
-        Scrape a website using ScrapeNinja API
+        Scrape a website using the Website Scraper API
         """
         logger.info(f"Scraping URL: {url} (render_js: {render_js})")
         
         try:
-            # Use the ScrapeNinja API
+            # Use the Website Scraper API
             api_config = API_CONFIG["scrape_ninja"]
             scrape_url = api_config["endpoint"]
             headers = UpdatedAPIIntegrations.get_headers("scrape_ninja")
             
-            # Prepare request payload
-            payload = {
+            # Prepare query parameters
+            params = {
                 "url": url,
-                "render": render_js
+                "javascript": "true" if render_js else "false"
             }
             
-            # Add additional options if provided
+            # Add proxy options if needed
             if use_proxy:
-                payload["proxy"] = {
-                    "type": "residential"
-                }
-            
-            if custom_headers:
-                payload["headers"] = custom_headers
+                params["proxy"] = "true"
             
             # Make the API request
-            response = requests.post(scrape_url, headers=headers, json=payload, timeout=60)
+            response = requests.get(scrape_url, headers=headers, params=params, timeout=60)
             response.raise_for_status()
             
             # Parse the response
-            data = response.json()
-            logger.info("Web scraping response received")
-            
-            # Extract and format the result
-            success = data.get("success", False)
-            
-            if success:
+            try:
+                data = response.json()
+                logger.info("Web scraping response received")
+                
+                # Check if response contains content
+                if "content" in data:
+                    return {
+                        "success": True,
+                        "url": url,
+                        "html": data.get("content", ""),
+                        "status_code": 200,
+                        "headers": data.get("headers", {}),
+                        "render_time": data.get("time_taken", 0)
+                    }
+                else:
+                    logger.warning(f"Web scraping failed: {data.get('message', 'Unknown error')}")
+                    return {
+                        "success": False,
+                        "url": url,
+                        "error": data.get("message", "Unknown error")
+                    }
+            except ValueError:
+                # If not JSON, assume it's HTML content directly
                 return {
                     "success": True,
                     "url": url,
-                    "html": data.get("body", ""),
-                    "status_code": data.get("statusCode", 200),
-                    "headers": data.get("headers", {}),
-                    "render_time": data.get("renderTime", 0)
-                }
-            else:
-                logger.warning(f"Web scraping failed: {data.get('error', 'Unknown error')}")
-                return {
-                    "success": False,
-                    "url": url,
-                    "error": data.get("error", "Unknown error")
+                    "html": response.text,
+                    "status_code": response.status_code,
+                    "headers": dict(response.headers),
+                    "render_time": 0
                 }
         
         except requests.RequestException as e:
