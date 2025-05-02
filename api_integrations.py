@@ -32,12 +32,21 @@ TEMP_MAIL_BACKUP_API_KEY = os.getenv('TEMP_MAIL_BACKUP_API_KEY', RAPIDAPI_KEY)
 
 # API configuration
 API_CONFIG = {
-    # Identity Verification API using RandomUser.me (free public API)
+    # Identity Generation API using RandomUser.me (free public API)
     "personator": {
         "key": "",
         "host": "",
         "endpoint": "https://randomuser.me/api/",
         "auth_type": "none",
+        "content_type": "application/json"
+    },
+    
+    # Personator Identity Verification API
+    "personator_search": {
+        "key": "api_key",  # Will be replaced at runtime
+        "host": "personator-search-api.example.com",
+        "endpoint": "https://personator-search-api.example.com/search",
+        "auth_type": "authtoken",
         "content_type": "application/json"
     },
     
@@ -1065,46 +1074,110 @@ class APIIntegrations:
         }
         
     @staticmethod
-    def web_scrape(url, use_proxy=False, custom_headers=None, cookies=None, timeout=30):
+    def web_scrape(url, use_proxy=False, custom_headers=None, cookies=None, timeout=30, render_js=False):
         """
-        Scrape a website using direct HTTP requests with a browser user agent
+        Scrape a website using ScrapeNinja API with fallback to direct requests
         
         Args:
             url (str): The URL to scrape
-            use_proxy (bool): Whether to use a proxy for scraping (not used in this implementation)
+            use_proxy (bool): Whether to use a residential proxy for scraping
             custom_headers (dict): Optional custom headers to use for the request
             cookies (dict): Optional cookies to send with the request
             timeout (int): Time in seconds to wait for the scraping to complete
+            render_js (bool): Whether to use JavaScript rendering for the scrape
             
         Returns:
             dict: Scraped content and metadata
         """
-        logger.info(f"Scraping URL: {url}")
+        logger.info(f"Scraping URL: {url} {'with' if render_js else 'without'} JS rendering")
+        
+        # Default browser headers to simulate a real browser
+        default_headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        # Merge custom headers if provided
+        if custom_headers:
+            default_headers.update(custom_headers)
         
         try:
-            # Use a direct HTTP request with a browser user agent
-            # Default headers that mimic a browser
-            default_headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-                'Cache-Control': 'max-age=0'
-            }
+            # Try using ScrapeNinja API first
+            # Select the appropriate API endpoint based on JS rendering needs
+            api_name = "scrape_ninja_js" if render_js else "scrape_ninja"
             
-            # Merge custom headers if provided
-            if custom_headers:
-                default_headers.update(custom_headers)
+            try:
+                scrape_ninja_api = API_CONFIG[api_name]
+                scrape_ninja_headers = APIIntegrations.get_headers(api_name)
+                
+                # Create the ScrapeNinja payload
+                payload = {
+                    "url": url,
+                    "proxy": "residential" if use_proxy else "datacenter",
+                    "timeout": timeout * 1000,  # Convert to milliseconds
+                    "headers": default_headers
+                }
+                
+                # Add cookies if provided
+                if cookies:
+                    payload["cookies"] = cookies
+                
+                logger.info(f"Making request to ScrapeNinja API ({api_name})")
+                scrape_response = requests.post(
+                    scrape_ninja_api["endpoint"],
+                    headers=scrape_ninja_headers,
+                    json=payload,
+                    timeout=timeout + 5  # Add buffer to the timeout
+                )
+                scrape_response.raise_for_status()
+                
+                # Parse the response
+                scrape_data = scrape_response.json()
+                
+                if scrape_data.get("error"):
+                    logger.warning(f"ScrapeNinja API returned error: {scrape_data.get('error')}")
+                    raise ValueError(f"ScrapeNinja API error: {scrape_data.get('error')}")
+                
+                logger.info(f"ScrapeNinja API successfully scraped {url}")
+                
+                # Extract the relevant content
+                html_content = scrape_data.get("content", "")
+                
+                # Use the trafilatura library to extract the main content
+                try:
+                    import trafilatura
+                    extracted_text = trafilatura.extract(html_content)
+                    main_content = extracted_text if extracted_text else html_content
+                except ImportError:
+                    main_content = html_content
+                
+                return {
+                    "content": main_content,
+                    "raw_html": html_content,
+                    "status_code": scrape_data.get("status_code", 200),
+                    "headers": scrape_data.get("headers", {}),
+                    "cookies": scrape_data.get("cookies", {}),
+                    "url": url,
+                    "proxy_used": use_proxy,
+                    "js_rendered": render_js,
+                    "method": "scrape_ninja"
+                }
+                
+            except (requests.RequestException, ValueError) as e:
+                logger.warning(f"ScrapeNinja API failed, falling back to direct request: {e}")
             
-            # Make the direct request
+            # Fall back to direct request if ScrapeNinja fails
+            logger.info(f"Falling back to direct HTTP request for {url}")
             response = requests.get(url, headers=default_headers, cookies=cookies, timeout=timeout)
             response.raise_for_status()
             
-            logger.info(f"Successfully scraped URL: {url}")
+            logger.info(f"Successfully scraped URL using direct request: {url}")
             
             # Use the trafilatura library to extract the main content if available
-            # Import locally to avoid dependency issues
             try:
                 import trafilatura
                 extracted_text = trafilatura.extract(response.text)
@@ -1114,11 +1187,14 @@ class APIIntegrations:
             
             return {
                 "content": main_content,
+                "raw_html": response.text,
                 "status_code": response.status_code,
                 "headers": dict(response.headers),
                 "cookies": dict(response.cookies),
                 "url": response.url,
-                "proxy_used": False
+                "proxy_used": False,
+                "js_rendered": False,
+                "method": "direct_request"
             }
             
         except requests.Timeout:

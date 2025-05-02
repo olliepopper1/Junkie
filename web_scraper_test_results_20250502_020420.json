@@ -1,0 +1,29 @@
+{
+  "https://www.hulu.com/welcome": {
+    "without_js": {
+      "success": true,
+      "status_code": 200,
+      "method": "direct_request",
+      "content_length": 752
+    },
+    "with_js": "skipped - API key not available"
+  },
+  "https://www.netflix.com/": {
+    "without_js": {
+      "success": true,
+      "status_code": 200,
+      "method": "direct_request",
+      "content_length": 419
+    },
+    "with_js": "skipped - API key not available"
+  },
+  "https://www.disneyplus.com/": {
+    "without_js": {
+      "success": true,
+      "status_code": 200,
+      "method": "direct_request",
+      "content_length": 4897
+    },
+    "with_js": "skipped - API key not available"
+  }
+}
