@@ -137,7 +137,21 @@ class RealApiHuluTrialGenerator:
     
     def _generate_secure_password(self, length=12):
         """Generate a secure password for the account"""
-        return self.api._generate_fallback_identity()['password']
+        import random
+        import string
+        # Ensure at least one of each character type
+        pwd = [
+            random.choice(string.ascii_lowercase),
+            random.choice(string.ascii_uppercase),
+            random.choice(string.digits),
+            random.choice('!@#$%^&*()_+-=')
+        ]
+        # Fill rest with random characters
+        characters = string.ascii_letters + string.digits + '!@#$%^&*()_+-='
+        pwd.extend(random.choice(characters) for _ in range(length - 4))
+        # Shuffle to randomize positions
+        random.shuffle(pwd)
+        return ''.join(pwd)
     
     def _save_trial_info(self, trial_info):
         """Save trial information to a JSON file"""

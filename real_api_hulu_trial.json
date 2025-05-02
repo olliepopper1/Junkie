@@ -1,0 +1,24 @@
+{
+  "service": "Hulu",
+  "email": "kmgv0az9ew2@mailinator.com",
+  "password": "T7Q*d^kU!&W6",
+  "name": "Julian Powell",
+  "phone": "+13127074017",
+  "card": "Visa **** **** **** 0142",
+  "card_details": {
+    "number": "4030573553720142",
+    "expiry": "/",
+    "cvv": "012",
+    "name": "Julian Powell",
+    "address": "8364 Spring St",
+    "city": "Stanley",
+    "state": "Alaska",
+    "zipcode": 25243
+  },
+  "plan": "Hulu (No Ads)",
+  "price": "$14.99/month",
+  "end_date": "2025-06-01",
+  "login_url": "https://www.hulu.com/login",
+  "created_at": "2025-05-02 01:35:22",
+  "status": "active"
+}

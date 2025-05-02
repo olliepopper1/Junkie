@@ -910,11 +910,11 @@ def generate_trial():
                 'limit': usage_result['limit']
             }), 429  # 429 Too Many Requests
         
-        # Import the trial generator
-        from utils.trial_generator import TrialGenerator
-        generator = TrialGenerator()
+        # Import the real trial generator instead of the simulated one
+        from utils.real_trial_generator import RealTrialGenerator
+        generator = RealTrialGenerator()
         
-        # Generate trial based on the service
+        # Generate a real trial based on the service
         trial_info = asyncio.run(generator.generate_trial(service))
         
         # Track this usage in the database
