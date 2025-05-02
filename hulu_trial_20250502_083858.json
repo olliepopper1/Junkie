@@ -1,0 +1,32 @@
+{
+  "service": "hulu",
+  "plan": "Hulu (No Ads)",
+  "first_name": "Bradley",
+  "last_name": "Wheeler",
+  "address": "4141 E Center St",
+  "city": "Thornton",
+  "state": "Georgia",
+  "zipcode": "94714",
+  "country": "US",
+  "phone": "997-490-3009",
+  "email": "y4pnlh6rfd@temp-mail.org",
+  "password": "q7yhgyC=Y$jg",
+  "card_details": {
+    "type": "visa",
+    "number": "4609008981522485",
+    "expiry": "05/27",
+    "cvv": "400",
+    "last4": "2485"
+  },
+  "creation_date": "2025-05-02",
+  "ip_protection": true,
+  "auto_renewal": false,
+  "trial_length": 30,
+  "features": [
+    "Ad-free streaming",
+    "Full library access",
+    "HD quality"
+  ],
+  "start_date": "2025-05-02",
+  "end_date": "2025-06-01"
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "type": "visa",
+    "number": "4609008981522485",
+    "expiry": "05/27",
+    "cvv": "400",
+    "last4": "2485",
+    "valid": true,
+    "source": "local_generation"
+  }
+]
