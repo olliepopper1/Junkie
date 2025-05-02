@@ -920,7 +920,36 @@ def generate_trial():
         # Track this usage in the database
         bot_db.track_usage(user_id, 'generate_trial')
         
-        # Save the trial to the database
+        # Set up trial delivery to send to both dashboard and Discord
+        from utils.trial_delivery import TrialDelivery
+        delivery = TrialDelivery()
+        
+        # Check if user has Discord linked in the database
+        discord_id = None
+        try:
+            # Check for linked Discord account
+            discord_users = db.session.query(DiscordUser).filter_by(web_user_id=user_id).all()
+            if discord_users and len(discord_users) > 0:
+                discord_id = discord_users[0].discord_id
+        except Exception as e:
+            logger.error(f"Error checking for linked Discord account: {str(e)}")
+        
+        # Determine delivery methods based on what's available
+        delivery_methods = ['dashboard']
+        if discord_id:
+            delivery_methods.append('discord')
+        
+        # Try to deliver the trial via selected methods
+        delivery_results = asyncio.run(delivery.deliver_trial(
+            user_id=user_id,
+            trial_data=trial_info,
+            delivery_methods=delivery_methods
+        ))
+        
+        # Log delivery results
+        logger.info(f"Trial delivery results for user {user_id}: {delivery_results}")
+        
+        # Save to Flask-SQLAlchemy database (separate from bot database)
         try:
             # Create a new trial record
             trial = Trial(
@@ -935,23 +964,13 @@ def generate_trial():
             db.session.add(trial)
             db.session.commit()
             logger.info(f"Trial saved to database: {trial.id} for user {user_id}")
+            
+            # Use the database ID
+            trial_id = trial.id
         except Exception as e:
             logger.error(f"Error saving trial to database: {str(e)}")
-            # Continue anyway since we have the trial info to return
-        
-        # Generate a random trial ID as fallback
-        trial_id = random.randint(1000, 9999)
-        
-        # This variable will be defined if database save was successful
-        saved_trial = locals().get('trial')
-        
-        # If we have a saved trial with an ID, use that instead
-        if saved_trial is not None:
-            try:
-                if hasattr(saved_trial, 'id') and saved_trial.id:
-                    trial_id = saved_trial.id
-            except Exception as e:
-                logger.debug(f"Using random trial ID due to error: {e}")
+            # Generate a random trial ID as fallback
+            trial_id = random.randint(1000, 9999)
         
         return jsonify({
             'success': True,

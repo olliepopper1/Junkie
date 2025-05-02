@@ -254,6 +254,55 @@ def run_bot():
                 # Update the original message with the success embed
                 await processing_message.edit(embed=success_embed)
                 
+                # Save the trial to the database using the TrialDelivery system
+                try:
+                    from database import Database
+                    from utils.trial_delivery import TrialDelivery
+                    
+                    # Get the Discord user ID
+                    discord_id = str(ctx.author.id)
+                    
+                    # Initialize the database
+                    db = Database()
+                    
+                    # Check if the user exists, create if not
+                    if not db.user_exists(discord_id):
+                        db.create_user(discord_id, str(ctx.author))
+                    
+                    # Create the delivery object without Discord bot (we're already in Discord)
+                    delivery = TrialDelivery()
+                    
+                    # Record the trial in the database
+                    delivery_result = await delivery.save_to_dashboard(
+                        user_id=discord_id,
+                        trial_data=trial_data
+                    )
+                    
+                    logger.info(f"Trial saved to database: {delivery_result}")
+                    
+                    # Check for linked web account and save there too if available
+                    web_user_id = None
+                    try:
+                        # Query for linked accounts - this would need a proper implementation
+                        # in your database.py based on your schema
+                        linked_accounts = db.get_linked_accounts(discord_id)
+                        if linked_accounts and len(linked_accounts) > 0:
+                            web_user_id = linked_accounts[0].get('web_user_id')
+                            
+                            if web_user_id:
+                                web_delivery_result = await delivery.save_to_dashboard(
+                                    user_id=web_user_id,
+                                    trial_data=trial_data
+                                )
+                                logger.info(f"Trial also saved to web account: {web_delivery_result}")
+                    except Exception as link_err:
+                        logger.error(f"Error checking linked accounts: {str(link_err)}")
+                        # Continue anyway
+                
+                except Exception as db_err:
+                    logger.error(f"Error saving trial to database: {str(db_err)}")
+                    # We don't need to notify the user since they already have the trial info
+                
             except Exception as e:
                 logger.error(f"Error generating trial: {str(e)}")
                 error_embed = discord.Embed(
