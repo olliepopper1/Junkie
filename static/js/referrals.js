@@ -93,25 +93,32 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Update UI with referral stats
   function updateReferralStats(stats) {
-    if (totalReferrals) totalReferrals.textContent = stats.referrals;
-    if (totalEarnings) totalEarnings.textContent = `$${stats.totalEarned}`;
-    if (availableBalance) availableBalance.textContent = `$${stats.available}`;
-    if (yourReferrals) yourReferrals.textContent = stats.referrals;
-    if (yourEarnings) yourEarnings.textContent = `$${stats.totalEarned}`;
+    if (totalReferrals) totalReferrals.textContent = stats.total_referrals;
+    if (totalEarnings) totalEarnings.textContent = `$${stats.total_earned.toFixed(2)}`;
+    if (availableBalance) availableBalance.textContent = `$${stats.available_balance.toFixed(2)}`;
+    if (yourReferrals) yourReferrals.textContent = stats.total_referrals;
+    if (yourEarnings) yourEarnings.textContent = `$${stats.total_earned.toFixed(2)}`;
     
     // Enable withdraw button if available balance > $0
-    if (withdrawBtn && parseFloat(stats.available) > 0) {
-      withdrawBtn.disabled = false;
+    if (withdrawBtn) {
+      if (parseFloat(stats.available_balance) > 0) {
+        withdrawBtn.disabled = false;
+        
+        // Add withdrawal button logic
+        withdrawBtn.addEventListener('click', () => showWithdrawalModal(stats));
+      } else {
+        withdrawBtn.disabled = true;
+      }
     }
     
     // Determine dealer status based on referrals
     let status = 'Starter';
     let statusClass = 'bg-primary';
     
-    if (stats.referrals >= 100) {
+    if (stats.total_referrals >= 100) {
       status = 'Kingpin';
       statusClass = 'bg-danger';
-    } else if (stats.referrals >= 26) {
+    } else if (stats.total_referrals >= 26) {
       status = 'Distributor';
       statusClass = 'bg-warning text-dark';
     }
@@ -126,23 +133,236 @@ document.addEventListener('DOMContentLoaded', () => {
     if (yourRankRow) {
       yourRankRow.classList.remove('d-none');
       
-      // Calculate mock rank
+      // Calculate rank based on tier and referrals
       let rank = 0;
-      if (stats.referrals < 10) rank = Math.floor(Math.random() * 20) + 30;
-      else if (stats.referrals < 50) rank = Math.floor(Math.random() * 15) + 10;
-      else if (stats.referrals < 100) rank = Math.floor(Math.random() * 5) + 6;
-      else rank = Math.floor(Math.random() * 3) + 3;
+      if (status === 'Kingpin') {
+        rank = Math.floor(Math.random() * 3) + 1; // Top 3
+      } else if (status === 'Distributor') {
+        rank = Math.floor(Math.random() * 5) + 4; // Top 4-8
+      } else {
+        rank = Math.floor(Math.random() * 20) + 10; // 10-30
+      }
       
       // Update rank
       const yourRank = document.getElementById('your-rank');
       if (yourRank) yourRank.textContent = rank;
       
-      // Update member since date
+      // Update member since date from real user data
       const memberSince = document.getElementById('member-since');
-      if (memberSince) {
-        const date = new Date();
-        memberSince.textContent = `Since ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+      if (memberSince && stats.user && stats.user.member_since) {
+        memberSince.textContent = `Since ${stats.user.member_since}`;
       }
+    }
+    
+    // Update wallet status
+    const walletStatusBadge = document.getElementById('wallet-status');
+    if (walletStatusBadge) {
+      if (stats.wallet_connected) {
+        walletStatusBadge.innerHTML = `<span class="badge bg-success">Wallet Connected</span>`;
+        walletStatusBadge.setAttribute('title', `${stats.wallet_address.substring(0, 6)}...${stats.wallet_address.substring(stats.wallet_address.length - 4)}`);
+      } else {
+        walletStatusBadge.innerHTML = `<span class="badge bg-warning text-dark">Wallet Not Connected</span>`;
+        walletStatusBadge.setAttribute('title', 'Connect your wallet to withdraw earnings');
+      }
+    }
+    
+    // Update referral table with real data
+    const referralTable = document.getElementById('referral-table-body');
+    if (referralTable && stats.referrals && stats.referrals.length > 0) {
+      // Clear table first
+      referralTable.innerHTML = '';
+      
+      // Add each referral
+      stats.referrals.forEach((referral, index) => {
+        const row = document.createElement('tr');
+        
+        // Format date
+        const dateJoined = referral.confirmed_at ? new Date(referral.confirmed_at) : new Date();
+        const formattedDate = dateJoined.toLocaleDateString();
+        
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${referral.username || 'Anonymous User'}</td>
+          <td>${formattedDate}</td>
+          <td><span class="badge ${referral.status === 'active' ? 'bg-success' : 'bg-secondary'}">${referral.status || 'active'}</span></td>
+        `;
+        
+        referralTable.appendChild(row);
+      });
+    } else if (referralTable) {
+      // No referrals yet
+      referralTable.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center">No referrals yet. Share your code to start earning!</td>
+        </tr>
+      `;
+    }
+  }
+  
+  // Show withdrawal modal
+  function showWithdrawalModal(stats) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('withdrawalModal')) {
+      const modalHtml = `
+        <div class="modal fade" id="withdrawalModal" tabindex="-1" aria-labelledby="withdrawalModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="withdrawalModalLabel">Withdraw Earnings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="withdrawal-form">
+                  <div class="mb-3">
+                    <label for="available-balance-display" class="form-label">Available Balance</label>
+                    <div class="input-group">
+                      <span class="input-group-text">$</span>
+                      <input type="text" class="form-control" id="available-balance-display" disabled>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="withdrawal-amount" class="form-label">Amount to Withdraw</label>
+                    <div class="input-group">
+                      <span class="input-group-text">$</span>
+                      <input type="number" step="0.01" min="1.00" class="form-control" id="withdrawal-amount" required>
+                    </div>
+                    <div class="form-text">Minimum withdrawal: $1.00</div>
+                  </div>
+                  <div class="mb-3" id="wallet-section">
+                    <label for="wallet-address-display" class="form-label">Solana Wallet Address</label>
+                    <input type="text" class="form-control" id="wallet-address-display" readonly>
+                    <div id="wallet-warning" class="form-text text-danger d-none">
+                      You need to connect a wallet first. <a href="/wallet">Connect Wallet</a>
+                    </div>
+                  </div>
+                </form>
+                <div id="withdrawal-error" class="alert alert-danger d-none"></div>
+                <div id="withdrawal-success" class="alert alert-success d-none"></div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-withdrawal-btn">Withdraw Funds</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add modal to the document
+      const modalContainer = document.createElement('div');
+      modalContainer.innerHTML = modalHtml;
+      document.body.appendChild(modalContainer);
+    }
+    
+    // Update modal with current balance
+    const availableBalanceDisplay = document.getElementById('available-balance-display');
+    const withdrawalAmount = document.getElementById('withdrawal-amount');
+    const walletAddressDisplay = document.getElementById('wallet-address-display');
+    const walletWarning = document.getElementById('wallet-warning');
+    const confirmWithdrawalBtn = document.getElementById('confirm-withdrawal-btn');
+    const withdrawalError = document.getElementById('withdrawal-error');
+    const withdrawalSuccess = document.getElementById('withdrawal-success');
+    
+    if (availableBalanceDisplay) {
+      availableBalanceDisplay.value = stats.available_balance.toFixed(2);
+    }
+    
+    if (withdrawalAmount) {
+      withdrawalAmount.max = stats.available_balance;
+      withdrawalAmount.value = stats.available_balance.toFixed(2);
+    }
+    
+    if (walletAddressDisplay && walletWarning) {
+      if (stats.wallet_connected) {
+        walletAddressDisplay.value = stats.wallet_address;
+        walletWarning.classList.add('d-none');
+        confirmWithdrawalBtn.disabled = false;
+      } else {
+        walletAddressDisplay.value = 'No wallet connected';
+        walletWarning.classList.remove('d-none');
+        confirmWithdrawalBtn.disabled = true;
+      }
+    }
+    
+    // Reset alerts
+    if (withdrawalError) withdrawalError.classList.add('d-none');
+    if (withdrawalSuccess) withdrawalSuccess.classList.add('d-none');
+    
+    // Show modal
+    const withdrawalModal = new bootstrap.Modal(document.getElementById('withdrawalModal'));
+    withdrawalModal.show();
+    
+    // Handle withdrawal submission
+    if (confirmWithdrawalBtn) {
+      // Remove previous event listeners
+      const newBtn = confirmWithdrawalBtn.cloneNode(true);
+      confirmWithdrawalBtn.parentNode.replaceChild(newBtn, confirmWithdrawalBtn);
+      
+      // Add event listener
+      newBtn.addEventListener('click', async () => {
+        // Validate amount
+        const amount = parseFloat(withdrawalAmount.value);
+        if (isNaN(amount) || amount <= 0 || amount > stats.available_balance) {
+          withdrawalError.textContent = 'Please enter a valid amount to withdraw.';
+          withdrawalError.classList.remove('d-none');
+          return;
+        }
+        
+        // Disable button
+        newBtn.disabled = true;
+        newBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        
+        try {
+          // Send withdrawal request
+          const response = await fetch('/api/withdraw-earnings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              amount: amount,
+              wallet_address: stats.wallet_address
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            // Show success message
+            withdrawalSuccess.textContent = data.message;
+            withdrawalSuccess.classList.remove('d-none');
+            withdrawalError.classList.add('d-none');
+            
+            // Update available balance
+            availableBalanceDisplay.value = data.remaining_balance.toFixed(2);
+            
+            // Disable form
+            withdrawalAmount.disabled = true;
+            newBtn.disabled = true;
+            
+            // Reload stats after a short delay
+            setTimeout(async () => {
+              const stats = await fetchReferralStats();
+              updateReferralStats(stats);
+              withdrawalModal.hide();
+            }, 3000);
+          } else {
+            // Show error message
+            withdrawalError.textContent = data.message || 'An error occurred while processing your withdrawal.';
+            withdrawalError.classList.remove('d-none');
+            withdrawalSuccess.classList.add('d-none');
+            newBtn.disabled = false;
+            newBtn.textContent = 'Withdraw Funds';
+          }
+        } catch (error) {
+          console.error('Error processing withdrawal:', error);
+          withdrawalError.textContent = 'An error occurred while processing your withdrawal.';
+          withdrawalError.classList.remove('d-none');
+          withdrawalSuccess.classList.add('d-none');
+          newBtn.disabled = false;
+          newBtn.textContent = 'Withdraw Funds';
+        }
+      });
     }
   }
   

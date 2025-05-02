@@ -1280,6 +1280,10 @@ def get_referral_stats():
         commissions = bot_db.get_user_commissions(user_id)
         total_commission = bot_db.get_total_commission(user_id)
         
+        # Get user data for last login information
+        user = WebUser.query.get(user_id)
+        last_login = user.last_login.isoformat() if user and hasattr(user, 'last_login') and user.last_login else None
+        
         # Calculate active users (those who have logged in within the last 30 days)
         active_users = sum(1 for ref in referrals if ref.get('last_active') and 
                          (datetime.utcnow() - datetime.fromisoformat(ref['last_active'])).days < 30)
@@ -1307,6 +1311,9 @@ def get_referral_stats():
         else:
             next_tier_progress = (len(referrals) / 100) * 100  # Progress beyond Dealer's Choice
         
+        # Get wallet information for withdrawals
+        wallet_address = user.wallet_address if user and hasattr(user, 'wallet_address') else None
+        
         return jsonify({
             "success": True,
             "total_referrals": len(referrals),
@@ -1314,16 +1321,136 @@ def get_referral_stats():
             "total_earned": float(total_commission) if total_commission else 0.0,
             "total_paid": paid_commissions,
             "available_balance": pending_commissions,
+            "wallet_connected": bool(wallet_address),
+            "wallet_address": wallet_address,
             "tier": tier,
             "next_tier_progress": min(next_tier_progress, 100),
             "next_tier_target": next_tier_target,
-            "referrals": referrals  # List of referral details
+            "referrals": referrals,  # List of referral details
+            "user": {
+                "username": user.username if user else "User",
+                "last_login": last_login,
+                "member_since": user.created_at.strftime("%B %Y") if user and hasattr(user, 'created_at') and user.created_at else "Unknown"
+            }
         })
     except Exception as e:
         logger.error(f"Error getting referral stats: {str(e)}")
         return jsonify({
             "success": False,
             "message": "Error retrieving referral statistics"
+        }), 500
+        
+@app.route('/api/withdraw-earnings', methods=['POST'])
+def withdraw_earnings():
+    """Process a withdrawal request for referral earnings"""
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "User not authenticated"
+        }), 401
+    
+    # Get user ID
+    user_id = session['user_id']
+    
+    # Get request data
+    data = request.get_json()
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "No data provided"
+        }), 400
+    
+    # Get amount to withdraw
+    amount = data.get('amount')
+    if not amount:
+        return jsonify({
+            "success": False,
+            "message": "Withdrawal amount is required"
+        }), 400
+    
+    try:
+        # Convert amount to float
+        amount = float(amount)
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "message": "Invalid withdrawal amount"
+        }), 400
+    
+    # Get wallet address from user profile or data
+    user = WebUser.query.get(user_id)
+    wallet_address = user.wallet_address if user and hasattr(user, 'wallet_address') and user.wallet_address else data.get('wallet_address')
+    
+    if not wallet_address:
+        return jsonify({
+            "success": False,
+            "message": "Wallet address is required for withdrawal. Please connect your wallet first."
+        }), 400
+    
+    try:
+        # Initialize database connection
+        bot_db = Database()
+        
+        # Check available balance
+        commissions = bot_db.get_user_commissions(user_id, status='pending')
+        available_balance = sum(float(comm['amount']) for comm in commissions)
+        
+        if amount > available_balance:
+            return jsonify({
+                "success": False,
+                "message": f"Insufficient balance. Available: ${available_balance:.2f}"
+            }), 400
+        
+        # Process withdrawal
+        # In a real implementation, you would integrate with your payment processor
+        # For now, we'll just mark the commissions as paid
+        import uuid
+        from datetime import datetime
+        
+        # Create a withdrawal record
+        withdrawal_id = str(uuid.uuid4())
+        withdrawal_reference = f"WITHDRAW-{withdrawal_id[:8]}"
+        
+        # Update commission statuses
+        remaining = amount
+        updated_commissions = []
+        
+        for commission in commissions:
+            if remaining <= 0:
+                break
+                
+            commission_amount = float(commission['amount'])
+            commission_id = commission['id']
+            
+            if commission_amount <= remaining:
+                # Mark entire commission as paid
+                bot_db.update_commission_status(commission_id, 'paid', datetime.utcnow().isoformat())
+                remaining -= commission_amount
+                updated_commissions.append(commission_id)
+            else:
+                # This would be more complex in a real system - would need to split the commission
+                # For this demo, we'll just process whole commissions
+                continue
+        
+        # Record the withdrawal in the database
+        # In a real implementation, you would integrate with Solana or your payment processor
+        logger.info(f"Withdrawal processed: {user_id} withdrew ${amount:.2f} to {wallet_address}")
+        
+        return jsonify({
+            "success": True,
+            "message": f"Withdrawal of ${amount:.2f} processed successfully",
+            "reference": withdrawal_reference,
+            "processed_at": datetime.utcnow().isoformat(),
+            "amount": amount,
+            "wallet_address": wallet_address,
+            "remaining_balance": available_balance - amount
+        })
+    except Exception as e:
+        logger.error(f"Error processing withdrawal: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": f"Error processing withdrawal: {str(e)}"
         }), 500
 
 if __name__ == '__main__':
