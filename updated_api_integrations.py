@@ -10,8 +10,14 @@ import random
 import string
 import requests
 import sys
+import time
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Configure logging
 logging.basicConfig(
@@ -23,9 +29,6 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-
-# Load environment variables
-load_dotenv()
 
 # Get API key from environment variables
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
@@ -75,11 +78,11 @@ API_CONFIG = {
         "auth_type": "rapidapi"
     },
     
-    # Credit Card Generator API
+    # Credit Card Generator API - Fake Valid CC Generator
     "fake_cc_generator": {
         "key": RAPIDAPI_KEY,
-        "host": "cardgenerator.p.rapidapi.com",
-        "endpoint": "https://cardgenerator.p.rapidapi.com/generateCard",
+        "host": "fake-valid-cc-data-generator.p.rapidapi.com",
+        "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/generate",
         "auth_type": "rapidapi"
     },
     
@@ -304,12 +307,12 @@ class UpdatedAPIIntegrations:
     @staticmethod
     def generate_card(card_type="visa"):
         """
-        Generate a valid credit card using the Card Generator API
+        Generate a valid credit card using the Fake Valid CC Data Generator API
         """
         logger.info(f"Generating card of type: {card_type}")
         
         try:
-            # Use the Card Generator API
+            # Use the Fake Valid CC Data Generator API
             api_config = API_CONFIG["fake_cc_generator"]
             url = api_config["endpoint"]
             headers = UpdatedAPIIntegrations.get_headers("fake_cc_generator")
@@ -318,16 +321,19 @@ class UpdatedAPIIntegrations:
             card_type_map = {
                 "visa": "visa",
                 "mastercard": "mastercard",
-                "amex": "americanexpress",
-                "discover": "discover"
+                "amex": "amex",
+                "discover": "discover",
+                "diners": "diners",
+                "jcb": "jcb",
+                "maestro": "maestro"
             }
             
             api_card_type = card_type_map.get(card_type.lower(), "visa")
             
             # Prepare query parameters
             params = {
-                "type": api_card_type,
-                "safe": "true"  # Get a card with valid CVV and expiry date
+                "brand": api_card_type,
+                "format": "json"
             }
             
             # Make the API request
@@ -338,48 +344,23 @@ class UpdatedAPIIntegrations:
             data = response.json()
             logger.info("Card generation response received")
             
-            # This API returns an array of cards, get the first one
-            if isinstance(data, list) and len(data) > 0:
-                card_data = data[0]
-            else:
-                card_data = data  # Some APIs return a single object
+            # Extract card details from the response
+            card_number = data.get("credit_card_number", "")
+            expiry = data.get("credit_card_expiry_date", "")
+            cvv = data.get("credit_card_cvv", "")
+            cardholder_name = data.get("credit_card_holder_name", "")
             
-            # Extract card details with proper key mappings
-            card_number = card_data.get("number", "")
-            
-            # Get expiry month and year, format as needed
-            expiry_month = card_data.get("expirationMonth", "")
-            if not expiry_month and "expiry" in card_data:
-                # Try alternative field names
-                expiry_parts = card_data.get("expiry", "").split("/")
-                if len(expiry_parts) >= 1:
-                    expiry_month = expiry_parts[0].strip()
-            
-            expiry_year = card_data.get("expirationYear", "")
-            if not expiry_year and "expiry" in card_data:
-                # Try alternative field names
-                expiry_parts = card_data.get("expiry", "").split("/")
-                if len(expiry_parts) >= 2:
-                    expiry_year = expiry_parts[1].strip()
+            # Parse expiry date (format MM/YY or MM/YYYY)
+            expiry_month = ""
+            expiry_year = ""
+            if expiry and "/" in expiry:
+                parts = expiry.split("/")
+                if len(parts) == 2:
+                    expiry_month = parts[0].strip()
+                    expiry_year = parts[1].strip()
                     # Convert 2-digit year to 4-digit if needed
                     if len(expiry_year) == 2:
                         expiry_year = f"20{expiry_year}"
-            
-            # Get CVV/security code
-            cvv = card_data.get("cvv", "")
-            if not cvv:
-                cvv = card_data.get("securityCode", "")
-            
-            # Format the expiry date
-            expiry = f"{expiry_month}/{expiry_year[-2:]}" if expiry_month and expiry_year else ""
-            
-            # Get or generate cardholder name
-            cardholder_name = card_data.get("cardHolderName", "")
-            if not cardholder_name:
-                # Generate a random name if none provided
-                first_names = ["John", "Jane", "Michael", "Emily", "David", "Sarah"]
-                last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller"]
-                cardholder_name = f"{random.choice(first_names)} {random.choice(last_names)}"
             
             # Format the card information
             return {
@@ -394,7 +375,89 @@ class UpdatedAPIIntegrations:
         
         except requests.RequestException as e:
             logger.error(f"Error generating card: {str(e)}")
-            raise
+            
+            # Implement a fallback method to generate cards directly
+            logger.info("Using built-in card generation as fallback")
+            
+            # Generate card number using Luhn algorithm
+            def generate_card_number(prefix, length):
+                """Generate a valid card number using the Luhn algorithm"""
+                # Generate the first part (excluding the last digit)
+                number = prefix
+                number += ''.join(random.choice('0123456789') for _ in range(length - len(prefix) - 1))
+                
+                # Calculate Luhn checksum
+                digits = [int(d) for d in number]
+                for i in range(len(digits) - 1, -1, -2):
+                    digits[i] *= 2
+                    if digits[i] > 9:
+                        digits[i] -= 9
+                
+                # Calculate the check digit
+                checksum = sum(digits)
+                check_digit = (10 - (checksum % 10)) % 10
+                
+                # Return the complete number
+                return number + str(check_digit)
+            
+            # Generate card based on type
+            card_prefixes = {
+                "visa": ["4"],
+                "mastercard": ["51", "52", "53", "54", "55"],
+                "amex": ["34", "37"],
+                "discover": ["6011", "644", "645", "646", "647", "648", "649", "65"]
+            }
+            
+            card_lengths = {
+                "visa": 16,
+                "mastercard": 16,
+                "amex": 15,
+                "discover": 16
+            }
+            
+            prefix = random.choice(card_prefixes.get(card_type.lower(), ["4"]))
+            length = card_lengths.get(card_type.lower(), 16)
+            
+            card_number = generate_card_number(prefix, length)
+            
+            # Generate expiry date (1-5 years in future)
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            year_offset = random.randint(1, 5)
+            future_year = current_year + year_offset
+            
+            # If same year, ensure month is in future
+            if year_offset == 0:
+                future_month = random.randint(current_month + 1, 12)
+            else:
+                future_month = random.randint(1, 12)
+            
+            expiry_month = f"{future_month:02d}"
+            expiry_year = str(future_year)
+            
+            # Generate CVV - 3 digits for most cards, 4 for AMEX
+            cvv_length = 4 if card_type.lower() == "amex" else 3
+            cvv = ''.join(random.choice('0123456789') for _ in range(cvv_length))
+            
+            # Format the expiry date
+            expiry = f"{expiry_month}/{expiry_year[-2:]}"
+            
+            # Generate cardholder name
+            first_names = ["John", "Jane", "Michael", "Emily", "David", "Sarah"]
+            last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller"]
+            cardholder_name = f"{random.choice(first_names)} {random.choice(last_names)}"
+            
+            # Return the fallback card
+            return {
+                "card_number": card_number,
+                "card_type": card_type,
+                "cvv": cvv,
+                "expiry_month": expiry_month,
+                "expiry_year": expiry_year,
+                "expiry": expiry,
+                "cardholder_name": cardholder_name
+            }
     
     @staticmethod
     def validate_email(email):
@@ -555,11 +618,47 @@ class UpdatedAPIIntegrations:
         
         except requests.RequestException as e:
             logger.error(f"Error scraping website: {str(e)}")
-            return {
-                "success": False,
-                "url": url,
-                "error": str(e)
-            }
+            logger.info("Using direct requests as fallback for web scraping")
+            
+            try:
+                # Prepare fallback headers
+                fallback_headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Cache-Control': 'max-age=0'
+                }
+                
+                # Add any custom headers provided
+                if custom_headers:
+                    fallback_headers.update(custom_headers)
+                
+                # Make a direct request to the URL
+                start_time = time.time()
+                direct_response = requests.get(url, headers=fallback_headers, timeout=30)
+                render_time = time.time() - start_time
+                
+                # Return the result
+                return {
+                    "success": True,
+                    "url": url,
+                    "html": direct_response.text,
+                    "status_code": direct_response.status_code,
+                    "headers": dict(direct_response.headers),
+                    "render_time": render_time,
+                    "fallback": True
+                }
+            
+            except requests.RequestException as fallback_error:
+                logger.error(f"Fallback scraping also failed: {str(fallback_error)}")
+                return {
+                    "success": False,
+                    "url": url,
+                    "error": f"API error: {str(e)}. Fallback error: {str(fallback_error)}",
+                    "fallback_attempted": True
+                }
 
     @staticmethod
     def generate_complete_trial_data(service="hulu"):
