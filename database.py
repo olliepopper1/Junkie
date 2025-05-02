@@ -845,6 +845,125 @@ class Database:
             return True
         except Exception as e:
             logger.error(f"Error linking accounts: {e}")
-            conn.rollback()
-            conn.close()
+            if conn:
+                conn.rollback()
+                conn.close()
             return False
+    
+    def get_linked_accounts(self, user_id, account_type='discord'):
+        """
+        Get linked accounts for a user
+        
+        Args:
+            user_id (str): The user ID to lookup
+            account_type (str): The type of ID provided ('discord' or 'web')
+            
+        Returns:
+            list: List of linked account information
+        """
+        conn = self._get_connection()
+        cursor = self._get_cursor(conn)
+        
+        linked_accounts = []
+        
+        try:
+            if account_type == 'discord':
+                # Look up web accounts linked to this Discord ID from web_users table
+                cursor.execute(
+                    "SELECT id, username, email FROM web_users WHERE discord_id = %s",
+                    (user_id,)
+                )
+                rows = cursor.fetchall()
+                
+                for row in rows:
+                    linked_accounts.append({
+                        'discord_id': user_id,
+                        'web_user_id': row['id'],
+                        'web_username': row['username'],
+                        'web_email': row['email']
+                    })
+            else:
+                # Look up Discord ID linked to this web user ID
+                cursor.execute(
+                    "SELECT discord_id FROM web_users WHERE id = %s AND discord_id IS NOT NULL",
+                    (user_id,)
+                )
+                row = cursor.fetchone()
+                
+                if row and row['discord_id']:
+                    discord_id = row['discord_id']
+                    
+                    # Get Discord user info
+                    cursor.execute(
+                        "SELECT username FROM users WHERE user_id = %s",
+                        (discord_id,)
+                    )
+                    discord_user = cursor.fetchone()
+                    
+                    linked_accounts.append({
+                        'discord_id': discord_id,
+                        'web_user_id': user_id,
+                        'discord_username': discord_user['username'] if discord_user else 'Unknown Discord User'
+                    })
+            
+            # Also check account_mappings table if it exists
+            try:
+                if account_type == 'discord':
+                    cursor.execute(
+                        "SELECT web_user_id FROM account_mappings WHERE discord_id = %s",
+                        (user_id,)
+                    )
+                    mapping_rows = cursor.fetchall()
+                    
+                    for mapping in mapping_rows:
+                        # Check if this web_user_id is already in our results
+                        web_user_id = mapping['web_user_id']
+                        if not any(acct['web_user_id'] == web_user_id for acct in linked_accounts):
+                            # Get web user info
+                            cursor.execute(
+                                "SELECT username, email FROM web_users WHERE id = %s",
+                                (web_user_id,)
+                            )
+                            web_user = cursor.fetchone()
+                            
+                            if web_user:
+                                linked_accounts.append({
+                                    'discord_id': user_id,
+                                    'web_user_id': web_user_id,
+                                    'web_username': web_user['username'],
+                                    'web_email': web_user['email']
+                                })
+                else:
+                    cursor.execute(
+                        "SELECT discord_id FROM account_mappings WHERE web_user_id = %s",
+                        (user_id,)
+                    )
+                    mapping_rows = cursor.fetchall()
+                    
+                    for mapping in mapping_rows:
+                        # Check if this discord_id is already in our results
+                        discord_id = mapping['discord_id']
+                        if not any(acct['discord_id'] == discord_id for acct in linked_accounts):
+                            # Get Discord user info
+                            cursor.execute(
+                                "SELECT username FROM users WHERE user_id = %s",
+                                (discord_id,)
+                            )
+                            discord_user = cursor.fetchone()
+                            
+                            linked_accounts.append({
+                                'discord_id': discord_id,
+                                'web_user_id': user_id,
+                                'discord_username': discord_user['username'] if discord_user else 'Unknown Discord User'
+                            })
+            except Exception as e:
+                # Mappings table might not exist, which is fine
+                logger.debug(f"Error checking account_mappings table: {e}")
+            
+            conn.close()
+            return linked_accounts
+        except Exception as e:
+            logger.error(f"Error getting linked accounts: {e}")
+            if conn:
+                conn.close()
+            return []
