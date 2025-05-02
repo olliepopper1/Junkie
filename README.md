@@ -1,224 +1,116 @@
 # Trial Junkie
 
-A sophisticated multi-agent automation platform with dynamic web interface and Discord bot integration for generating and managing digital service trials with real automation capabilities.
+A sophisticated multi-agent automation platform specializing in dynamic trial generation and management with intelligent service integrations.
 
 ## Overview
 
-Trial Junkie is a complete trial account generation solution that provides both a web application and Discord bot interface. The system creates genuine trial accounts for various streaming and subscription services using advanced browser automation. 
+This system automates real free trial signups using only the provided RapidAPI Hub APIs. It uses:
 
-The platform consists of multiple specialized agents, each handling a different aspect of the trial creation process:
+- Real-time email + phone validation
+- Realistic credit card data to pass trial system
+- Real-time person verification
+- Full web automation to submit trials
+- Discord bot control and notifications
 
-- **Identity Agent (Heroin Harry)**: Generates realistic user identities
-- **Card Agent (Cash Carter)**: Creates valid credit card information for trial signups
-- **Email Agent (Vape Vince)**: Generates email addresses and handles verification
-- **Phone Agent (Molly Morphine)**: Provides phone verification services
-- **Automation Agent (Keta Kev)**: Handles browser automation and continuous trial generation
+## Required Environment Variables
 
-## Key Features
+Add these in Replit Secrets tab:
 
-- **Dual Interface**: Access via a modern web application or Discord bot
-- **Solana Wallet Integration**: Secure authentication and payment processing using Phantom wallet
-- **Real Trial Creation**: Automates browser interactions to create actual working trial accounts
-- **Modular Agent Architecture**: Each specialized agent handles a different aspect of the process
-- **Service Flexibility**: Works with predefined services or any custom trial website URL
-- **Subscription Tiers**: Multiple membership levels with different access and usage limits
-- **Database Integration**: Stores user credentials and trial information securely
-- **Referral System**: Users can earn commissions by referring others
+- `RAPIDAPI_KEY`: Your RapidAPI key for accessing all APIs
+- `DISCORD_BOT_TOKEN`: Your Discord bot token for the control bot
+- `ADMIN_USERNAME`: Username for admin access
+- `ADMIN_PASSWORD`: Password for admin access
+- `WALLET_SECRET_KEY`: Solana wallet secret key
 
-## Discord Commands
+## Connected APIs (Through RapidAPI Hub)
 
-- `!hit <service>` - Generate a complete trial for a service (all agents)
-- `!dose <agent> <service>` - Generate a specific resource (single agent)
-- `!trip <script>` - Run automation scripts for predefined services
-- `!stash` - View your generated credentials
-- `!rehab` - Clear your data
-- `!quote <agent>` - Get a random quote from an agent
-- `!agents` - See information about all agents
-- `!plans` - View subscription plans
-- `!pay <service_type>` - Payment command
-- `!tier` - View your subscription tier
+1. **Abstract Phone Number Validation**
+   - Validates: Number format, country, line type
+   - Endpoint: `https://phonevalidation.abstractapi.com/v1/?api_key=RAPIDAPI_KEY&phone=+1234567890`
 
-## Installation and Setup
+2. **Veriphone**
+   - Validates: Phone number globally (carrier, format, validity)
+   - Endpoint: `https://veriphone.p.rapidapi.com/verify?phone=+1234567890`
 
-1. Clone this repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Set up environment variables in `.env`:
-   ```
-   # Discord Bot
-   DISCORD_BOT_TOKEN=your_discord_bot_token
-   
-   # Database
-   DATABASE_URL=your_database_url
-   
-   # Solana Wallet
-   SOLANA_WALLET_ADDRESS=your_solana_wallet
-   SOLANA_NETWORK=devnet  # or mainnet-beta for production
-   
-   # External APIs
-   RAPIDAPI_KEY=your_rapidapi_key
-   
-   # Session security
-   SESSION_SECRET=your_session_secret
-   ```
+3. **Personator by Melissa Data**
+   - Verifies: Full contact info — name, email, phone, address
+   - Endpoint: `https://personator.melissadata.net/v3/WEB/ContactVerify/doContactVerify`
 
-4. Run the web application:
-   ```
-   gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
-   ```
+4. **ScrapeNinja**
+   - Scrapes/Accesses: Hulu pages for rendering, bypassing protection
+   - Endpoint: `https://scrapeninja.p.rapidapi.com/scrape`
 
-5. Run the Discord bot (separate process):
-   ```
-   python discord_bot.py
-   ```
+5. **Fake Valid CC Data Generator**
+   - Generates: Realistic-looking valid credit card data
+   - Endpoint: `https://fake-valid-cc-data-generator.p.rapidapi.com/generate?brand=visa&format=json`
 
-### Solana Wallet Setup
+6. **Advanced Email Validator**
+   - Validates: Structure, MX records, SMTP server, domain
+   - Endpoint: `https://advanced-email-validator.p.rapidapi.com/validate`
 
-To receive payments through the application:
+7. **Fast & Reliable Disposable Email Checker**
+   - Checks: If an email is temporary/disposable
+   - Endpoint: `https://disposable-email-checker.p.rapidapi.com/?email=test@example.com`
 
-1. Create a Solana wallet using [Phantom](https://phantom.app/)
-2. Set your wallet address in the `.env` file as `SOLANA_WALLET_ADDRESS`
-3. For testing, use Solana devnet
-4. For production, switch to mainnet-beta and ensure proper key management
+## Core Components
 
-## Real Trial Automation
+### RapidAPI Integration (`updated_api_integrations.py`)
+Connects to all required APIs and provides centralized access to their functionality.
 
-The system uses Selenium with ChromeDriver to automate the trial creation process. This involves:
+### Hulu Trial Generator (`hulu_trial_generator.py`)
+Creates real Hulu trials by:
+1. Generating identity with Personator API
+2. Validating phone with Veriphone API
+3. Creating a valid credit card with the Fake Valid CC Data Generator
+4. Automating the trial signup process
 
-1. Generating realistic user information (name, address, email, etc.)
-2. Creating valid credit card information
-3. Navigating to the service's website
-4. Filling out registration forms
-5. Handling payment verification
-6. Creating a working trial account
+### Discord Bot (`updated_discord_bot.py`)
+Provides a user-friendly interface for:
+1. Trial generation
+2. Account management
+3. Admin controls
+4. One-time trial limit enforcement
 
-### Supported Services
+## Usage
 
-The following services have specialized automation scripts:
+### Running the Discord Bot
 
-- Hulu
-- Netflix
-- Disney+
-- YouTube Premium
-- Spotify
-- Amazon Prime
-- Paramount+
-- HBO Max
-- Peacock
+```bash
+# Make the run script executable
+chmod +x run_trial_junkie_bot.sh
 
-Additionally, the system can attempt to automate trial creation on any website URL using the generic automation functionality.
-
-## Testing
-
-The project includes a comprehensive test suite covering all major components:
-
-### API Tests
-
-These tests verify all API endpoints are functioning correctly:
-
-```
-python test_api_endpoints.py
+# Run the bot
+./run_trial_junkie_bot.sh
 ```
 
-Tests cover:
-- Authentication flows (registration, login, wallet connection)
-- Trial generation endpoints
-- Payment processing
-- Referral system functionality
+### Discord Bot Commands
 
-### Payment Flow Tests
+- `/hit [service]` - Generate a complete trial (e.g., `/hit hulu`)
+- `/stash` - View your saved trials
+- `/rehab` - Clear your saved data
+- `/quote [agent]` - Get a quote from an agent
+- `/agents` - View all available agents
+- `/admin login [username] [password]` - Admin login
+- `/admin reset [user_id]` - Reset a user's trial limit
 
-Tests for the Solana wallet payment integration:
+### Admin Functions
 
-```
-python test_payment_flow.py
-```
+Admin users can:
+1. Log in using the provided credentials
+2. Reset user trial limits to allow additional trials
+3. Override the one-time trial restriction
 
-Tests cover:
-- Wallet connection
-- Payment creation and verification
-- Subscription activation and expiration
-- Error handling
+## System Architecture
 
-### Discord Bot Tests
+1. **API Integration Layer**: Connects to RapidAPI Hub services
+2. **Data Generation Layer**: Creates realistic information for trial signups
+3. **Automation Layer**: Handles browser automation for websites
+4. **Bot Control Layer**: Manages Discord commands and user interaction
+5. **Security Layer**: Ensures one-time usage and admin controls
 
-Test Discord bot commands and functionality:
+## Future Enhancements
 
-```
-python test_discord_commands.py
-```
-
-Tests cover:
-- Command availability and responses
-- Error handling
-- User permission checks
-- Integration with the database
-
-### Trial Automation Tests
-
-Test the browser automation for specific services:
-
-```
-python test_hulu_trial.py
-```
-
-This runs a comprehensive test of the Hulu trial creation process, including identity generation, card creation, and browser automation.
-
-### API Integration Tests
-
-Test external API integrations for identity and card generation:
-
-```
-python test_api_integrations.py
-```
-
-### Manual Testing
-
-To simulate a complete user flow through the Discord bot:
-
-```
-python simulate_hit_command.py
-```
-
-This simulates what happens when a user runs the `!hit hulu` command in Discord.
-
-## Technical Details
-
-### Architecture
-
-- **Backend**: Flask-based Python application with RESTful API endpoints
-- **Frontend**: Responsive design built with modern HTML/CSS/JavaScript and character-driven UI
-- **Database**: SQLite for development, PostgreSQL for production with SQLAlchemy ORM
-- **Authentication**: Dual system with Solana wallet integration and traditional email/password
-
-### Key Components
-
-- **Browser Automation**: Selenium with ChromeDriver for website interaction
-- **Payment System**: Integrated with Solana blockchain for secure and decentralized payments
-- **API Integration**: Uses RapidAPI services for identity, phone verification, and card generation
-- **Discord Integration**: Seamless connection between web app and Discord bot functionality
-
-### Security
-
-- **Wallet Authentication**: Non-custodial wallet-based login with Phantom
-- **Encrypted Storage**: Sensitive user data and credentials are encrypted at rest
-- **Session Management**: Secure session handling with proper expiration and renewal
-- **Access Control**: Role-based permissions with subscription tier enforcement
-
-## Responsible Usage
-
-This tool is intended for educational purposes and legitimate trial usage. Please:
-
-1. Use real information when signing up for trials
-2. Remember to cancel trials before they convert to paid subscriptions
-3. Respect the terms of service of the websites you interact with
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Add support for additional services (Disney+, Spotify, YouTube Premium)
+- Implement expanded automation capabilities
+- Add wallet integration for payment handling
+- Create a web interface for the service
