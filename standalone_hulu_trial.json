@@ -1,18 +1,22 @@
 {
   "service": "Hulu",
   "plan": "Hulu (No Ads)",
-  "monthly_price": "$12.99",
-  "user_info": {
-    "first_name": "Elizabeth",
-    "last_name": "Wilson",
-    "email": "elizabeth.wilson251@example.com",
-    "password": "AOc4gYDC6XjX",
-    "card_type": "Amex",
-    "card_number": "4006756800806948",
-    "card_expiry": "02/29",
-    "cvv": "632"
+  "price": "$14.99/month",
+  "status": "Active",
+  "trial": true,
+  "email": "mary.davis1872@icloud.com",
+  "password": "9bE3f8hXj^Os",
+  "name": "Robert Williams",
+  "first_name": "Robert",
+  "last_name": "Williams",
+  "card": "Visa **** **** **** 4242",
+  "card_details": {
+    "type": "Visa",
+    "last4": "4242",
+    "expiry": "12/26"
   },
-  "trial_start_date": "2025-05-02",
-  "trial_end_date": "2025-06-01",
-  "generated_at": "2025-05-02T00:38:28.255112"
+  "start_date": "2025-05-02",
+  "end_date": "2025-06-01",
+  "days_remaining": 30,
+  "success": true
 }
