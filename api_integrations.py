@@ -59,11 +59,20 @@ API_CONFIG = {
         "content_type": "application/json"
     },
     
-    # Credit Card Generation API using Fake Credit Card Generator
+    # Credit Card Generation API (Primary)
     "fake_card": {
         "key": RAPIDAPI_KEY,
-        "host": "fake-credit-card-generator.p.rapidapi.com",
-        "endpoint": "https://fake-credit-card-generator.p.rapidapi.com/creditcard/generate",
+        "host": "credit-card-generator2.p.rapidapi.com",
+        "endpoint": "https://credit-card-generator2.p.rapidapi.com/generate-card",
+        "auth_type": "rapidapi",
+        "content_type": "application/json"
+    },
+    
+    # Credit Card Generation API (Backup)
+    "fake_card_backup": {
+        "key": RAPIDAPI_KEY,
+        "host": "generator-credit-card.p.rapidapi.com",
+        "endpoint": "https://generator-credit-card.p.rapidapi.com/creditcard/generate",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -71,8 +80,8 @@ API_CONFIG = {
     # Virtual Card Issuing API
     "virtual_card": {
         "key": RAPIDAPI_KEY,
-        "host": "visa-credit-card-generator-api.p.rapidapi.com",
-        "endpoint": "https://visa-credit-card-generator-api.p.rapidapi.com/visa",
+        "host": "creditcards.p.rapidapi.com",
+        "endpoint": "https://creditcards.p.rapidapi.com/creditcard/generate",
         "auth_type": "rapidapi",
         "content_type": "application/json"
     },
@@ -409,54 +418,174 @@ class APIIntegrations:
     
     @staticmethod
     def generate_card(card_type="visa"):
-        """Generate a valid credit card for verification using Fake Credit Card Generator API"""
+        """Generate a valid credit card for verification using Credit Card Generator API"""
         logger.info(f"Generating card of type: {card_type}")
+        normalized_type = card_type.lower()
         
         try:
-            # Use the Fake Credit Card Generator API from RapidAPI
+            # Use the primary Credit Card Generator API
             url = API_CONFIG["fake_card"]["endpoint"]
             headers = APIIntegrations.get_headers("fake_card")
             
-            # This API uses GET requests, no need for payload
-            response = requests.get(url, headers=headers, timeout=10)
+            # Format query parameters according to the API
+            querystring = {}
+            if normalized_type in ["visa", "mastercard", "amex", "discover"]:
+                querystring["brand"] = normalized_type
+            
+            # Make the API request
+            response = requests.get(url, headers=headers, params=querystring, timeout=10)
             response.raise_for_status()
             
+            # Parse the response
             data = response.json()
-            logger.info("Credit card generated successfully")
-            
-            # Format the response according to our standard format
-            card_info = {}
             
             # Check if we have a proper response
-            if isinstance(data, dict):
-                # Extract card information
+            if not data:
+                raise ValueError("Empty response from Credit Card Generator API")
+                
+            logger.info("Credit card generated successfully")
+            
+            # Format for our standard output
+            card_info = {}
+            
+            # Check different response formats
+            if isinstance(data, dict) and "CreditCard" in data:
+                # New API format
+                card_data = data["CreditCard"]
                 card_info = {
-                    "card_number": data.get("CreditCardNumber", ""),
-                    "card_type": card_type,
-                    "cvv": data.get("CVV", ""),
-                    "expiry_month": data.get("ExpirationDate", "").split("/")[0] if "/" in data.get("ExpirationDate", "") else "",
-                    "expiry_year": data.get("ExpirationDate", "").split("/")[1] if "/" in data.get("ExpirationDate", "") else "",
-                    "cardholder_name": data.get("CardHolderName", "")
+                    "card_number": card_data.get("CardNumber", ""),
+                    "card_type": normalized_type,
+                    "cvv": card_data.get("CVV", ""),
+                    "expiry_month": card_data.get("ExpiryMonth", ""),
+                    "expiry_year": card_data.get("ExpiryYear", ""),
+                    "cardholder_name": card_data.get("Name", "")
                 }
+            elif isinstance(data, dict):
+                # Check for common field names in different APIs
+                card_info = {
+                    "card_number": data.get("CreditCardNumber", data.get("card_number", data.get("number", ""))),
+                    "card_type": normalized_type,
+                    "cvv": data.get("CVV", data.get("cvv", data.get("security_code", ""))),
+                    "expiry_month": "",
+                    "expiry_year": "",
+                    "cardholder_name": data.get("CardHolderName", data.get("name", data.get("holder", "")))
+                }
+                
+                # Handle expiration date in different formats
+                expiry = data.get("ExpirationDate", data.get("expiry", data.get("expiration", "")))
+                if expiry and "/" in expiry:
+                    parts = expiry.split("/")
+                    if len(parts) == 2:
+                        card_info["expiry_month"] = parts[0].strip()
+                        card_info["expiry_year"] = parts[1].strip()
             elif isinstance(data, list) and len(data) > 0:
                 # Some APIs return a list of cards
                 card_data = data[0]
                 card_info = {
-                    "card_number": card_data.get("CreditCardNumber", ""),
-                    "card_type": card_type,
-                    "cvv": card_data.get("CVV", ""),
-                    "expiry_month": card_data.get("ExpirationDate", "").split("/")[0] if "/" in card_data.get("ExpirationDate", "") else "",
-                    "expiry_year": card_data.get("ExpirationDate", "").split("/")[1] if "/" in card_data.get("ExpirationDate", "") else "",
-                    "cardholder_name": card_data.get("CardHolderName", "")
+                    "card_number": card_data.get("CreditCardNumber", card_data.get("card_number", card_data.get("number", ""))),
+                    "card_type": normalized_type,
+                    "cvv": card_data.get("CVV", card_data.get("cvv", card_data.get("security_code", ""))),
+                    "expiry_month": "",
+                    "expiry_year": "",
+                    "cardholder_name": card_data.get("CardHolderName", card_data.get("name", card_data.get("holder", "")))
                 }
+                
+                # Handle expiration date in different formats
+                expiry = card_data.get("ExpirationDate", card_data.get("expiry", card_data.get("expiration", "")))
+                if expiry and "/" in expiry:
+                    parts = expiry.split("/")
+                    if len(parts) == 2:
+                        card_info["expiry_month"] = parts[0].strip()
+                        card_info["expiry_year"] = parts[1].strip()
             else:
-                logger.warning("Unexpected response format from Fake Credit Card API")
+                logger.warning("Unexpected response format from Credit Card API")
                 return APIIntegrations._generate_fallback_card(card_type)
             
+            # Validate the card data
+            if not card_info.get("card_number"):
+                raise ValueError("No card number in response")
+                
             return card_info
             
-        except requests.RequestException as e:
-            logger.error(f"Error calling Fake Card API: {e}")
+        except (requests.RequestException, ValueError) as primary_api_error:
+            # Try backup API if primary fails
+            logger.warning(f"Primary Credit Card API failed: {primary_api_error}")
+            logger.info("Trying backup Credit Card API...")
+            
+            try:
+                # Use the backup API
+                backup_url = API_CONFIG["fake_card_backup"]["endpoint"]
+                backup_headers = APIIntegrations.get_headers("fake_card_backup")
+                
+                # Format query parameters for backup API
+                querystring = {}
+                if normalized_type in ["visa", "mastercard", "amex", "discover"]:
+                    querystring["type"] = normalized_type
+                
+                # Make the API request
+                backup_response = requests.get(backup_url, headers=backup_headers, params=querystring, timeout=10)
+                backup_response.raise_for_status()
+                
+                # Parse the response
+                backup_data = backup_response.json()
+                
+                # Check if we have a proper response
+                if not backup_data:
+                    raise ValueError("Empty response from Backup Credit Card API")
+                    
+                logger.info("Credit card generated successfully via backup API")
+                
+                # Extract data from backup API response
+                card_info = {}
+                
+                if isinstance(backup_data, dict):
+                    card_info = {
+                        "card_number": backup_data.get("card_number", backup_data.get("number", "")),
+                        "card_type": normalized_type,
+                        "cvv": backup_data.get("cvv", backup_data.get("cvc", "")),
+                        "expiry_month": "",
+                        "expiry_year": "",
+                        "cardholder_name": backup_data.get("name", backup_data.get("holder", ""))
+                    }
+                    
+                    # Handle expiration date formats
+                    expiry = backup_data.get("expiry", backup_data.get("expiration", ""))
+                    if expiry and "/" in expiry:
+                        parts = expiry.split("/")
+                        if len(parts) == 2:
+                            card_info["expiry_month"] = parts[0].strip()
+                            card_info["expiry_year"] = parts[1].strip()
+                elif isinstance(backup_data, list) and len(backup_data) > 0:
+                    first_card = backup_data[0]
+                    card_info = {
+                        "card_number": first_card.get("card_number", first_card.get("number", "")),
+                        "card_type": normalized_type,
+                        "cvv": first_card.get("cvv", first_card.get("cvc", "")),
+                        "expiry_month": "",
+                        "expiry_year": "",
+                        "cardholder_name": first_card.get("name", first_card.get("holder", ""))
+                    }
+                    
+                    # Handle expiration date formats
+                    expiry = first_card.get("expiry", first_card.get("expiration", ""))
+                    if expiry and "/" in expiry:
+                        parts = expiry.split("/")
+                        if len(parts) == 2:
+                            card_info["expiry_month"] = parts[0].strip()
+                            card_info["expiry_year"] = parts[1].strip()
+                
+                # Validate the card data
+                if not card_info.get("card_number"):
+                    raise ValueError("No card number in backup API response")
+                    
+                return card_info
+                
+            except (requests.RequestException, ValueError, Exception) as backup_api_error:
+                logger.error(f"Backup Credit Card API also failed: {backup_api_error}")
+                logger.info("Using fallback card generation")
+                return APIIntegrations._generate_fallback_card(card_type)
+        except Exception as e:
+            logger.error(f"Unexpected error in generate_card: {e}")
             logger.info("Using fallback card generation")
             return APIIntegrations._generate_fallback_card(card_type)
     
@@ -520,31 +649,89 @@ class APIIntegrations:
             # Use the Virtual Card Issuing API
             url = API_CONFIG["virtual_card"]["endpoint"]
             headers = APIIntegrations.get_headers("virtual_card")
-            payload = json.dumps({
-                "amount": amount,
-                "currency": currency
-            })
             
-            response = requests.post(url, headers=headers, data=payload)
-            response.raise_for_status()
-            
-            data = response.json()
-            logger.info("Virtual card generated successfully")
-            
-            return {
-                "card_number": data.get("card_number", ""),
-                "card_type": data.get("card_type", ""),
-                "cvv": data.get("cvv", ""),
-                "expiry": data.get("expiry", ""),
-                "amount": data.get("amount", 0.00),
-                "currency": data.get("currency", "USD")
+            # Format payload based on the API requirements
+            querystring = {
+                "amount": str(amount),
+                "currency": currency,
+                "type": "visa"  # Default to Visa cards
             }
             
-        except requests.RequestException as e:
+            # Make the API request
+            response = requests.get(url, headers=headers, params=querystring, timeout=10)
+            response.raise_for_status()
+            
+            # Parse the response
+            data = response.json()
+            
+            # Check if we have a proper response
+            if not data:
+                raise ValueError("Empty response from Virtual Card API")
+                
+            logger.info("Virtual card generated successfully")
+            
+            # Format for our standard output
+            card_info = {}
+            
+            # Extract card info from different response formats
+            if isinstance(data, dict) and "card" in data:
+                # Structured response with card object
+                card_data = data["card"]
+                card_info = {
+                    "card_number": card_data.get("number", ""),
+                    "card_type": "visa",  # Default for most virtual cards
+                    "cvv": card_data.get("cvv", card_data.get("cvc", "")),
+                    "expiry_month": card_data.get("exp_month", ""),
+                    "expiry_year": card_data.get("exp_year", ""),
+                    "expiry": f"{card_data.get('exp_month', '')}/{card_data.get('exp_year', '')}",
+                    "cardholder_name": card_data.get("name", ""),
+                    "amount": amount,
+                    "currency": currency
+                }
+            elif isinstance(data, dict):
+                # Direct card details in root object
+                card_info = {
+                    "card_number": data.get("number", data.get("card_number", "")),
+                    "card_type": "visa",  # Default for most virtual cards
+                    "cvv": data.get("cvv", data.get("cvc", data.get("security_code", ""))),
+                    "expiry": data.get("expiry", data.get("expiration", "")),
+                    "cardholder_name": data.get("name", data.get("cardholder", "")),
+                    "amount": data.get("amount", amount),
+                    "currency": data.get("currency", currency)
+                }
+                
+                # Parse expiry into month/year if needed
+                if card_info["expiry"] and "/" in card_info["expiry"]:
+                    parts = card_info["expiry"].split("/")
+                    if len(parts) == 2:
+                        card_info["expiry_month"] = parts[0].strip()
+                        card_info["expiry_year"] = parts[1].strip()
+            
+            # Validate the virtual card data
+            if not card_info.get("card_number"):
+                raise ValueError("No card number in Virtual Card API response")
+                
+            return card_info
+            
+        except (requests.RequestException, ValueError, Exception) as e:
             logger.error(f"Error calling Virtual Card API: {e}")
-            # Fallback to local generation
             logger.info("Using fallback virtual card generation")
-            return APIIntegrations._generate_fallback_card()
+            
+            # Generate a fallback card with expiry details formatted
+            fallback_card = APIIntegrations._generate_fallback_card("visa")
+            
+            # Add the amount and currency details
+            fallback_card["amount"] = amount
+            fallback_card["currency"] = currency
+            
+            # Extract expiry month and year if available
+            if "expiry" in fallback_card and "/" in fallback_card["expiry"]:
+                parts = fallback_card["expiry"].split("/")
+                if len(parts) == 2:
+                    fallback_card["expiry_month"] = parts[0].strip()
+                    fallback_card["expiry_year"] = parts[1].strip()
+            
+            return fallback_card
     
     @staticmethod
     def validate_email(email):
