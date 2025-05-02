@@ -1119,6 +1119,10 @@ def connect_wallet():
         data = request.json
         wallet_address = data.get('address')
         
+        # Handle both parameter names for backward compatibility
+        if not wallet_address:
+            wallet_address = data.get('wallet_address')
+            
         if not wallet_address:
             return jsonify({'error': 'Wallet address is required'}), 400
         
@@ -1133,6 +1137,8 @@ def connect_wallet():
         user = WebUser.query.get(user_id)
         if user:
             user.wallet_address = wallet_address
+            # Update last connection timestamp
+            user.last_wallet_connection = datetime.utcnow()
             db.session.commit()
         
         return jsonify({
@@ -1194,16 +1200,21 @@ def wallet_status():
                     'connected_at': None  # We don't have this info from DB
                 }
         
+        # Get subscription information
+        subscription_info = check_subscription_status(user_id)
+        
         if wallet_info:
             return jsonify({
                 'status': 'success',
                 'connected': True,
-                'address': wallet_info['wallet_address']
+                'address': wallet_info['wallet_address'],
+                'subscription': subscription_info
             })
         else:
             return jsonify({
                 'status': 'success',
-                'connected': False
+                'connected': False,
+                'subscription': subscription_info
             })
     except Exception as e:
         logger.error(f"Error getting wallet status: {str(e)}")

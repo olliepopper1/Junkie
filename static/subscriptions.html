@@ -1017,26 +1017,59 @@
       // Check wallet connection on page load
       async function checkWalletConnection() {
         try {
+          console.log('Checking wallet connection status...');
           const response = await fetch('/api/wallet/status');
           const data = await response.json();
           
+          console.log('Wallet status response:', data);
+          
+          // Check for subscription information
+          if (data.subscription) {
+            // Update UI with subscription information
+            if (data.subscription.active) {
+              console.log('Active subscription found:', data.subscription);
+              
+              // Call our subscription status handler to update UI
+              await checkSubscriptionStatus();
+            }
+          }
+          
           if (data.connected) {
+            console.log('Wallet is connected:', data.address);
             updateUIForConnectedWallet(data.address, data.balance);
           } else {
+            console.log('Wallet not connected according to backend, checking with browser extension...');
             // If backend says not connected, let's also check with the wallet directly
-            if (window.phantomWallet) {
+            if (window.phantomWallet && window.phantomWallet.isInstalled) {
               const phantomStatus = await window.phantomWallet.checkConnection();
               if (phantomStatus.connected) {
+                console.log('Wallet is connected in browser but not in backend, syncing...');
+                // Wallet is connected in browser but not in backend, let's sync them
+                await fetch('/api/wallet/connect', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    address: phantomStatus.address
+                  })
+                });
+                
                 updateUIForConnectedWallet(phantomStatus.address);
+                
+                // Check subscription status again after connecting wallet
+                await checkSubscriptionStatus();
               } else {
+                console.log('Wallet not connected in browser');
                 updateUIForDisconnectedWallet();
               }
             } else {
+              console.log('Phantom wallet not installed or available');
               updateUIForDisconnectedWallet();
             }
           }
         } catch (error) {
-          console.error('Error checking wallet status:', error);
+          console.error('Error checking wallet connection:', error);
           updateUIForDisconnectedWallet();
         }
       }
