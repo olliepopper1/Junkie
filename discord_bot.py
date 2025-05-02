@@ -6,10 +6,16 @@ import os
 import sys
 import logging
 import random
-from datetime import datetime
+import json
+import string
+from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+
+# Import our updated API integrations
+from updated_api_integrations import UpdatedAPIIntegrations
+from bot_trial_delivery import TrialDelivery
 
 # Configure logging
 logging.basicConfig(
@@ -352,20 +358,61 @@ async def hit_command(ctx, *, service_or_url: str = None):
     embed.set_footer(text="Trial Junkie - Get your digital fix")
     await ctx.send(embed=embed)
     
-    # Create a mock trial response for now
-    from datetime import datetime, timedelta
-    import random
-    import string
-    
-    trial_result = {
-        'id': random.randint(1000, 9999),
-        'service': service_or_url.lower() if not service_or_url.startswith(('http://', 'https://')) else 'custom',
-        'email': f"user{random.randint(1000, 9999)}@trialmail.com",
-        'password': ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12)),
-        'card_type': random.choice(['Visa', 'Mastercard', 'American Express']),
-        'card_number': ''.join(random.choice(string.digits) for _ in range(16)),
-        'trial_end_date': (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d'),
-    }
+    # Use our real API integrations to generate the trial data
+    try:
+        # Initialize trial data
+        trial_data = {}
+        service = service_or_url.lower() if not service_or_url.startswith(('http://', 'https://')) else 'custom'
+        
+        # Initialize API client
+        api = UpdatedAPIIntegrations()
+        
+        # Step 1: Generate identity
+        identity = api.generate_identity()
+        logger.info(f"Generated identity for {ctx.author.name}: {identity['first_name']} {identity['last_name']}")
+        
+        # Step 2: Generate credit card
+        card = api.generate_card("visa")
+        logger.info(f"Generated card ending in {card['card_number'][-4:]}")
+        
+        # Step 3: Generate secure password
+        password = ''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(12))
+        
+        # Step 4: Calculate trial end date based on service
+        if service in TRIAL_SERVICES:
+            trial_days = TRIAL_SERVICES[service].get('trial_period_days', 30)
+        else:
+            trial_days = 30
+        
+        trial_end_date = (datetime.now() + timedelta(days=trial_days)).strftime('%Y-%m-%d')
+        
+        # Assemble the trial information
+        trial_result = {
+            'id': random.randint(1000, 9999),
+            'service': service,
+            'email': identity.get('email', f"{identity['first_name'].lower()}.{identity['last_name'].lower()}{random.randint(100, 999)}@example.com"),
+            'password': password,
+            'first_name': identity.get('first_name', ''),
+            'last_name': identity.get('last_name', ''),
+            'address': identity.get('address', ''),
+            'city': identity.get('city', ''),
+            'state': identity.get('state', ''),
+            'zipcode': identity.get('zipcode', ''),
+            'card_type': card.get('card_type', 'Visa'),
+            'card_number': card.get('card_number', ''),
+            'card_expiry': card.get('expiry', ''),
+            'card_cvv': card.get('cvv', ''),
+            'trial_end_date': trial_end_date,
+        }
+        
+        # Store trial in database using TrialDelivery
+        delivery = TrialDelivery()
+        delivery.save_trial_to_database(ctx.author.id, trial_result)
+        
+    except Exception as e:
+        logger.error(f"Error generating trial data: {str(e)}")
+        await ctx.send(f"Error generating trial: {str(e)}")
+        return
     
     # Send success message
     success_embed = discord.Embed(
@@ -556,54 +603,73 @@ async def dose_command(ctx, agent_type: str = None, platform: str = None):
     )
     
     if agent_type == "harry":
-        # Identity generation
-        import random
-        
-        first_names = ["John", "Jane", "Michael", "Sarah", "David", "Emma", "James", "Olivia"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson"]
-        states = ["CA", "NY", "TX", "FL", "IL", "PA", "OH", "GA"]
-        cities = ["Los Angeles", "New York", "Houston", "Miami", "Chicago", "Philadelphia", "Columbus", "Atlanta"]
-        
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
-        
-        address = f"{random.randint(100, 9999)} {random.choice(['Main', 'Oak', 'Maple', 'Pine', 'Cedar'])} {random.choice(['St', 'Ave', 'Blvd', 'Dr'])}"
-        city = random.choice(cities)
-        state = random.choice(states)
-        zipcode = f"{random.randint(10000, 99999)}"
-        phone = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-        
-        result_embed.add_field(name="Full Name", value=f"{first_name} {last_name}", inline=False)
-        result_embed.add_field(name="Address", value=f"{address}\n{city}, {state} {zipcode}", inline=False)
-        result_embed.add_field(name="Phone", value=phone, inline=True)
-        result_embed.add_field(name="DOB", value=f"{random.randint(1, 12)}/{random.randint(1, 28)}/{random.randint(1970, 2000)}", inline=True)
+        # Identity generation using our real API
+        try:
+            # Initialize API client
+            api = UpdatedAPIIntegrations()
+            
+            # Generate identity with the API
+            identity = api.generate_identity()
+            logger.info(f"Generated identity for {ctx.author.name}: {identity['first_name']} {identity['last_name']}")
+            
+            # Format the address
+            address = identity.get('address', '')
+            city = identity.get('city', '')
+            state = identity.get('state', '')
+            zipcode = identity.get('zipcode', '')
+            phone = identity.get('phone', '')
+            dob = identity.get('dob', '')
+            
+            # Add to embed
+            result_embed.add_field(name="Full Name", value=f"{identity['first_name']} {identity['last_name']}", inline=False)
+            result_embed.add_field(name="Address", value=f"{address}\n{city}, {state} {zipcode}", inline=False)
+            result_embed.add_field(name="Phone", value=phone, inline=True)
+            result_embed.add_field(name="DOB", value=dob, inline=True)
+            
+            # Add email if available
+            if 'email' in identity:
+                result_embed.add_field(name="Email", value=identity['email'], inline=False)
+                
+        except Exception as e:
+            logger.error(f"Error generating identity: {str(e)}")
+            await ctx.send(f"❌ Error generating identity: {str(e)}")
+            return
         
     elif agent_type == "mandy":
-        # Card generation
-        import random
-        import string
-        
-        card_types = ["Visa", "Mastercard", "American Express"]
-        card_type = random.choice(card_types)
-        
-        if card_type == "Visa":
-            card_number = "4" + ''.join(random.choice(string.digits) for _ in range(15))
-            cvv = ''.join(random.choice(string.digits) for _ in range(3))
-        elif card_type == "Mastercard":
-            card_number = "5" + ''.join(random.choice(string.digits) for _ in range(15))
-            cvv = ''.join(random.choice(string.digits) for _ in range(3))
-        else:  # American Express
-            card_number = "3" + ''.join(random.choice(string.digits) for _ in range(14))
-            cvv = ''.join(random.choice(string.digits) for _ in range(4))
-        
-        current_year = datetime.now().year
-        exp_month = random.randint(1, 12)
-        exp_year = random.randint(current_year + 1, current_year + 5)
-        
-        result_embed.add_field(name="Card Type", value=card_type, inline=True)
-        result_embed.add_field(name="Card Number", value=f"{card_number[0:4]} {card_number[4:8]} {card_number[8:12]} {card_number[12:]}", inline=False)
-        result_embed.add_field(name="Expiration", value=f"{exp_month:02d}/{exp_year % 100}", inline=True)
-        result_embed.add_field(name="CVV", value=cvv, inline=True)
+        # Card generation using real API
+        try:
+            # Initialize API client
+            api = UpdatedAPIIntegrations()
+            
+            # Generate card with API - select card type based on platform parameter if valid
+            valid_card_types = ["visa", "mastercard", "amex", "discover", "diners", "jcb"]
+            card_type = platform.lower() if platform.lower() in valid_card_types else "visa"
+            
+            # Generate card
+            card = api.generate_card(card_type)
+            logger.info(f"Generated card for {ctx.author.name}: {card_type} ending in {card['card_number'][-4:]}")
+            
+            # Format card number for display with spaces
+            card_number = card.get('card_number', '')
+            if card_number:
+                formatted_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+            else:
+                formatted_number = "Not available"
+            
+            # Add to embed
+            result_embed.add_field(name="Card Type", value=card.get('card_type', 'Visa').title(), inline=True)
+            result_embed.add_field(name="Card Number", value=formatted_number, inline=False)
+            result_embed.add_field(name="Expiration", value=card.get('expiry', 'MM/YY'), inline=True)
+            result_embed.add_field(name="CVV", value=card.get('cvv', ''), inline=True)
+            
+            # Add cardholder if available
+            if 'cardholder_name' in card and card['cardholder_name']:
+                result_embed.add_field(name="Cardholder", value=card['cardholder_name'], inline=False)
+                
+        except Exception as e:
+            logger.error(f"Error generating card: {str(e)}")
+            await ctx.send(f"❌ Error generating card: {str(e)}")
+            return
         
     elif agent_type == "xan":
         # Email generation
