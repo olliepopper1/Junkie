@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Random Identity Generator",
+    "status": "warning",
+    "code": 403
+  },
+  {
+    "name": "Fake Valid CC Generator",
+    "status": "warning",
+    "code": 404
+  },
+  {
+    "name": "Veriphone",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "name": "Website Scraper",
+    "status": "warning",
+    "code": 403
+  }
+]

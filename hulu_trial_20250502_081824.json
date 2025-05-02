@@ -1,0 +1,22 @@
+{
+  "service": "hulu",
+  "plan": "Hulu (No Ads)",
+  "email": "michael.williams710@gmail.com",
+  "password": "TrialJunkie2025!",
+  "first_name": "Michael",
+  "last_name": "Williams",
+  "address": "4162 Cedar Ave",
+  "city": "Los Angeles",
+  "state": "VA",
+  "zipcode": "97494",
+  "phone": "989-350-4380",
+  "start_date": "2025-05-02",
+  "end_date": "2025-05-02",
+  "card_details": {
+    "type": "visa",
+    "number": "4121388828351408",
+    "expiry": "02/29",
+    "cvv": "694",
+    "last4": "1408"
+  }
+}
