@@ -237,7 +237,7 @@ class Database:
             credential_value = json.dumps(credential_value)
         
         cursor.execute(
-            "INSERT INTO credentials (user_id, service, credential_type, credential_value, created_at) VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO credentials (user_id, service, credential_type, credential_value, created_at) VALUES (?, ?, ?, ?, ?)",
             (user_id, service, credential_type, credential_value, now)
         )
         
@@ -252,11 +252,11 @@ class Database:
         conn = self._get_connection()
         cursor = self._get_cursor(conn)
         
-        query = "SELECT * FROM credentials WHERE user_id = %s"
+        query = "SELECT * FROM credentials WHERE user_id = ?"
         params = [user_id]
         
         if service:
-            query += " AND service = %s"
+            query += " AND service = ?"
             params.append(service)
         
         query += " ORDER BY created_at DESC"

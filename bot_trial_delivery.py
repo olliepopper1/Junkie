@@ -6,7 +6,7 @@ import json
 import logging
 import sys
 from datetime import datetime
-from database import Database
+from trial_storage import TrialStorage
 
 # Configure logging
 logging.basicConfig(
@@ -26,7 +26,7 @@ class TrialDelivery:
     
     def __init__(self):
         """Initialize the delivery system with database connection"""
-        self.db = Database()
+        self.storage = TrialStorage()
     
     def load_trial_from_file(self, filepath="standalone_hulu_trial.json"):
         """Load trial information from a JSON file"""
@@ -42,55 +42,16 @@ class TrialDelivery:
     def save_trial_to_database(self, user_id, trial_data):
         """Save trial information to the database for a specific user"""
         try:
-            # Create user if it doesn't exist
-            if not self.db.user_exists(user_id):
-                self.db.create_user(user_id, f"user_{user_id}")
+            # Simply use the new trial storage class to save the trial
+            trial_id = self.storage.save_trial(user_id, trial_data)
             
-            # Remove special characters from credential values to avoid SQL injection
-            def sanitize(value):
-                if isinstance(value, str):
-                    # Replace problematic characters that might cause SQL issues
-                    return value.replace("'", "''").replace("%", "%%")
-                return value
-            
-            # Insert into credentials table
-            self.db.save_credential(
-                user_id=user_id,
-                service=sanitize(trial_data['service']),
-                credential_type="email",
-                credential_value=sanitize(trial_data['email'])
-            )
-            
-            self.db.save_credential(
-                user_id=user_id,
-                service=sanitize(trial_data['service']),
-                credential_type="password",
-                credential_value=sanitize(trial_data['password'])
-            )
-            
-            self.db.save_credential(
-                user_id=user_id,
-                service=sanitize(trial_data['service']),
-                credential_type="plan",
-                credential_value=sanitize(trial_data['plan'])
-            )
-            
-            self.db.save_credential(
-                user_id=user_id,
-                service=sanitize(trial_data['service']),
-                credential_type="payment",
-                credential_value=sanitize(trial_data['card'])
-            )
-            
-            self.db.save_credential(
-                user_id=user_id,
-                service=sanitize(trial_data['service']),
-                credential_type="expiry",
-                credential_value=sanitize(trial_data['end_date'])
-            )
-            
-            logger.info(f"Saved {trial_data['service']} trial for user {user_id} to database")
-            return True
+            if trial_id:
+                logger.info(f"Saved {trial_data['service']} trial (ID: {trial_id}) for user {user_id} to database")
+                return True
+            else:
+                logger.error("Failed to save trial, no trial ID returned")
+                return False
+                
         except Exception as e:
             logger.error(f"Error saving trial to database: {str(e)}")
             return False
