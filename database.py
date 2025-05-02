@@ -1,571 +1,583 @@
+#!/usr/bin/env python3
 """
-Trial Junkie Database Module
+Database Module for Trial Junkie
 Handles database connections and operations
 """
 import os
+import sys
 import json
 import logging
-import sqlite3
-import psycopg2
-from psycopg2 import pool
-from psycopg2.extras import RealDictCursor
+import traceback
 from datetime import datetime
+from typing import Dict, List, Any, Optional, Union, Tuple
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("database.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 logger = logging.getLogger("database")
 
 class Database:
     """
-    Database interface for Trial Junkie system
-    Handles both SQLite (for development) and PostgreSQL (for production)
+    Database connection and operations handler
+    Supports both PostgreSQL and SQLite backends
     """
-    
-    def __init__(self):
-        self.db_type = "postgresql"  # Default to PostgreSQL
-        self.connection_pool = None
-        self.db_path = "instance/database.db"  # SQLite path for fallback
-        
-        # Try to get PostgreSQL connection info from environment
-        self.db_url = os.getenv("DATABASE_URL")
-        self.db_host = os.getenv("PGHOST")
-        self.db_port = os.getenv("PGPORT")
-        self.db_user = os.getenv("PGUSER")
-        self.db_pass = os.getenv("PGPASSWORD")
-        self.db_name = os.getenv("PGDATABASE")
-        
-        # If no PostgreSQL info available, fallback to SQLite
-        if not (self.db_url or (self.db_host and self.db_port and self.db_user and self.db_name)):
-            self.db_type = "sqlite"
-            logger.warning("No PostgreSQL credentials found, falling back to SQLite")
-    
-    def initialize(self):
+    def __init__(self, db_url: str = None):
         """
-        Initialize the database connection and schema
-        Returns:
-            dict: Connection status information
-        """
-        logger.info("Initializing database")
-        
-        try:
-            if self.db_type == "postgresql":
-                return self._init_postgresql()
-            else:
-                return self._init_sqlite()
-        except Exception as e:
-            logger.error(f"Database initialization error: {str(e)}")
-            return {"success": False, "message": str(e)}
-    
-    def _init_postgresql(self):
-        """
-        Initialize PostgreSQL database
-        """
-        logger.info("Connecting to PostgreSQL database")
-        
-        try:
-            # Use the DATABASE_URL if available, otherwise construct from components
-            if self.db_url:
-                # Create a connection pool with 5 connections
-                self.connection_pool = pool.SimpleConnectionPool(
-                    1, 5, self.db_url
-                )
-            else:
-                # Create a connection pool with component params
-                self.connection_pool = pool.SimpleConnectionPool(
-                    1, 5,
-                    host=self.db_host,
-                    port=self.db_port,
-                    user=self.db_user,
-                    password=self.db_pass,
-                    dbname=self.db_name
-                )
-            
-            # Get a connection to create tables
-            conn = self.connection_pool.getconn()
-            conn.autocommit = True
-            cursor = conn.cursor()
-            
-            logger.info("Initializing database schema")
-            self._create_tables_postgresql(cursor)
-            
-            # Return connection to the pool
-            self.connection_pool.putconn(conn)
-            
-            logger.info("Database initialized successfully")
-            return {"success": True, "message": "PostgreSQL database initialized successfully"}
-            
-        except psycopg2.Error as e:
-            logger.error(f"PostgreSQL error: {str(e)}")
-            return {"success": False, "message": f"PostgreSQL error: {str(e)}"}
-        except Exception as e:
-            logger.error(f"Error initializing PostgreSQL: {str(e)}")
-            return {"success": False, "message": str(e)}
-    
-    def _init_sqlite(self):
-        """
-        Initialize SQLite database
-        """
-        logger.info("Connecting to SQLite database")
-        
-        try:
-            # Make sure the instance directory exists
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-            
-            # Create a connection
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            logger.info("Initializing database schema")
-            self._create_tables_sqlite(cursor)
-            
-            conn.commit()
-            conn.close()
-            
-            logger.info("Database initialized successfully")
-            return {"success": True, "message": "SQLite database initialized successfully"}
-            
-        except sqlite3.Error as e:
-            logger.error(f"SQLite error: {str(e)}")
-            return {"success": False, "message": f"SQLite error: {str(e)}"}
-        except Exception as e:
-            logger.error(f"Error initializing SQLite: {str(e)}")
-            return {"success": False, "message": str(e)}
-    
-    def _create_tables_postgresql(self, cursor):
-        """
-        Create PostgreSQL tables if they don't exist
-        """
-        # Create users table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(64) UNIQUE NOT NULL,
-            email VARCHAR(120) UNIQUE NOT NULL,
-            password_hash VARCHAR(256),
-            wallet_address VARCHAR(64),
-            tier VARCHAR(20) DEFAULT 'free',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """)
-        
-        # Create trials table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS trials (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            service VARCHAR(64) NOT NULL,
-            plan VARCHAR(64) NOT NULL,
-            email VARCHAR(120) NOT NULL,
-            password VARCHAR(64) NOT NULL,
-            first_name VARCHAR(64),
-            last_name VARCHAR(64),
-            address TEXT,
-            city VARCHAR(64),
-            state VARCHAR(32),
-            zipcode VARCHAR(16),
-            phone VARCHAR(32),
-            start_date DATE NOT NULL,
-            end_date DATE NOT NULL,
-            card_type VARCHAR(32),
-            card_last4 VARCHAR(4),
-            trial_data JSONB,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create payments table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS payments (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            amount DECIMAL(10, 6) NOT NULL,
-            currency VARCHAR(10) DEFAULT 'SOL',
-            payment_type VARCHAR(32) NOT NULL,
-            transaction_id VARCHAR(128),
-            status VARCHAR(32) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create referrals table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS referrals (
-            id SERIAL PRIMARY KEY,
-            referrer_id INTEGER NOT NULL,
-            referred_id INTEGER NOT NULL,
-            referral_code VARCHAR(32) NOT NULL,
-            status VARCHAR(32) DEFAULT 'pending',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (referred_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create commissions table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS commissions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            amount DECIMAL(10, 6) NOT NULL,
-            currency VARCHAR(10) DEFAULT 'SOL',
-            source_id INTEGER,
-            status VARCHAR(32) DEFAULT 'pending',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (source_id) REFERENCES users(id) ON DELETE SET NULL
-        );
-        """)
-    
-    def _create_tables_sqlite(self, cursor):
-        """
-        Create SQLite tables if they don't exist
-        """
-        # Create users table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT,
-            wallet_address TEXT,
-            tier TEXT DEFAULT 'free',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-        );
-        """)
-        
-        # Create trials table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS trials (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            service TEXT NOT NULL,
-            plan TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL,
-            first_name TEXT,
-            last_name TEXT,
-            address TEXT,
-            city TEXT,
-            state TEXT,
-            zipcode TEXT,
-            phone TEXT,
-            start_date TEXT NOT NULL,
-            end_date TEXT NOT NULL,
-            card_type TEXT,
-            card_last4 TEXT,
-            trial_data TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create payments table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            currency TEXT DEFAULT 'SOL',
-            payment_type TEXT NOT NULL,
-            transaction_id TEXT,
-            status TEXT NOT NULL,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create referrals table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS referrals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            referrer_id INTEGER NOT NULL,
-            referred_id INTEGER NOT NULL,
-            referral_code TEXT NOT NULL,
-            status TEXT DEFAULT 'pending',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (referred_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        """)
-        
-        # Create commissions table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS commissions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            currency TEXT DEFAULT 'SOL',
-            source_id INTEGER,
-            status TEXT DEFAULT 'pending',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (source_id) REFERENCES users(id) ON DELETE SET NULL
-        );
-        """)
-    
-    def get_connection(self):
-        """
-        Get a database connection
-        
-        Returns:
-            conn: Database connection object
-        """
-        if self.db_type == "postgresql":
-            # Get connection from pool
-            if self.connection_pool:
-                return self.connection_pool.getconn()
-            else:
-                logger.error("Connection pool not initialized")
-                return None
-        else:
-            # Create SQLite connection
-            return sqlite3.connect(self.db_path)
-    
-    def release_connection(self, conn):
-        """
-        Release a database connection
+        Initialize the database handler
         
         Args:
-            conn: Database connection to release
+            db_url: Database URL (defaults to DATABASE_URL environment variable)
         """
-        if self.db_type == "postgresql" and self.connection_pool:
-            self.connection_pool.putconn(conn)
-        else:
-            conn.close()
+        self.db_url = db_url or os.getenv("DATABASE_URL")
+        self.connection = None
+        self.db_type = None
+        
+        logger.info("Initializing database")
     
-    def save_trial(self, user_id, trial_data):
+    def initialize(self) -> Dict[str, Any]:
+        """
+        Initialize the database connection
+        
+        Returns:
+            dict: Initialization result
+        """
+        if not self.db_url:
+            return {
+                "success": False,
+                "message": "No database URL provided"
+            }
+        
+        # Determine database type
+        if self.db_url.startswith("postgresql://") or self.db_url.startswith("postgres://"):
+            return self._initialize_postgres()
+        elif self.db_url.startswith("sqlite://"):
+            return self._initialize_sqlite()
+        else:
+            return {
+                "success": False,
+                "message": f"Unsupported database type: {self.db_url.split('://')[0]}"
+            }
+    
+    def _initialize_postgres(self) -> Dict[str, Any]:
+        """
+        Initialize PostgreSQL database connection
+        
+        Returns:
+            dict: Initialization result
+        """
+        try:
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            
+            logger.info("Connecting to PostgreSQL database")
+            
+            self.connection = psycopg2.connect(self.db_url)
+            self.connection.autocommit = True
+            self.db_type = "postgres"
+            
+            # Test the connection
+            with self.connection.cursor() as cursor:
+                cursor.execute("SELECT version();")
+                version = cursor.fetchone()[0]
+                logger.info(f"Connected to PostgreSQL: {version}")
+            
+            # Initialize schema
+            self._initialize_schema()
+            
+            return {
+                "success": True,
+                "message": "PostgreSQL connection established",
+                "db_type": self.db_type
+            }
+        
+        except ImportError:
+            return {
+                "success": False,
+                "message": "psycopg2 module not available"
+            }
+        except Exception as e:
+            logger.error(f"PostgreSQL connection error: {str(e)}")
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": str(e)
+            }
+    
+    def _initialize_sqlite(self) -> Dict[str, Any]:
+        """
+        Initialize SQLite database connection
+        
+        Returns:
+            dict: Initialization result
+        """
+        try:
+            import sqlite3
+            
+            # Parse SQLite URL
+            db_path = self.db_url.replace("sqlite:///", "")
+            
+            logger.info(f"Connecting to SQLite database: {db_path}")
+            
+            self.connection = sqlite3.connect(db_path)
+            self.connection.row_factory = sqlite3.Row
+            self.db_type = "sqlite"
+            
+            # Test the connection
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT sqlite_version();")
+            version = cursor.fetchone()[0]
+            logger.info(f"Connected to SQLite: {version}")
+            
+            # Initialize schema
+            self._initialize_schema()
+            
+            return {
+                "success": True,
+                "message": "SQLite connection established",
+                "db_type": self.db_type
+            }
+        
+        except Exception as e:
+            logger.error(f"SQLite connection error: {str(e)}")
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": str(e)
+            }
+    
+    def _initialize_schema(self) -> None:
+        """Initialize the database schema if tables don't exist"""
+        logger.info("Initializing database schema")
+        
+        # Define the schema based on database type
+        if self.db_type == "postgres":
+            # PostgreSQL schema
+            schema = """
+            -- Users table
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                discord_id VARCHAR(255) UNIQUE,
+                username VARCHAR(255),
+                email VARCHAR(255) UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Trials table
+            CREATE TABLE IF NOT EXISTS trials (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                service VARCHAR(255),
+                plan VARCHAR(255),
+                email VARCHAR(255),
+                password VARCHAR(255),
+                first_name VARCHAR(255),
+                last_name VARCHAR(255),
+                phone VARCHAR(255),
+                start_date DATE,
+                end_date DATE,
+                card_details JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Payments table
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                amount DECIMAL(10, 2),
+                currency VARCHAR(10),
+                status VARCHAR(50),
+                payment_method VARCHAR(100),
+                reference VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Referrals table
+            CREATE TABLE IF NOT EXISTS referrals (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                referral_code VARCHAR(50) UNIQUE,
+                referred_by INTEGER REFERENCES users(id),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- User tiers table
+            CREATE TABLE IF NOT EXISTS user_tier (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) UNIQUE,
+                tier VARCHAR(50),
+                expires_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Commissions table
+            CREATE TABLE IF NOT EXISTS commissions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                referral_id INTEGER REFERENCES referrals(id),
+                amount DECIMAL(10, 2),
+                status VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+            
+            # Execute each statement separately
+            with self.connection.cursor() as cursor:
+                for statement in schema.split(';'):
+                    if statement.strip():
+                        cursor.execute(statement)
+        
+        elif self.db_type == "sqlite":
+            # SQLite schema
+            schema = """
+            -- Users table
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                discord_id TEXT UNIQUE,
+                username TEXT,
+                email TEXT UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Trials table
+            CREATE TABLE IF NOT EXISTS trials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id),
+                service TEXT,
+                plan TEXT,
+                email TEXT,
+                password TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                phone TEXT,
+                start_date DATE,
+                end_date DATE,
+                card_details TEXT,  -- JSON string in SQLite
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Payments table
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id),
+                amount REAL,
+                currency TEXT,
+                status TEXT,
+                payment_method TEXT,
+                reference TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Referrals table
+            CREATE TABLE IF NOT EXISTS referrals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id),
+                referral_code TEXT UNIQUE,
+                referred_by INTEGER REFERENCES users(id),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- User tiers table
+            CREATE TABLE IF NOT EXISTS user_tier (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id) UNIQUE,
+                tier TEXT,
+                expires_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Commissions table
+            CREATE TABLE IF NOT EXISTS commissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id),
+                referral_id INTEGER REFERENCES referrals(id),
+                amount REAL,
+                status TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+            
+            # Execute each statement separately
+            cursor = self.connection.cursor()
+            for statement in schema.split(';'):
+                if statement.strip():
+                    cursor.execute(statement)
+            self.connection.commit()
+        
+        logger.info("Database initialized successfully")
+    
+    def create_user(self, discord_id: str = None, username: str = None, 
+                   email: str = None) -> Dict[str, Any]:
+        """
+        Create a new user
+        
+        Args:
+            discord_id: Discord user ID
+            username: Username
+            email: Email address
+            
+        Returns:
+            dict: User creation result
+        """
+        try:
+            # Determine database type and execute appropriate query
+            if self.db_type == "postgres":
+                with self.connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO users (discord_id, username, email) VALUES (%s, %s, %s) RETURNING id",
+                        (discord_id, username, email)
+                    )
+                    user_id = cursor.fetchone()[0]
+            else:  # SQLite
+                cursor = self.connection.cursor()
+                cursor.execute(
+                    "INSERT INTO users (discord_id, username, email) VALUES (?, ?, ?)",
+                    (discord_id, username, email)
+                )
+                self.connection.commit()
+                user_id = cursor.lastrowid
+            
+            return {
+                "success": True,
+                "user_id": user_id,
+                "message": "User created successfully"
+            }
+        
+        except Exception as e:
+            logger.error(f"Error creating user: {str(e)}")
+            return {
+                "success": False,
+                "message": str(e)
+            }
+    
+    def save_trial(self, user_id: int, trial_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Save a trial to the database
         
         Args:
-            user_id: The user ID to associate with the trial
-            trial_data: Dictionary containing trial information
+            user_id: User ID
+            trial_data: Trial data
             
         Returns:
-            dict: Result with success status and message
+            dict: Trial saving result
         """
         try:
-            conn = self.get_connection()
-            if not conn:
-                return {"success": False, "message": "Could not get database connection"}
+            # Extract trial fields
+            service = trial_data.get("service")
+            plan = trial_data.get("plan")
+            email = trial_data.get("email")
+            password = trial_data.get("password")
+            first_name = trial_data.get("first_name")
+            last_name = trial_data.get("last_name")
+            phone = trial_data.get("phone")
+            start_date = trial_data.get("start_date")
+            end_date = trial_data.get("end_date")
             
-            if self.db_type == "postgresql":
-                cursor = conn.cursor()
+            # Handle card details based on database type
+            if self.db_type == "postgres":
+                card_details = json.dumps(trial_data.get("card_details", {}))
                 
-                # Extract data from trial_data
-                service = trial_data.get("service", "unknown")
-                plan = trial_data.get("plan", "standard")
-                email = trial_data.get("email", "")
-                password = trial_data.get("password", "")
-                first_name = trial_data.get("first_name", "")
-                last_name = trial_data.get("last_name", "")
-                address = trial_data.get("address", "")
-                city = trial_data.get("city", "")
-                state = trial_data.get("state", "")
-                zipcode = trial_data.get("zipcode", "")
-                phone = trial_data.get("phone", "")
-                start_date = trial_data.get("start_date", datetime.now().strftime("%Y-%m-%d"))
-                end_date = trial_data.get("end_date", "")
+                with self.connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO trials 
+                        (user_id, service, plan, email, password, first_name, last_name, 
+                        phone, start_date, end_date, card_details) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                        RETURNING id
+                        """,
+                        (user_id, service, plan, email, password, first_name, last_name,
+                        phone, start_date, end_date, card_details)
+                    )
+                    trial_id = cursor.fetchone()[0]
+            else:  # SQLite
+                card_details = json.dumps(trial_data.get("card_details", {}))
                 
-                # Card info may be nested
-                card_details = trial_data.get("card_details", {})
-                if isinstance(card_details, str):
-                    try:
-                        card_details = json.loads(card_details)
-                    except:
-                        card_details = {}
-                
-                card_type = card_details.get("type", trial_data.get("card_type", ""))
-                card_last4 = card_details.get("last4", trial_data.get("card_last4", ""))
-                
-                # Store the full trial data as JSON
-                trial_json = json.dumps(trial_data)
-                
-                # Insert into database
-                cursor.execute("""
-                INSERT INTO trials 
-                (user_id, service, plan, email, password, first_name, last_name, 
-                address, city, state, zipcode, phone, start_date, end_date, 
-                card_type, card_last4, trial_data)
-                VALUES 
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
-                """, (
-                    user_id, service, plan, email, password, first_name, last_name,
-                    address, city, state, zipcode, phone, start_date, end_date,
-                    card_type, card_last4, trial_json
-                ))
-                
-                trial_id = cursor.fetchone()[0]
-                conn.commit()
-                
-            else:
-                cursor = conn.cursor()
-                
-                # Extract data from trial_data
-                service = trial_data.get("service", "unknown")
-                plan = trial_data.get("plan", "standard")
-                email = trial_data.get("email", "")
-                password = trial_data.get("password", "")
-                first_name = trial_data.get("first_name", "")
-                last_name = trial_data.get("last_name", "")
-                address = trial_data.get("address", "")
-                city = trial_data.get("city", "")
-                state = trial_data.get("state", "")
-                zipcode = trial_data.get("zipcode", "")
-                phone = trial_data.get("phone", "")
-                start_date = trial_data.get("start_date", datetime.now().strftime("%Y-%m-%d"))
-                end_date = trial_data.get("end_date", "")
-                
-                # Card info may be nested
-                card_details = trial_data.get("card_details", {})
-                if isinstance(card_details, str):
-                    try:
-                        card_details = json.loads(card_details)
-                    except:
-                        card_details = {}
-                
-                card_type = card_details.get("type", trial_data.get("card_type", ""))
-                card_last4 = card_details.get("last4", trial_data.get("card_last4", ""))
-                
-                # Store the full trial data as JSON
-                trial_json = json.dumps(trial_data)
-                
-                # Insert into database
-                cursor.execute("""
-                INSERT INTO trials 
-                (user_id, service, plan, email, password, first_name, last_name, 
-                address, city, state, zipcode, phone, start_date, end_date, 
-                card_type, card_last4, trial_data)
-                VALUES 
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    user_id, service, plan, email, password, first_name, last_name,
-                    address, city, state, zipcode, phone, start_date, end_date,
-                    card_type, card_last4, trial_json
-                ))
-                
+                cursor = self.connection.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO trials 
+                    (user_id, service, plan, email, password, first_name, last_name, 
+                    phone, start_date, end_date, card_details) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (user_id, service, plan, email, password, first_name, last_name,
+                    phone, start_date, end_date, card_details)
+                )
+                self.connection.commit()
                 trial_id = cursor.lastrowid
-                conn.commit()
             
-            self.release_connection(conn)
-            
-            logger.info(f"Trial saved successfully with ID {trial_id}")
-            return {"success": True, "message": "Trial saved successfully", "trial_id": trial_id}
-            
+            return {
+                "success": True,
+                "trial_id": trial_id,
+                "message": "Trial saved successfully"
+            }
+        
         except Exception as e:
             logger.error(f"Error saving trial: {str(e)}")
-            if conn:
-                self.release_connection(conn)
-            return {"success": False, "message": f"Database error: {str(e)}"}
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": str(e)
+            }
     
-    def get_user_trials(self, user_id, limit=10):
+    def get_user_trials(self, user_id: int) -> Dict[str, Any]:
         """
-        Get trials for a specific user
+        Get all trials for a user
         
         Args:
-            user_id: The user ID to get trials for
-            limit: Maximum number of trials to return
+            user_id: User ID
             
         Returns:
-            list: List of trials for the user
+            dict: User trials result
         """
         try:
-            conn = self.get_connection()
-            if not conn:
-                return []
-            
-            if self.db_type == "postgresql":
-                cursor = conn.cursor(cursor_factory=RealDictCursor)
+            if self.db_type == "postgres":
+                from psycopg2.extras import RealDictCursor
                 
-                # Get trials from database
-                cursor.execute("""
-                SELECT * FROM trials 
-                WHERE user_id = %s 
-                ORDER BY created_at DESC 
-                LIMIT %s
-                """, (user_id, limit))
+                with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        """
+                        SELECT * FROM trials
+                        WHERE user_id = %s
+                        ORDER BY created_at DESC
+                        """,
+                        (user_id,)
+                    )
+                    trials = cursor.fetchall()
+                    
+                    # Convert JSON strings to dictionaries
+                    for trial in trials:
+                        if "card_details" in trial and trial["card_details"]:
+                            if isinstance(trial["card_details"], str):
+                                trial["card_details"] = json.loads(trial["card_details"])
+                            
+                            # Convert dates to strings
+                            if "start_date" in trial and trial["start_date"]:
+                                trial["start_date"] = trial["start_date"].strftime("%Y-%m-%d")
+                            if "end_date" in trial and trial["end_date"]:
+                                trial["end_date"] = trial["end_date"].strftime("%Y-%m-%d")
+            else:  # SQLite
+                cursor = self.connection.cursor()
+                cursor.execute(
+                    """
+                    SELECT * FROM trials
+                    WHERE user_id = ?
+                    ORDER BY created_at DESC
+                    """,
+                    (user_id,)
+                )
+                rows = cursor.fetchall()
                 
-                trials = cursor.fetchall()
-                
-            else:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.cursor()
-                
-                # Get trials from database
-                cursor.execute("""
-                SELECT * FROM trials 
-                WHERE user_id = ? 
-                ORDER BY created_at DESC 
-                LIMIT ?
-                """, (user_id, limit))
-                
-                trials = [dict(row) for row in cursor.fetchall()]
+                # Convert rows to dictionaries
+                trials = []
+                for row in rows:
+                    trial = dict(zip([column[0] for column in cursor.description], row))
+                    
+                    # Convert JSON strings to dictionaries
+                    if "card_details" in trial and trial["card_details"]:
+                        trial["card_details"] = json.loads(trial["card_details"])
+                    
+                    trials.append(trial)
             
-            self.release_connection(conn)
-            
-            # Process trials if needed (e.g., parse trial_data JSON)
-            for trial in trials:
-                if 'trial_data' in trial and trial['trial_data']:
-                    try:
-                        if isinstance(trial['trial_data'], str):
-                            trial['trial_data'] = json.loads(trial['trial_data'])
-                    except:
-                        pass
-            
-            return trials
-            
+            return {
+                "success": True,
+                "trials": trials,
+                "count": len(trials)
+            }
+        
         except Exception as e:
             logger.error(f"Error getting user trials: {str(e)}")
-            if conn:
-                self.release_connection(conn)
-            return []
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": str(e),
+                "trials": []
+            }
     
-    def close(self):
-        """Close all database connections"""
-        if self.db_type == "postgresql" and self.connection_pool:
-            self.connection_pool.closeall()
-            logger.info("All database connections closed")
+    def close(self) -> None:
+        """Close the database connection"""
+        if self.connection:
+            self.connection.close()
+            logger.info("Database connection closed")
+    
+    def __del__(self) -> None:
+        """Destructor to ensure connection is closed"""
+        self.close()
 
-# Run standalone test
+# For standalone testing
 if __name__ == "__main__":
-    print("Testing database connection...")
     db = Database()
     result = db.initialize()
-    print(f"Initialization result: {result}")
     
-    if result.get('success'):
-        print("\nTesting trial saving...")
-        test_trial = {
-            "service": "test_service",
-            "plan": "premium",
-            "email": "test@example.com",
-            "password": "testpassword",
-            "start_date": datetime.now().strftime("%Y-%m-%d"),
-            "end_date": datetime.now().strftime("%Y-%m-%d"),
-            "card_details": {
-                "type": "visa",
-                "last4": "1234"
+    if result.get("success", False):
+        print(f"Database connection successful: {result.get('db_type')}")
+        
+        # Test creating a user
+        user_result = db.create_user(
+            discord_id="123456789", 
+            username="test_user", 
+            email="test@example.com"
+        )
+        
+        if user_result.get("success", False):
+            user_id = user_result.get("user_id")
+            print(f"User created with ID: {user_id}")
+            
+            # Test saving a trial
+            trial_data = {
+                "service": "test_service",
+                "plan": "test_plan",
+                "email": "trial@example.com",
+                "password": "password123",
+                "first_name": "Test",
+                "last_name": "User",
+                "phone": "123-456-7890",
+                "start_date": "2025-01-01",
+                "end_date": "2025-01-31",
+                "card_details": {
+                    "type": "visa",
+                    "number": "4111111111111111",
+                    "expiry": "12/28",
+                    "cvv": "123",
+                    "last4": "1111"
+                }
             }
-        }
-        save_result = db.save_trial(1, test_trial)
-        print(f"Save result: {save_result}")
-        
-        print("\nTesting trial retrieval...")
-        trials = db.get_user_trials(1)
-        print(f"Found {len(trials)} trials for user 1")
-        
+            
+            trial_result = db.save_trial(user_id, trial_data)
+            
+            if trial_result.get("success", False):
+                print(f"Trial saved with ID: {trial_result.get('trial_id')}")
+                
+                # Test getting user trials
+                trials_result = db.get_user_trials(user_id)
+                
+                if trials_result.get("success", False):
+                    print(f"Found {trials_result.get('count')} trials for user {user_id}")
+                else:
+                    print(f"Error getting trials: {trials_result.get('message')}")
+            else:
+                print(f"Error saving trial: {trial_result.get('message')}")
+        else:
+            print(f"Error creating user: {user_result.get('message')}")
+    else:
+        print(f"Database connection failed: {result.get('message')}")
+    
     db.close()

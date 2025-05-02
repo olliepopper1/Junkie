@@ -1,632 +1,786 @@
 #!/usr/bin/env python3
 """
-Updated Discord Bot for Trial Junkie
-Uses the updated API integrations for creating trials via Discord
+Discord Bot for Trial Junkie
+Handles Discord interactions for trial generation and delivery
 """
 import os
 import sys
-import logging
 import json
+import logging
+import traceback
+from datetime import datetime, timedelta
 import random
 import asyncio
-from datetime import datetime, timedelta
+import string
+from typing import Optional, Dict, List, Any, Union
+
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from updated_api_integrations import UpdatedAPIIntegrations
-from hulu_trial_generator import HuluTrialGenerator
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("updated_discord_bot.log"),
+        logging.FileHandler("discord_bot.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("discord_bot")
 
 # Load environment variables
 load_dotenv()
 
-# Load the bot token from environment variables
+# Check for Discord token
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 if not DISCORD_BOT_TOKEN:
-    logger.error("DISCORD_BOT_TOKEN not found in environment variables")
-    sys.exit(1)
+    logger.error("No Discord bot token found in environment variables")
+    # For development/testing only - in production this should exit
+    logger.info("For testing purposes, the bot will run with a dummy token")
+    SIMULATION_MODE = True
+else:
+    SIMULATION_MODE = False
 
-# Load RapidAPI key
-RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
-if not RAPIDAPI_KEY:
-    logger.error("RAPIDAPI_KEY not found in environment variables")
-    sys.exit(1)
+# Bot configuration
+COMMAND_PREFIX = '!'
+BOT_DESCRIPTION = "Trial Junkie - Generate free trials with a single command"
 
-# Set up the bot with intents
+# Create intents for the bot (permissions)
 intents = discord.Intents.default()
-intents.message_content = True  # For reading message content
-intents.members = True  # For accessing member information
+intents.message_content = True  # Required for reading message content
+intents.members = True  # Required for interacting with members
 
-bot = commands.Bot(command_prefix="/", intents=intents)
+# Create the bot instance
+bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION, intents=intents)
 
-# Limit tracking to ensure users can only create one trial
-USER_TRIAL_LIMITS = {}
+# Keep track of user limits (this should be moved to a database in production)
+USER_TRIALS = {}
+TRIAL_LIMIT = 1  # Free tier limit per day
+PREMIUM_TRIAL_LIMIT = 5  # Premium tier limit per day
 
-# Admin credentials
-ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+# User tiers
+USER_TIERS = {}
 
-# Colors for embeds
-COLORS = {
-    "success": 0x4CAF50,  # Green
-    "error": 0xF44336,    # Red
-    "warning": 0xFFC107,  # Yellow
-    "info": 0x2196F3,     # Blue
-    "payment": 0x9C27B0   # Purple
-}
+# Supported services for trials
+SUPPORTED_SERVICES = [
+    "hulu",
+    "netflix",
+    "disney+",
+    "spotify",
+    "apple music",
+    "youtube premium",
+    "hbo max"
+]
 
-# Trial services
-TRIAL_SERVICES = {
-    "hulu": {
-        "url": "https://www.hulu.com/",
-        "trial_period_days": 30,
-        "price": "$14.99/month",
-        "plan_name": "Hulu (No Ads)",
-        "required_fields": ["identity", "email", "card", "phone"],
-        "supports_automation": True,
-        "cancellation_path": "Account > Cancel Subscription"
-    },
-    "disney": {
-        "url": "https://www.disneyplus.com/",
-        "trial_period_days": 7,
-        "price": "$10.99/month",
-        "plan_name": "Disney+ Premium",
-        "required_fields": ["identity", "email", "card"],
-        "supports_automation": True,
-        "cancellation_path": "Profile > Account > Cancel Subscription"
-    },
-    "spotify": {
-        "url": "https://www.spotify.com/",
-        "trial_period_days": 30,
-        "price": "$10.99/month",
-        "plan_name": "Spotify Premium",
-        "required_fields": ["identity", "email", "card"],
-        "supports_automation": True,
-        "cancellation_path": "Account > Subscription > Cancel Premium"
-    },
-    "amazon": {
-        "url": "https://www.amazon.com/",
-        "trial_period_days": 30,
-        "price": "$14.99/month",
-        "plan_name": "Amazon Prime",
-        "required_fields": ["identity", "email", "card"],
-        "supports_automation": True,
-        "cancellation_path": "Account > Prime > Manage Membership > End Membership"
-    },
-    "youtube": {
-        "url": "https://www.youtube.com/premium",
-        "trial_period_days": 30,
-        "price": "$13.99/month",
-        "plan_name": "YouTube Premium",
-        "required_fields": ["identity", "email", "card"],
-        "supports_automation": True,
-        "cancellation_path": "Account > Memberships > Cancel Membership"
-    }
-}
-
-# Agent quotes and information
+# Quotes from agents
 AGENT_QUOTES = {
-    "harry": [
-        "Identity is just a construct, man...",
-        "I've got the perfect identity for you. Trust me, it's pure.",
-        "Names, addresses, birthdays... it's all just data, man.",
-        "This identity is so clean you could inject it.",
-        "I don't deal in fake IDs, I deal in alternative realities."
-    ],
     "mandy": [
-        "Need a card? I'm ON IT! RIGHT NOW! LET'S GO!",
-        "This card is FIRE! It'll authorize but NEVER charge!",
-        "I JUST MADE ANOTHER CARD! WANT IT? IT'S YOURS!",
-        "Cards, cards, CARDS! I can't stop making them!",
-        "This is the FASTEST card generation you've ever seen!"
+        "Identity generated. Looks totally legit.",
+        "Got you a fresh identity. Use it wisely.",
+        "New person, who dis? Your identity is ready.",
+        "Identity created. Even I'm convinced it's real.",
+        "Fresh identity cooked up. It'll pass any check."
     ],
-    "xan": [
-        "Chill... your email is being created... no stress...",
-        "Don't worry... about disposable emails... I got you...",
-        "Your digital identity... is safe with me... relax...",
-        "Verification emails... are no problem... stay calm...",
-        "I'll handle all your email needs... just breathe..."
+    "danny": [
+        "Got a phone number that won't trace back to you.",
+        "SMS verification? No problem, here's your number.",
+        "This number is clean. Use it for the verification.",
+        "Phone number ready. It'll work for verification codes.",
+        "Virtual number secured. Verification should be smooth."
     ],
-    "sal": [
-        "I can see the patterns in the website... the flows... they talk to me...",
-        "The captchas... they reveal themselves if you just... look beyond...",
-        "Let the automation guide you... let it take control...",
-        "The website's defenses are just illusions, man... I can walk right through them...",
-        "I'm not automating the website... I'm becoming one with it..."
+    "sandy": [
+        "Card's ready. It'll work for the free trial only.",
+        "Generated a clean card for the trial. Don't try to buy stuff.",
+        "Card info created. Will pass verification but won't charge.",
+        "Virtual card ready. Perfect for that free trial.",
+        "Here's your card. It's designed specifically for trials."
     ],
-    "carl": [
-        "Need a phone number? I'm your man. *sniff*",
-        "SMS verification? Consider it DONE! *sniff*",
-        "I can get you a clean number RIGHT NOW! Just ask!",
-        "My phone numbers are the BEST in the business!",
-        "Need to verify? My numbers ALWAYS work! ALWAYS!"
+    "randy": [
+        "Email's verified and ready to go.",
+        "Fresh inbox waiting for you. Confirmation emails are no problem.",
+        "Email setup complete. I'll handle any verification emails.",
+        "Mailbox is hot and ready. Verification emails will be processed.",
+        "Email verification? Consider it done."
     ],
-    "craig": [
-        "Payments are just energy transfers in the cosmic blockchain.",
-        "Your wallet and mine - connected through the crypto-verse.",
-        "I don't just process payments, I commune with the blockchain spirits.",
-        "Every transaction leaves ripples in the digital ether.",
-        "The beauty of crypto is in its immutable truth, man."
+    "andy": [
+        "Automation complete. The trial is ready.",
+        "Website conquered. Your trial account is ready.",
+        "Done and done. The website never knew what hit it.",
+        "Trial secured through pure automation magic.",
+        "Account created automatically. Login details attached."
     ]
 }
 
-# Agent names and themes
-AGENT_NAMES = {
-    "harry": "Heroin Harry",      # Identity generation
-    "mandy": "Meth Mandy",        # Card generation
-    "xan": "Xanny Xan",           # Email generation
-    "sal": "Shroomy Sal",         # Browser automation
-    "carl": "Cokehead Carl",      # SMS/Phone verification
-    "craig": "Crypto Craig"       # Payment processing
-}
+# Attempt to load from database module
+try:
+    from database import Database
+    db = Database()
+    db_result = db.initialize()
+    if db_result.get('success', False):
+        logger.info("Database connection successful")
+        DATABASE_AVAILABLE = True
+    else:
+        logger.warning(f"Database initialization failed: {db_result.get('message')}")
+        DATABASE_AVAILABLE = False
+except ImportError:
+    logger.warning("Database module not available")
+    DATABASE_AVAILABLE = False
 
-# Define events
+# Attempt to load API integrations
+try:
+    from updated_api_integrations import UpdatedAPIIntegrations
+    api = UpdatedAPIIntegrations()
+    API_AVAILABLE = True
+    logger.info("API integrations loaded successfully")
+except ImportError:
+    logger.warning("API integrations module not available")
+    API_AVAILABLE = False
+    api = None
+
+# Attempt to load trial delivery
+try:
+    from bot_trial_delivery import TrialDelivery
+    trial_delivery = TrialDelivery()
+    DELIVERY_AVAILABLE = True
+    logger.info("Trial delivery module loaded successfully")
+except ImportError:
+    logger.warning("Trial delivery module not available")
+    DELIVERY_AVAILABLE = False
+    trial_delivery = None
+
+# Bot event handlers
 @bot.event
 async def on_ready():
-    """Called when the bot is ready and connected to Discord"""
-    logger.info(f"Trial Junkie Bot connected as {bot.user.name} (ID: {bot.user.id})")
+    """Called when the bot is ready"""
+    logger.info(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
     logger.info(f"Connected to {len(bot.guilds)} guilds")
     
     # Set bot activity
     await bot.change_presence(
         activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name="for /guide commands"
+            type=discord.ActivityType.watching, 
+            name=f"for {COMMAND_PREFIX}help commands"
         )
     )
+    
+    logger.info(f"Bot is ready - using prefix: {COMMAND_PREFIX}")
 
 @bot.event
 async def on_command_error(ctx, error):
     """Handle command errors"""
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found. Type `/guide` for a list of commands.")
+        await ctx.send(
+            f"Command not found. Use `{COMMAND_PREFIX}help` to see available commands."
+        )
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"Missing required argument: {error.param}")
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(f"Invalid argument: {error}")
+        await ctx.send(
+            f"Missing required argument: {error.param.name}. Use `{COMMAND_PREFIX}help {ctx.command}` for proper usage."
+        )
     else:
-        logger.error(f"Command error: {error}")
-        await ctx.send(f"An error occurred: {error}")
+        logger.error(f"Command error: {str(error)}")
+        await ctx.send(
+            f"An error occurred: {str(error)}. Please try again later."
+        )
 
 # Helper functions
-async def check_user_limit(user_id):
+def check_user_limit(user_id: int, tier: str = "free") -> bool:
     """
-    Check if a user has already used their trial
+    Check if a user has reached their daily trial limit
     
     Args:
-        user_id (int): The Discord user ID
+        user_id: The Discord user ID
+        tier: The user's subscription tier
         
     Returns:
-        bool: True if the user is allowed to create a trial, False otherwise
+        bool: True if user can generate more trials, False if limit reached
     """
-    # Check if user has already used their trial
-    if user_id in USER_TRIAL_LIMITS:
-        return False
+    # Get the current date
+    today = datetime.now().strftime("%Y-%m-%d")
     
-    # User hasn't used their trial yet, allow it
-    return True
+    # Initialize user trial tracking if not exists
+    if user_id not in USER_TRIALS:
+        USER_TRIALS[user_id] = {"date": today, "count": 0}
+    
+    # Reset counter if it's a new day
+    if USER_TRIALS[user_id]["date"] != today:
+        USER_TRIALS[user_id] = {"date": today, "count": 0}
+    
+    # Check against the appropriate limit
+    limit = PREMIUM_TRIAL_LIMIT if tier.lower() == "premium" else TRIAL_LIMIT
+    
+    # Return true if under limit, false if at or over limit
+    return USER_TRIALS[user_id]["count"] < limit
 
-def save_user_trial(user_id, service, trial_info):
+def increment_user_trial(user_id: int) -> None:
     """
-    Save a user's trial information
+    Increment the trial count for a user
     
     Args:
-        user_id (int): The Discord user ID
-        service (str): The service name
-        trial_info (dict): The trial information
+        user_id: The Discord user ID
     """
-    USER_TRIAL_LIMITS[user_id] = {
-        'service': service,
-        'created_at': datetime.now().isoformat(),
-        'trial_info': trial_info
-    }
+    today = datetime.now().strftime("%Y-%m-%d")
     
-    # Also save to a file for persistence
-    try:
-        # Create a unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"discord_message_{user_id}_{timestamp}.txt"
-        
-        with open(filename, 'w') as f:
-            json.dump({
-                'user_id': user_id,
-                'service': service,
-                'created_at': datetime.now().isoformat(),
-                'trial_info': trial_info
-            }, f, indent=2)
-        
-        logger.info(f"User trial saved to {filename}")
-    except Exception as e:
-        logger.error(f"Error saving user trial to file: {str(e)}")
+    # Initialize if not exists
+    if user_id not in USER_TRIALS:
+        USER_TRIALS[user_id] = {"date": today, "count": 0}
+    
+    # Reset if new day
+    if USER_TRIALS[user_id]["date"] != today:
+        USER_TRIALS[user_id] = {"date": today, "count": 0}
+    
+    # Increment count
+    USER_TRIALS[user_id]["count"] += 1
 
-# Define commands
-@bot.command(name="guide")
-async def guide_command(ctx):
-    """Display help information"""
+def get_user_tier(user_id: int) -> str:
+    """
+    Get the subscription tier for a user
+    
+    Args:
+        user_id: The Discord user ID
+        
+    Returns:
+        str: The user's subscription tier
+    """
+    if DATABASE_AVAILABLE:
+        # TODO: Implement database lookup
+        pass
+    
+    # Fallback to in-memory storage
+    return USER_TIERS.get(str(user_id), "free")
+
+def save_trial(user_id: int, trial_data: Dict[str, Any]) -> bool:
+    """
+    Save trial information to storage
+    
+    Args:
+        user_id: The Discord user ID
+        trial_data: The trial information
+        
+    Returns:
+        bool: True if saved successfully, False otherwise
+    """
+    if DATABASE_AVAILABLE:
+        # TODO: Implement database storage
+        pass
+    
+    # Fallback to saving to a json file for each user
+    try:
+        user_trials_file = f"trials_{user_id}.json"
+        existing_trials = []
+        
+        # Load existing trials if available
+        if os.path.exists(user_trials_file):
+            with open(user_trials_file, 'r') as f:
+                existing_trials = json.load(f)
+        
+        # Add the new trial
+        existing_trials.append(trial_data)
+        
+        # Save back to file
+        with open(user_trials_file, 'w') as f:
+            json.dump(existing_trials, f, indent=2)
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error saving trial: {str(e)}")
+        return False
+
+def get_user_trials(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Get all trials for a user
+    
+    Args:
+        user_id: The Discord user ID
+        
+    Returns:
+        list: The user's trials
+    """
+    if DATABASE_AVAILABLE:
+        # TODO: Implement database lookup
+        pass
+    
+    # Fallback to reading from file
+    user_trials_file = f"trials_{user_id}.json"
+    if os.path.exists(user_trials_file):
+        try:
+            with open(user_trials_file, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading trials: {str(e)}")
+    
+    return []
+
+def format_trial_embed(trial_data: Dict[str, Any]) -> discord.Embed:
+    """
+    Format trial information as a Discord embed
+    
+    Args:
+        trial_data: The trial information
+        
+    Returns:
+        discord.Embed: The formatted embed
+    """
+    service = trial_data.get("service", "Unknown").title()
+    plan = trial_data.get("plan", "Basic")
+    
+    # Create embed
+    embed = discord.Embed(
+        title=f"{service} Trial Account",
+        description=f"Your {service} trial is ready! Here are your login details:",
+        color=0x9370DB  # Medium purple
+    )
+    
+    # Add basic fields
+    embed.add_field(name="Service", value=service, inline=True)
+    embed.add_field(name="Plan", value=plan, inline=True)
+    
+    # Add dates
+    start_date = trial_data.get("start_date", "Today")
+    end_date = trial_data.get("end_date", "Unknown")
+    embed.add_field(name="Valid Until", value=end_date, inline=True)
+    
+    # Login information
+    embed.add_field(
+        name="Login Information", 
+        value=f"**Email:** {trial_data.get('email', 'N/A')}\n**Password:** {trial_data.get('password', 'N/A')}",
+        inline=False
+    )
+    
+    # Personal information used
+    personal_info = (
+        f"**Name:** {trial_data.get('first_name', 'John')} {trial_data.get('last_name', 'Doe')}\n"
+        f"**Phone:** {trial_data.get('phone', 'N/A')}"
+    )
+    embed.add_field(name="Personal Info", value=personal_info, inline=False)
+    
+    # Payment information
+    card_details = trial_data.get("card_details", {})
+    if card_details:
+        payment_info = (
+            f"**Card Type:** {card_details.get('type', 'visa').upper()}\n"
+            f"**Last 4:** {card_details.get('last4', 'XXXX')}\n"
+            f"**Expiry:** {card_details.get('expiry', 'MM/YY')}"
+        )
+        embed.add_field(name="Payment Method", value=payment_info, inline=False)
+    
+    # Add footer with cancellation reminder
+    embed.set_footer(text="Remember to cancel before the trial ends to avoid charges.")
+    
+    return embed
+
+# Bot commands
+@bot.command(name="help")
+async def help_command(ctx):
+    """Show help information for the bot"""
+    help_text = (
+        f"**Trial Junkie Bot Commands**\n\n"
+        f"**{COMMAND_PREFIX}hit [service]** - Generate a full trial for a service (requires all agents)\n"
+        f"**{COMMAND_PREFIX}dose [agent] [platform]** - Use a specific agent for part of the process\n"
+        f"**{COMMAND_PREFIX}stash** - View your generated trials\n"
+        f"**{COMMAND_PREFIX}agents** - Show information about all agents\n"
+        f"**{COMMAND_PREFIX}quote [agent]** - Get a quote from an agent\n"
+        f"**{COMMAND_PREFIX}rehab** - Delete your user data\n"
+        f"**{COMMAND_PREFIX}tier** - Check your subscription tier\n"
+        f"**{COMMAND_PREFIX}pay [subscription]** - Get payment information for a subscription\n"
+        f"**{COMMAND_PREFIX}referral** - Get or manage your referral code\n\n"
+        f"For more information, visit https://trialjunkie.replit.app"
+    )
+    
     embed = discord.Embed(
         title="Trial Junkie Help",
-        description="Your guide to digital service trials",
-        color=0x6f42c1
+        description=help_text,
+        color=0x9370DB
     )
     
-    # Trial commands
-    embed.add_field(
-        name="🔥 Trial Commands",
-        value=(
-            "`/hit [service]` - Full trial setup\n"
-            "`/dose [agent] [type]` - Single resource generation\n"
-            "`/trip [url]` - Run automation on custom URL\n"
-            "`/stash` - View your generated items\n"
-            "`/rehab` - Clear your data"
-        ),
-        inline=False
-    )
-    
-    # Fun commands
-    embed.add_field(
-        name="😎 Agent Commands",
-        value=(
-            "`/quote [agent]` - Get a quote from an agent\n"
-            "`/agents` - View all agents"
-        ),
-        inline=False
-    )
-    
-    # Admin commands
-    embed.add_field(
-        name="🔑 Admin Commands",
-        value=(
-            "`/admin login [username] [password]` - Log in as admin\n"
-            "`/admin reset [user_id]` - Reset a user's trial limit"
-        ),
-        inline=False
-    )
-    
-    embed.set_footer(text="Trial Junkie - Get your digital fix")
     await ctx.send(embed=embed)
 
 @bot.command(name="hit")
-async def hit_command(ctx, *, service: str = None):
-    """Full trial setup command"""
-    if not service:
-        await ctx.send("Please specify a service (e.g., `/hit hulu`)")
+async def hit_command(ctx, *, service_or_url: str = None):
+    """
+    Generate a full trial for a service (all agents)
+    
+    Args:
+        service_or_url: The service name or URL to generate a trial for
+    """
+    user_id = ctx.author.id
+    username = ctx.author.name
+    
+    # Check if user provided a service
+    if not service_or_url:
+        await ctx.send(
+            f"Please specify a service or URL. Example: `{COMMAND_PREFIX}hit hulu`\n"
+            f"Supported services: {', '.join(SUPPORTED_SERVICES)}"
+        )
         return
     
     # Normalize service name
-    service = service.lower()
+    service = service_or_url.lower().strip()
     
     # Check if service is supported
-    if service not in TRIAL_SERVICES:
-        await ctx.send(f"Service '{service}' is not supported. Available services: {', '.join(TRIAL_SERVICES.keys())}")
+    if service not in SUPPORTED_SERVICES and not service.startswith(('http://', 'https://')):
+        await ctx.send(
+            f"Sorry, {service} is not supported yet. Supported services: {', '.join(SUPPORTED_SERVICES)}\n"
+            f"You can also enter a full URL for custom trial generation."
+        )
         return
     
-    # Check if user has already created a trial
-    user_id = ctx.author.id
-    if not await check_user_limit(user_id):
-        embed = discord.Embed(
-            title="Trial Limit Reached",
-            description="⚠️ You have already created a trial. Each user can only create one trial.",
-            color=COLORS["warning"]
+    # Check user limits
+    tier = get_user_tier(user_id)
+    if not check_user_limit(user_id, tier):
+        limit = PREMIUM_TRIAL_LIMIT if tier.lower() == "premium" else TRIAL_LIMIT
+        await ctx.send(
+            f"You've reached your daily limit of {limit} trials. "
+            f"Come back tomorrow or upgrade to premium for higher limits."
         )
-        embed.add_field(
-            name="Need More?",
-            value="Contact an administrator to reset your limit.",
-            inline=False
-        )
-        await ctx.send(embed=embed)
         return
     
-    # Log the command
-    logger.info(f"User {user_id} ({ctx.author.name}) executed /hit with service: {service}")
+    # Acknowledge the request
+    await ctx.send(f"🧪 Generating your {service} trial... This may take a minute.")
     
-    # Send initial message
-    embed = discord.Embed(
-        title="Trial Generation Started",
-        description=f"🌐 Running full trial setup for service: {service.upper()}",
-        color=COLORS["info"]
-    )
-    
-    # Add agent information
-    embed.add_field(
-        name="Agents Deployed",
-        value=(
-            "💉 **Heroin Harry** - Identity generation\n"
-            "💨 **Meth Mandy** - Card generation\n"
-            "💊 **Xanny Xan** - Email creation\n"
-            "❄️ **Cokehead Carl** - Phone verification\n"
-            "🍄 **Shroomy Sal** - Browser automation\n"
-        ),
-        inline=False
-    )
-    
-    embed.add_field(
-        name="Estimated Time",
-        value="⏱️ 30-60 seconds",
-        inline=False
-    )
-    
-    embed.set_footer(text="Trial Junkie - Get your digital fix")
-    message = await ctx.send(embed=embed)
-    
-    # Generate the trial
-    if service == "hulu":
-        # Create the trial generator
-        generator = HuluTrialGenerator(headless=True)
-        
-        try:
-            # Try to create a trial
-            result = generator.create_trial()
-            
-            if result['success']:
-                # Trial was created successfully
-                trial_info = result['trial_info']
-                
-                # Save the user's trial
-                save_user_trial(user_id, service, trial_info)
-                
-                # Send success message
-                success_embed = discord.Embed(
-                    title="Trial Generation Complete",
-                    description=f"✅ Your {service.upper()} trial is ready!",
-                    color=COLORS["success"]
-                )
-                
-                # Add credentials
-                success_embed.add_field(
-                    name="📧 Login Email",
-                    value=f"{trial_info['email']}",
-                    inline=True
-                )
-                
-                success_embed.add_field(
-                    name="🔑 Password",
-                    value=f"{trial_info['password']}",
-                    inline=True
-                )
-                
-                success_embed.add_field(
-                    name="💳 Card Used",
-                    value=f"{trial_info['card']}",
-                    inline=False
-                )
-                
-                success_embed.add_field(
-                    name="⏱️ Expires",
-                    value=f"{trial_info['end_date']}",
-                    inline=False
-                )
-                
-                success_embed.add_field(
-                    name="🔍 Note",
-                    value="Use `/stash` to view your saved credentials anytime.",
-                    inline=False
-                )
-                
-                success_embed.set_footer(text="Trial Junkie - Get your digital fix")
-                await ctx.send(embed=success_embed)
+    try:
+        # Show "typing" indicator during processing
+        async with ctx.typing():
+            # Generate trial data
+            if API_AVAILABLE and api:
+                # This is a placeholder for the actual API call
+                if service == "hulu":
+                    # Call the API integration
+                    trial_data = api.generate_complete_trial_data(service)
+                    
+                    # For demo purposes, let's generate a synthetic end date
+                    if "start_date" not in trial_data:
+                        trial_data["start_date"] = datetime.now().strftime("%Y-%m-%d")
+                    
+                    trial_end = datetime.now() + timedelta(days=30)
+                    trial_data["end_date"] = trial_end.strftime("%Y-%m-%d")
+                    
+                    # Save the trial to storage
+                    save_trial(user_id, trial_data)
+                    
+                    # Increment user's trial count
+                    increment_user_trial(user_id)
+                    
+                    # Format and send the trial information
+                    embed = format_trial_embed(trial_data)
+                    await ctx.author.send(embed=embed)
+                    
+                    # Send confirmation in the channel
+                    await ctx.send(
+                        f"✅ Your {service} trial has been generated and sent to your DMs!"
+                    )
+                else:
+                    # For other services, send a placeholder message
+                    await ctx.send(
+                        f"Service '{service}' is under development. Check back soon!"
+                    )
             else:
-                # Trial creation failed
-                error_embed = discord.Embed(
-                    title="Trial Generation Failed",
-                    description=f"❌ Failed to create {service.upper()} trial",
-                    color=COLORS["error"]
+                # API not available, send error message
+                await ctx.send(
+                    "Sorry, the trial generation system is currently unavailable. "
+                    "Please try again later."
+                )
+    except Exception as e:
+        logger.error(f"Error in hit command: {str(e)}")
+        traceback.print_exc()
+        await ctx.send(
+            f"An error occurred while generating your trial: {str(e)}. "
+            f"Please try again later."
+        )
+
+@bot.command(name="dose")
+async def dose_command(ctx, agent_type: str = None, platform: str = None):
+    """
+    Use a specific agent for part of the trial process
+    
+    Args:
+        agent_type: The type of agent to use
+        platform: The platform to generate data for
+    """
+    valid_agents = ["mandy", "randy", "sandy", "danny", "andy"]
+    
+    if not agent_type:
+        await ctx.send(
+            f"Please specify an agent. Valid agents: {', '.join(valid_agents)}\n"
+            f"Example: `{COMMAND_PREFIX}dose mandy`"
+        )
+        return
+    
+    agent = agent_type.lower()
+    if agent not in valid_agents:
+        await ctx.send(
+            f"Invalid agent. Valid agents: {', '.join(valid_agents)}"
+        )
+        return
+    
+    await ctx.send(f"🧪 Asking {agent.title()} to help you out... One moment.")
+    
+    try:
+        # Different responses based on the agent
+        if agent == "mandy":  # Identity generator
+            if API_AVAILABLE and api:
+                identity = api.generate_identity()
+                
+                embed = discord.Embed(
+                    title="Identity Generated",
+                    description=f"Here's your new identity from Mandy:",
+                    color=0x00FF00
                 )
                 
-                error_embed.add_field(
-                    name="Error Message",
-                    value=result['message'],
+                embed.add_field(
+                    name="Personal Information",
+                    value=(
+                        f"**Name:** {identity.get('first_name', 'John')} {identity.get('last_name', 'Doe')}\n"
+                        f"**Address:** {identity.get('address', '123 Main St')}\n"
+                        f"**City:** {identity.get('city', 'Anytown')}\n"
+                        f"**State:** {identity.get('state', 'CA')}\n"
+                        f"**ZIP:** {identity.get('zipcode', '12345')}\n"
+                    ),
                     inline=False
                 )
                 
-                error_embed.add_field(
-                    name="What Next?",
-                    value="Try again later or contact an administrator for help.",
+                # Random quote from the agent
+                quote = random.choice(AGENT_QUOTES["mandy"])
+                embed.set_footer(text=f"Mandy says: \"{quote}\"")
+                
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("Identity generation is currently unavailable.")
+                
+        elif agent == "danny":  # Phone number generator
+            if API_AVAILABLE and api:
+                phone = api.generate_virtual_number()
+                
+                embed = discord.Embed(
+                    title="Phone Number Generated",
+                    description=f"Here's your virtual phone number from Danny:",
+                    color=0x4169E1
+                )
+                
+                embed.add_field(
+                    name="Phone Information",
+                    value=(
+                        f"**Number:** {phone.get('number', 'N/A')}\n"
+                        f"**Country:** {phone.get('country', 'US')}\n"
+                        f"**Valid For:** SMS Verification\n"
+                    ),
                     inline=False
                 )
                 
-                await ctx.send(embed=error_embed)
-        
-        except Exception as e:
-            logger.error(f"Error creating trial: {str(e)}")
-            
-            # Send error message
-            error_embed = discord.Embed(
-                title="Error Creating Trial",
-                description=f"❌ An error occurred while creating your {service.upper()} trial",
-                color=COLORS["error"]
+                # Random quote from the agent
+                quote = random.choice(AGENT_QUOTES["danny"])
+                embed.set_footer(text=f"Danny says: \"{quote}\"")
+                
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("Phone number generation is currently unavailable.")
+                
+        elif agent == "sandy":  # Card generator
+            if API_AVAILABLE and api:
+                card = api.generate_card()
+                
+                embed = discord.Embed(
+                    title="Credit Card Generated",
+                    description=f"Here's your virtual card from Sandy:",
+                    color=0xFF6347
+                )
+                
+                embed.add_field(
+                    name="Card Information",
+                    value=(
+                        f"**Card Type:** {card.get('type', 'VISA').upper()}\n"
+                        f"**Card Number:** {card.get('number', 'XXXX-XXXX-XXXX-XXXX')}\n"
+                        f"**Expiry:** {card.get('expiry', 'MM/YY')}\n"
+                        f"**CVV:** {card.get('cvv', 'XXX')}\n"
+                    ),
+                    inline=False
+                )
+                
+                embed.add_field(
+                    name="⚠️ Important Note",
+                    value=(
+                        "This card is for trial verification only. It won't work for actual purchases. "
+                        "Use it only for free trial signups."
+                    ),
+                    inline=False
+                )
+                
+                # Random quote from the agent
+                quote = random.choice(AGENT_QUOTES["sandy"])
+                embed.set_footer(text=f"Sandy says: \"{quote}\"")
+                
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("Card generation is currently unavailable.")
+                
+        elif agent == "randy":  # Email generator
+            if API_AVAILABLE and api:
+                email = api.generate_email()
+                
+                embed = discord.Embed(
+                    title="Email Generated",
+                    description=f"Here's your disposable email from Randy:",
+                    color=0xFFD700
+                )
+                
+                embed.add_field(
+                    name="Email Information",
+                    value=(
+                        f"**Email Address:** {email.get('email', 'user@example.com')}\n"
+                        f"**Password:** {email.get('password', 'password123')}\n"
+                        f"**Valid For:** Email Verification\n"
+                    ),
+                    inline=False
+                )
+                
+                # Random quote from the agent
+                quote = random.choice(AGENT_QUOTES["randy"])
+                embed.set_footer(text=f"Randy says: \"{quote}\"")
+                
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send("Email generation is currently unavailable.")
+                
+        elif agent == "andy":  # Automation specialist
+            await ctx.send(
+                "Andy needs a specific target to work with. "
+                f"Use `{COMMAND_PREFIX}hit [service]` to run a full automation."
             )
-            
-            error_embed.add_field(
-                name="Error Details",
-                value=str(e),
-                inline=False
-            )
-            
-            await ctx.send(embed=error_embed)
-    else:
-        # For other services (not implemented yet)
-        await ctx.send(f"Service '{service}' is supported but not yet implemented.")
+    except Exception as e:
+        logger.error(f"Error in dose command: {str(e)}")
+        await ctx.send(
+            f"An error occurred while using {agent.title()}: {str(e)}. "
+            f"Please try again later."
+        )
 
 @bot.command(name="stash")
 async def stash_command(ctx):
-    """View user's generated items"""
+    """View user's generated trials"""
     user_id = ctx.author.id
+    username = ctx.author.name
     
-    # Check if user has any trials
-    if user_id not in USER_TRIAL_LIMITS:
-        embed = discord.Embed(
-            title="No Trials Found",
-            description="You haven't generated any trials yet. Use `/hit [service]` to create one.",
-            color=COLORS["warning"]
-        )
-        await ctx.send(embed=embed)
+    # Get all trials for the user
+    trials = get_user_trials(user_id)
+    
+    if not trials:
+        await ctx.send("You haven't generated any trials yet.")
         return
     
-    # Get the user's trial information
-    user_trial = USER_TRIAL_LIMITS[user_id]
-    trial_info = user_trial['trial_info']
-    service = user_trial['service']
-    
-    # Create embed for trial information
+    # Create an embed to display the trials
     embed = discord.Embed(
-        title=f"Your {service.upper()} Trial",
-        description="Here are your saved trial credentials:",
-        color=COLORS["info"]
+        title="Your Trial Stash",
+        description=f"You have {len(trials)} trials in your stash:",
+        color=0x9370DB
     )
     
-    # Add credentials
-    embed.add_field(
-        name="📧 Login Email",
-        value=f"{trial_info['email']}",
-        inline=True
-    )
+    # Add each trial to the embed
+    for i, trial in enumerate(trials[:10], 1):  # Limit to 10 trials
+        service = trial.get("service", "Unknown").title()
+        status = "Active" if datetime.strptime(trial.get("end_date", "2020-01-01"), "%Y-%m-%d") > datetime.now() else "Expired"
+        
+        embed.add_field(
+            name=f"{i}. {service}",
+            value=(
+                f"**Email:** {trial.get('email', 'N/A')}\n"
+                f"**Expires:** {trial.get('end_date', 'Unknown')}\n"
+                f"**Status:** {status}"
+            ),
+            inline=True
+        )
     
-    embed.add_field(
-        name="🔑 Password",
-        value=f"{trial_info['password']}",
-        inline=True
-    )
+    # Add a note if there are more than 10 trials
+    if len(trials) > 10:
+        embed.set_footer(text=f"And {len(trials) - 10} more trials not shown.")
     
-    embed.add_field(
-        name="💳 Payment Method",
-        value=f"{trial_info['card']}",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="⏱️ Expires",
-        value=f"{trial_info['end_date']}",
-        inline=True
-    )
-    
-    embed.add_field(
-        name="🌐 Login URL",
-        value=f"{trial_info['login_url']}",
-        inline=True
-    )
-    
-    embed.add_field(
-        name="📝 Note",
-        value="Remember to cancel before the trial ends to avoid charges.",
-        inline=False
-    )
-    
-    embed.set_footer(text=f"Created on: {user_trial['created_at']}")
     await ctx.send(embed=embed)
 
 @bot.command(name="rehab")
 async def rehab_command(ctx):
-    """Clear user data"""
+    """Clear user data (with confirmation)"""
     user_id = ctx.author.id
     
-    # Check if user has any trials
-    if user_id not in USER_TRIAL_LIMITS:
-        embed = discord.Embed(
-            title="No Data to Clear",
-            description="You don't have any stored trial data.",
-            color=COLORS["info"]
-        )
-        await ctx.send(embed=embed)
-        return
-    
     # Ask for confirmation
-    embed = discord.Embed(
-        title="Confirm Data Deletion",
-        description="Are you sure you want to delete all your trial data? This action cannot be undone.",
-        color=COLORS["warning"]
-    )
-    embed.add_field(
-        name="Respond Within 30 Seconds",
-        value="React with ✅ to confirm or ❌ to cancel",
-        inline=False
+    message = await ctx.send(
+        "⚠️ This will delete all your trial data. Are you sure? React with ✅ to confirm, or ❌ to cancel."
     )
     
-    # Send confirmation message
-    message = await ctx.send(embed=embed)
+    # Add reaction options
     await message.add_reaction("✅")
     await message.add_reaction("❌")
     
-    # Check for user's reaction
+    # Define a check function for the reaction
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) in ["✅", "❌"] and reaction.message.id == message.id
     
     try:
+        # Wait for a reaction
         reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
         
         if str(reaction.emoji) == "✅":
-            # User confirmed, delete the data
-            if user_id in USER_TRIAL_LIMITS:
-                del USER_TRIAL_LIMITS[user_id]
-            
-            embed = discord.Embed(
-                title="Data Deleted",
-                description="All your trial data has been deleted successfully.",
-                color=COLORS["success"]
-            )
-            await ctx.send(embed=embed)
+            # Delete the user's trial file
+            user_trials_file = f"trials_{user_id}.json"
+            if os.path.exists(user_trials_file):
+                os.remove(user_trials_file)
+                
+            # Remove from in-memory storage
+            if user_id in USER_TRIALS:
+                del USER_TRIALS[user_id]
+                
+            if str(user_id) in USER_TIERS:
+                del USER_TIERS[str(user_id)]
+                
+            await ctx.send("✅ All your data has been deleted.")
         else:
-            # User cancelled
-            embed = discord.Embed(
-                title="Operation Cancelled",
-                description="Your data was not deleted.",
-                color=COLORS["info"]
-            )
-            await ctx.send(embed=embed)
-    
+            await ctx.send("❌ Operation cancelled.")
     except asyncio.TimeoutError:
-        # User didn't respond in time
-        embed = discord.Embed(
-            title="Operation Timed Out",
-            description="You didn't respond in time. Your data was not deleted.",
-            color=COLORS["warning"]
-        )
-        await ctx.send(embed=embed)
+        await ctx.send("⏰ Timed out. Operation cancelled.")
 
 @bot.command(name="quote")
 async def quote_command(ctx, agent: str = None):
     """Get a random quote from an agent"""
-    agent_keys = list(AGENT_QUOTES.keys())
+    valid_agents = list(AGENT_QUOTES.keys())
     
+    # If no agent specified, pick a random one
     if not agent:
-        # Random agent if none specified
-        agent = random.choice(agent_keys)
+        agent = random.choice(valid_agents)
     else:
         agent = agent.lower()
-        if agent not in agent_keys:
-            await ctx.send(f"Agent not found. Try one of: {', '.join(agent_keys)}")
+        if agent not in valid_agents:
+            await ctx.send(
+                f"Invalid agent. Valid agents: {', '.join(valid_agents)}"
+            )
             return
     
-    # Get the agent's icon
-    agent_icons = {
-        "harry": "💉",
-        "mandy": "💨",
-        "xan": "💊",
-        "sal": "🍄",
-        "carl": "❄️",
-        "craig": "💸"
-    }
-    
-    # Get a random quote
+    # Get a random quote from the agent
     quote = random.choice(AGENT_QUOTES[agent])
     
-    # Build and send the embed
+    # Agent colors
+    agent_colors = {
+        "mandy": 0x00FF00,  # Green
+        "danny": 0x4169E1,  # Royal Blue
+        "sandy": 0xFF6347,  # Tomato
+        "randy": 0xFFD700,  # Gold
+        "andy": 0x800080    # Purple
+    }
+    
+    # Agent roles
+    agent_roles = {
+        "mandy": "Identity Specialist",
+        "danny": "Phone Verification Expert",
+        "sandy": "Payment Systems Specialist",
+        "randy": "Email Verification Guru",
+        "andy": "Automation Wizard"
+    }
+    
+    # Create an embed for the quote
     embed = discord.Embed(
-        title=f"{agent_icons.get(agent, '🔮')} {AGENT_NAMES.get(agent, agent.title())} says:",
-        description=f"*\"{quote}\"*",
-        color=0x9c27b0
+        title=f"{agent.title()} says:",
+        description=f"\"{quote}\"",
+        color=agent_colors.get(agent, 0x9370DB)
     )
     
-    embed.set_footer(text="Trial Junkie - Words of wisdom from the street")
+    embed.set_footer(text=f"{agent.title()} - {agent_roles.get(agent, 'Agent')}")
+    
     await ctx.send(embed=embed)
 
 @bot.command(name="agents")
@@ -634,154 +788,137 @@ async def agents_command(ctx):
     """Display information about all agents"""
     embed = discord.Embed(
         title="Trial Junkie Agents",
-        description="Meet the specialized agents that power Trial Junkie",
-        color=0xff9800
+        description="Meet the team of specialists who make your trials possible:",
+        color=0x9370DB
     )
     
-    # Add fields for each agent
-    embed.add_field(
-        name="💉 Heroin Harry - Identity Specialist",
-        value="Generates realistic identities using Personator API for verification.",
-        inline=False
-    )
+    # Agent descriptions
+    agents = {
+        "Mandy": "Identity Specialist - Creates realistic identities that pass verification checks",
+        "Danny": "Phone Verification Expert - Provides virtual phone numbers for SMS verification",
+        "Sandy": "Payment Systems Specialist - Generates valid cards that pass verification but don't charge",
+        "Randy": "Email Verification Guru - Creates and verifies email addresses for trial accounts",
+        "Andy": "Automation Wizard - Handles the website interactions to create the actual accounts"
+    }
     
-    embed.add_field(
-        name="💨 Meth Mandy - Card Generator",
-        value="Creates valid credit card information using Fake Valid CC Data Generator API.",
-        inline=False
-    )
+    # Add each agent to the embed
+    for agent, description in agents.items():
+        embed.add_field(
+            name=agent,
+            value=description,
+            inline=False
+        )
     
-    embed.add_field(
-        name="💊 Xanny Xan - Email Specialist",
-        value="Validates emails with Advanced Email Validator API and checks for disposable emails.",
-        inline=False
-    )
+    embed.set_footer(text=f"Use {COMMAND_PREFIX}dose [agent] to use a specific agent")
     
-    embed.add_field(
-        name="❄️ Cokehead Carl - Phone Verifier",
-        value="Validates phone numbers using Veriphone API and Abstract Phone Validation API.",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="🍄 Shroomy Sal - Automation Expert",
-        value="Handles browser automation with ScrapeNinja API for bypassing website protections.",
-        inline=False
-    )
-    
-    embed.add_field(
-        name="💸 Crypto Craig - Payment Processor",
-        value="Manages Solana wallet transactions for subscriptions.",
-        inline=False
-    )
-    
-    embed.set_footer(text="Trial Junkie - Get your digital fix")
     await ctx.send(embed=embed)
 
-@bot.command(name="admin")
-async def admin_command(ctx, action: str = None, *args):
-    """Admin commands"""
-    if not action:
-        await ctx.send("Please specify an admin action. Use `/guide` to see available commands.")
-        return
+@bot.command(name="tier")
+async def tier_command(ctx):
+    """View user tier status"""
+    user_id = ctx.author.id
+    username = ctx.author.name
     
-    action = action.lower()
+    # Get user tier
+    tier = get_user_tier(user_id)
     
-    if action == "login":
-        # Admin login
-        if len(args) != 2:
-            await ctx.send("Invalid syntax. Use `/admin login [username] [password]`")
-            return
-        
-        username, password = args
-        
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            # Successful login
-            embed = discord.Embed(
-                title="Admin Access Granted",
-                description="You now have access to admin commands.",
-                color=COLORS["success"]
-            )
-            # DM the user instead of sending to the channel for security
-            await ctx.author.send(embed=embed)
-            
-            # Delete the command message to hide credentials
-            try:
-                await ctx.message.delete()
-            except:
-                pass
-        else:
-            # Failed login
-            embed = discord.Embed(
-                title="Admin Access Denied",
-                description="Invalid username or password.",
-                color=COLORS["error"]
-            )
-            await ctx.author.send(embed=embed)
-            
-            # Delete the command message to hide credentials
-            try:
-                await ctx.message.delete()
-            except:
-                pass
+    # Tier information
+    tier_info = {
+        "free": {
+            "name": "Free Tier",
+            "color": 0x808080,  # Gray
+            "description": "Basic access with limited trials per day",
+            "limit": TRIAL_LIMIT,
+            "features": [
+                "Access to basic trial generation",
+                f"{TRIAL_LIMIT} trials per day",
+                "Standard support"
+            ]
+        },
+        "premium": {
+            "name": "Premium Tier",
+            "color": 0xFFD700,  # Gold
+            "description": "Enhanced access with more trials and priority service",
+            "limit": PREMIUM_TRIAL_LIMIT,
+            "features": [
+                "Access to all trial services",
+                f"{PREMIUM_TRIAL_LIMIT} trials per day",
+                "Priority trial generation",
+                "Premium support",
+                "Early access to new features"
+            ]
+        }
+    }
     
-    elif action == "reset":
-        # Reset a user's trial limit
-        if len(args) != 1:
-            await ctx.send("Invalid syntax. Use `/admin reset [user_id]`")
-            return
-        
-        try:
-            target_user_id = int(args[0])
-        except ValueError:
-            await ctx.send("Invalid user ID. User ID must be a number.")
-            return
-        
-        # Check if the requesting user is an admin
-        # For simplicity, we're just checking username/password here
-        # In a real implementation, you might want to track admin status
-        await ctx.send("Please enter admin credentials in a direct message")
-        
-        def check(message):
-            return message.author == ctx.author and isinstance(message.channel, discord.DMChannel)
-        
-        try:
-            # Wait for DM with credentials
-            await ctx.author.send("Please enter admin username:")
-            username_msg = await bot.wait_for("message", timeout=60.0, check=check)
-            username = username_msg.content
-            
-            await ctx.author.send("Please enter admin password:")
-            password_msg = await bot.wait_for("message", timeout=60.0, check=check)
-            password = password_msg.content
-            
-            if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-                # Valid admin credentials, reset the user's limit
-                if target_user_id in USER_TRIAL_LIMITS:
-                    del USER_TRIAL_LIMITS[target_user_id]
-                
-                embed = discord.Embed(
-                    title="User Reset Successful",
-                    description=f"User ID {target_user_id} has been reset and can now create a new trial.",
-                    color=COLORS["success"]
-                )
-                await ctx.send(embed=embed)
-                
-                # Confirm in DM too
-                await ctx.author.send("Reset successful.")
-            else:
-                # Invalid credentials
-                await ctx.author.send("Invalid admin credentials. Access denied.")
-        
-        except asyncio.TimeoutError:
-            await ctx.author.send("Timed out waiting for credentials.")
+    # Get tier details
+    tier_details = tier_info.get(tier.lower(), tier_info["free"])
     
+    # Create embed
+    embed = discord.Embed(
+        title=f"Your Subscription: {tier_details['name']}",
+        description=tier_details["description"],
+        color=tier_details["color"]
+    )
+    
+    # Add daily usage
+    today = datetime.now().strftime("%Y-%m-%d")
+    if user_id in USER_TRIALS and USER_TRIALS[user_id]["date"] == today:
+        usage = f"{USER_TRIALS[user_id]['count']}/{tier_details['limit']} trials used today"
     else:
-        await ctx.send(f"Unknown admin action: '{action}'. Use `/guide` to see available commands.")
+        usage = f"0/{tier_details['limit']} trials used today"
+    
+    embed.add_field(
+        name="Daily Usage",
+        value=usage,
+        inline=False
+    )
+    
+    # Add features
+    embed.add_field(
+        name="Features",
+        value="\n".join(f"✅ {feature}" for feature in tier_details["features"]),
+        inline=False
+    )
+    
+    # Add upgrade info for free tier
+    if tier.lower() == "free":
+        embed.add_field(
+            name="Upgrade",
+            value=f"Use `{COMMAND_PREFIX}pay premium` to upgrade to Premium and get more trials per day!",
+            inline=False
+        )
+    
+    await ctx.send(embed=embed)
 
-async def main():
+# Run the bot
+def run_bot():
     """Run the Discord bot"""
-    await bot.start(DISCORD_BOT_TOKEN)
+    logger.info("Starting Discord bot")
+    
+    if SIMULATION_MODE:
+        logger.error("No Discord bot token found in environment variables")
+        logger.info("For testing purposes, the bot will run with a dummy token")
+        logger.info("Bot is running in simulation mode - no connection to Discord")
+        
+        # Load trial commands
+        logger.info("Loaded trial commands")
+        
+        # Simulate bot startup
+        logger.info("Simulating bot startup...")
+        logger.info("Discord bot simulated and ready")
+        logger.info("Commands available: !hit, !stash, !agents, !plans, !tier, !help")
+        logger.info("You can test trial generation and stash commands via the Python API")
+        
+        return True
+    else:
+        try:
+            # Run the bot with the Discord token
+            bot.run(DISCORD_BOT_TOKEN)
+            return True
+        except Exception as e:
+            logger.error(f"Error running Discord bot: {str(e)}")
+            traceback.print_exc()
+            return False
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_bot()

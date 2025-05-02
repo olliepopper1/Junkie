@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
 Trial Junkie Setup Script
-This script validates the environment and prepares the Trial Junkie system for use
+Initializes and tests all components of the Trial Junkie system
 """
 import os
 import sys
 import json
+import time
 import logging
 import requests
-import subprocess
+import traceback
 from datetime import datetime
-from dotenv import load_dotenv
+from typing import Dict, List, Any, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -23,240 +24,336 @@ logging.basicConfig(
 )
 logger = logging.getLogger("setup")
 
-# Load environment variables
-load_dotenv()
+# Try to load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    logger.info("Environment variables loaded")
+except ImportError:
+    logger.warning("dotenv module not available - environment variables may not be loaded")
 
-class TrialJunkieSetup:
-    """Setup and validation for the Trial Junkie system"""
+# Check required environment variables
+def check_environment_variables() -> bool:
+    """
+    Check if required environment variables are set
     
-    def __init__(self):
-        self.api_keys = {
-            "DISCORD_BOT_TOKEN": os.getenv("DISCORD_BOT_TOKEN"),
-            "RAPIDAPI_KEY": os.getenv("RAPIDAPI_KEY")
+    Returns:
+        bool: True if all required variables are set, False otherwise
+    """
+    logger.info("Checking environment variables...")
+    
+    required_variables = [
+        "DATABASE_URL"
+    ]
+    
+    optional_variables = [
+        "DISCORD_BOT_TOKEN",
+        "RAPIDAPI_KEY"
+    ]
+    
+    # Check required variables
+    missing_required = []
+    for var in required_variables:
+        if not os.getenv(var):
+            missing_required.append(var)
+    
+    # Check optional variables
+    missing_optional = []
+    for var in optional_variables:
+        if not os.getenv(var):
+            missing_optional.append(var)
+    
+    if missing_required:
+        logger.error(f"Missing required environment variables: {', '.join(missing_required)}")
+        return False
+    
+    if missing_optional:
+        logger.warning(f"Missing optional environment variables: {', '.join(missing_optional)}")
+    
+    logger.info("All required environment variables are set")
+    return True
+
+# Test API endpoints
+def check_api_endpoints() -> Dict[str, Any]:
+    """
+    Test API endpoints to ensure they are working
+    
+    Returns:
+        dict: API test results
+    """
+    logger.info("Checking API endpoints...")
+    
+    # API configuration
+    apis = [
+        {
+            "name": "Random Identity Generator",
+            "url": "https://randomuser.me/api/",
+            "method": "GET",
+            "headers": {}
+        },
+        {
+            "name": "Fake Valid CC Generator",
+            "url": "https://fake-valid-cc-generator.p.rapidapi.com/creditcard/generate",
+            "method": "GET",
+            "headers": {
+                "X-RapidAPI-Host": "fake-valid-cc-generator.p.rapidapi.com",
+                "X-RapidAPI-Key": os.getenv("RAPIDAPI_KEY", "")
+            },
+            "params": {
+                "credit_card_type": "visa",
+                "quantity": "1"
+            }
+        },
+        {
+            "name": "Veriphone",
+            "url": "https://veriphone.p.rapidapi.com/verify",
+            "method": "GET",
+            "headers": {
+                "X-RapidAPI-Host": "veriphone.p.rapidapi.com",
+                "X-RapidAPI-Key": os.getenv("RAPIDAPI_KEY", "")
+            },
+            "params": {
+                "phone": "9087654321"
+            }
+        },
+        {
+            "name": "Website Scraper",
+            "url": "https://website-scraper.p.rapidapi.com/scrape",
+            "method": "POST",
+            "headers": {
+                "X-RapidAPI-Host": "website-scraper.p.rapidapi.com", 
+                "X-RapidAPI-Key": os.getenv("RAPIDAPI_KEY", ""),
+                "Content-Type": "application/json"
+            },
+            "json": {
+                "url": "https://www.example.com",
+                "timeout": 30
+            }
         }
-        self.api_configs = {}
-        self.database_status = None
-        logger.info("TrialJunkie Setup initialized")
+    ]
     
-    def check_environment(self):
-        """Check if all required environment variables are set"""
-        logger.info("Checking environment variables...")
-        
-        missing_keys = []
-        for key, value in self.api_keys.items():
-            if not value:
-                logger.error(f"Missing environment variable: {key}")
-                missing_keys.append(key)
-        
-        if missing_keys:
-            logger.error(f"Missing {len(missing_keys)} required environment variables")
-            return False
-        
-        logger.info("All required environment variables are set")
-        return True
+    # Test each API
+    results = []
+    success_count = 0
     
-    def check_apis(self):
-        """Check if all required API endpoints are accessible"""
-        logger.info("Checking API endpoints...")
-        
-        rapidapi_key = self.api_keys.get("RAPIDAPI_KEY")
-        if not rapidapi_key:
-            logger.error("RAPIDAPI_KEY is required to test API endpoints")
-            return False
-        
-        # Define APIs to check
-        apis = [
-            {
-                "name": "Random Identity Generator",
-                "host": "random-identity-generator.p.rapidapi.com",
-                "endpoint": "https://random-identity-generator.p.rapidapi.com/",
-                "headers": {
-                    "X-RapidAPI-Key": rapidapi_key,
-                    "X-RapidAPI-Host": "random-identity-generator.p.rapidapi.com"
-                }
-            },
-            {
-                "name": "Fake Valid CC Generator",
-                "host": "fake-valid-cc-data-generator.p.rapidapi.com",
-                "endpoint": "https://fake-valid-cc-data-generator.p.rapidapi.com/generate",
-                "params": {"brand": "visa", "format": "json"},
-                "headers": {
-                    "X-RapidAPI-Key": rapidapi_key,
-                    "X-RapidAPI-Host": "fake-valid-cc-data-generator.p.rapidapi.com"
-                }
-            },
-            {
-                "name": "Veriphone",
-                "host": "veriphone.p.rapidapi.com",
-                "endpoint": "https://veriphone.p.rapidapi.com/verify",
-                "params": {"phone": "2125551234"},
-                "headers": {
-                    "X-RapidAPI-Key": rapidapi_key,
-                    "X-RapidAPI-Host": "veriphone.p.rapidapi.com"
-                }
-            },
-            {
-                "name": "Website Scraper",
-                "host": "website-scraper-api.p.rapidapi.com",
-                "endpoint": "https://website-scraper-api.p.rapidapi.com/scrape",
-                "params": {"url": "https://www.example.com", "javascript": "true"},
-                "headers": {
-                    "X-RapidAPI-Key": rapidapi_key,
-                    "X-RapidAPI-Host": "website-scraper-api.p.rapidapi.com"
-                }
-            }
-        ]
-        
-        results = []
-        for api in apis:
-            try:
-                logger.info(f"Testing API: {api['name']}")
-                if api.get('params'):
-                    response = requests.get(api['endpoint'], headers=api['headers'], params=api['params'], timeout=10)
-                else:
-                    response = requests.get(api['endpoint'], headers=api['headers'], timeout=10)
-                
-                status = response.status_code
-                if status == 200:
-                    logger.info(f"✅ {api['name']} API: Success")
-                    results.append({"name": api['name'], "status": "success", "code": status})
-                else:
-                    logger.warning(f"⚠️ {api['name']} API: Status code {status}")
-                    results.append({"name": api['name'], "status": "warning", "code": status})
-            
-            except requests.RequestException as e:
-                logger.error(f"❌ {api['name']} API: Error - {str(e)}")
-                results.append({"name": api['name'], "status": "error", "message": str(e)})
-        
-        # Save API test results
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        result_file = f"api_test_results_{timestamp}.json"
-        with open(result_file, 'w') as f:
-            json.dump(results, f, indent=2)
-        
-        logger.info(f"API test results saved to {result_file}")
-        
-        # Count successful APIs
-        success_count = sum(1 for r in results if r['status'] == 'success')
-        logger.info(f"API Check Results: {success_count}/{len(apis)} successful")
-        
-        self.api_configs = {api['name']: api for api in apis}
-        return success_count > 0
-    
-    def check_database(self):
-        """Check if the database is accessible"""
-        logger.info("Checking database connection...")
-        
+    for api in apis:
+        logger.info(f"Testing API: {api['name']}")
         try:
-            from database import Database
-            db = Database()
-            connection_result = db.initialize()
-            self.database_status = connection_result
-            
-            if connection_result.get('success'):
-                logger.info("✅ Database connection successful")
-                return True
+            if api.get("method", "GET") == "GET":
+                response = requests.get(
+                    api["url"],
+                    headers=api.get("headers", {}),
+                    params=api.get("params", {})
+                )
             else:
-                logger.error(f"❌ Database connection failed: {connection_result.get('message', 'Unknown error')}")
-                return False
+                response = requests.post(
+                    api["url"],
+                    headers=api.get("headers", {}),
+                    json=api.get("json", {})
+                )
             
-        except ImportError:
-            logger.error("❌ Database module not found")
-            return False
+            if response.status_code == 200:
+                logger.info(f"✅ {api['name']} API: Success")
+                status = "success"
+                success_count += 1
+            else:
+                logger.warning(f"⚠️ {api['name']} API: Status code {response.status_code}")
+                status = "warning"
+        
         except Exception as e:
-            logger.error(f"❌ Database check error: {str(e)}")
-            return False
+            logger.error(f"❌ {api['name']} API: Error - {str(e)}")
+            status = "error"
+        
+        results.append({
+            "name": api["name"],
+            "status": status,
+            "code": response.status_code if 'response' in locals() else None
+        })
     
-    def create_example_trial(self):
-        """Create an example trial file to test the system"""
-        logger.info("Creating example trial file...")
-        
-        from updated_api_integrations import UpdatedAPIIntegrations
-        
-        try:
-            # Initialize API
-            api = UpdatedAPIIntegrations()
-            
-            # Generate core data
-            identity = api.generate_identity()
-            card = api.generate_card("visa")
-            
-            # Assemble trial data
-            trial_data = {
-                "service": "hulu",
-                "plan": "Hulu (No Ads)",
-                "email": identity.get('email', f"{identity['first_name'].lower()}.{identity['last_name'].lower()}@example.com"),
-                "password": "TrialJunkie2025!",
-                "first_name": identity.get('first_name', ''),
-                "last_name": identity.get('last_name', ''),
-                "address": identity.get('address', ''),
-                "city": identity.get('city', ''),
-                "state": identity.get('state', ''),
-                "zipcode": identity.get('zipcode', ''),
-                "phone": identity.get('phone', ''),
-                "start_date": datetime.now().strftime("%Y-%m-%d"),
-                "end_date": datetime.now().strftime("%Y-%m-%d"),
-                "card_details": {
-                    "type": card.get('card_type', 'visa'),
-                    "number": card.get('card_number', ''),
-                    "expiry": card.get('expiry', ''),
-                    "cvv": card.get('cvv', ''),
-                    "last4": card.get('card_number', '')[-4:] if card.get('card_number') else ''
-                }
-            }
-            
-            # Save to file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            trial_file = f"hulu_trial_{timestamp}.json"
-            with open(trial_file, 'w') as f:
-                json.dump(trial_data, f, indent=2)
-            
-            logger.info(f"Example trial saved to {trial_file}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to create example trial: {str(e)}")
-            return False
+    # Save results to file
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_file = f"api_test_results_{timestamp}.json"
     
-    def run_setup(self):
-        """Run the complete setup process"""
-        logger.info("Starting Trial Junkie setup...")
-        
-        # Step 1: Check environment variables
-        env_check = self.check_environment()
-        if not env_check:
-            logger.error("Environment check failed. Please set required environment variables.")
-            return False
-        
-        # Step 2: Check API access
-        api_check = self.check_apis()
-        if not api_check:
-            logger.warning("API check encountered issues. Setup will continue but some features may not work.")
-        
-        # Step 3: Check database
-        db_check = self.check_database()
-        if not db_check:
-            logger.error("Database check failed. Please check database configuration.")
-            return False
-        
-        # Step 4: Create example trial
-        trial_check = self.create_example_trial()
-        if not trial_check:
-            logger.warning("Example trial creation failed. Setup will continue but you may encounter issues.")
-        
-        logger.info("Trial Junkie setup completed successfully")
-        return True
+    with open(results_file, "w") as f:
+        json.dump(results, f, indent=2)
+    
+    logger.info(f"API test results saved to {results_file}")
+    logger.info(f"API Check Results: {success_count}/{len(apis)} successful")
+    
+    return {
+        "success_count": success_count,
+        "total": len(apis),
+        "results": results,
+        "file": results_file
+    }
 
-if __name__ == "__main__":
-    setup = TrialJunkieSetup()
-    success = setup.run_setup()
+# Check database connection
+def check_database() -> Dict[str, Any]:
+    """
+    Check the database connection
     
-    if success:
+    Returns:
+        dict: Database check results
+    """
+    logger.info("Checking database connection...")
+    try:
+        # Import and initialize database
+        from database import Database
+        db = Database()
+        db_result = db.initialize()
+        
+        if db_result.get("success", False):
+            logger.info("✅ Database connection successful")
+            return {
+                "success": True,
+                "message": "Database connection successful"
+            }
+        else:
+            logger.error(f"❌ Database connection failed: {db_result.get('message', 'Unknown error')}")
+            return {
+                "success": False,
+                "message": db_result.get("message", "Unknown error")
+            }
+    except Exception as e:
+        logger.error(f"❌ Database check error: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+# Create example trial
+def create_example_trial() -> Dict[str, Any]:
+    """
+    Create an example trial using the API integrations
+    
+    Returns:
+        dict: Example trial data
+    """
+    logger.info("Creating example trial file...")
+    try:
+        # Import API integrations
+        from updated_api_integrations import UpdatedAPIIntegrations
+        api = UpdatedAPIIntegrations()
+        
+        # Generate identity
+        identity = api.generate_identity()
+        
+        # Generate card
+        card = api.generate_card()
+        
+        # Combine data
+        trial_data = {
+            "service": "hulu",
+            "plan": "Hulu (No Ads)",
+            "email": identity.get("email"),
+            "password": "TrialJunkie2025!",
+            "first_name": identity.get("first_name"),
+            "last_name": identity.get("last_name"),
+            "address": identity.get("address"),
+            "city": identity.get("city"),
+            "state": identity.get("state"),
+            "zipcode": identity.get("zipcode"),
+            "phone": identity.get("phone"),
+            "start_date": datetime.now().strftime("%Y-%m-%d"),
+            "end_date": datetime.now().strftime("%Y-%m-%d"),
+            "card_details": {
+                "type": card.get("type"),
+                "number": card.get("number"),
+                "expiry": card.get("expiry"),
+                "cvv": card.get("cvv"),
+                "last4": card.get("last4")
+            }
+        }
+        
+        # Save the trial data to a file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        trial_file = f"hulu_trial_{timestamp}.json"
+        
+        with open(trial_file, "w") as f:
+            json.dump(trial_data, f, indent=2)
+        
+        logger.info(f"Example trial saved to {trial_file}")
+        
+        return {
+            "success": True,
+            "file": trial_file,
+            "data": trial_data
+        }
+    except Exception as e:
+        logger.error(f"❌ Error creating example trial: {str(e)}")
+        traceback.print_exc()
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+# Main setup function
+def setup() -> Dict[str, Any]:
+    """
+    Run the complete setup process
+    
+    Returns:
+        dict: Setup results
+    """
+    logger.info("TrialJunkie Setup initialized")
+    start_time = time.time()
+    
+    logger.info("Starting Trial Junkie setup...")
+    results = {
+        "environment_variables": None,
+        "api_endpoints": None,
+        "database": None,
+        "example_trial": None,
+        "success": False
+    }
+    
+    # Check environment variables
+    env_check = check_environment_variables()
+    results["environment_variables"] = {"success": env_check}
+    
+    if not env_check:
+        logger.error("❌ Environment variable check failed - setup aborted")
+        return results
+    
+    # Check API endpoints
+    api_results = check_api_endpoints()
+    results["api_endpoints"] = api_results
+    
+    # Check database
+    db_results = check_database()
+    results["database"] = db_results
+    
+    # Create example trial
+    trial_results = create_example_trial()
+    results["example_trial"] = trial_results
+    
+    # Determine overall success
+    results["success"] = (
+        env_check and
+        db_results.get("success", False) and
+        trial_results.get("success", False)
+    )
+    
+    end_time = time.time()
+    duration = end_time - start_time
+    
+    results["duration"] = duration
+    results["timestamp"] = datetime.now().isoformat()
+    
+    # Final log message
+    if results["success"]:
+        logger.info("Trial Junkie setup completed successfully")
         print("\n✅ Trial Junkie setup completed successfully!")
         print("You can now run the system using:")
         print("1. For the web app: workflow 'Start application'")
         print("2. For the Discord bot: workflow 'discord_bot'")
     else:
-        print("\n❌ Trial Junkie setup encountered issues.")
-        print("Please check setup.log for more details.")
-        sys.exit(1)
+        logger.warning("Trial Junkie setup completed with warnings or errors")
+        print("\n⚠️ Trial Junkie setup completed with warnings or errors")
+        print("Please check the log file for details.")
+    
+    return results
+
+# Entry point
+if __name__ == "__main__":
+    setup()
