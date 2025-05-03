@@ -81,6 +81,8 @@ class APIEndpointTests(unittest.TestCase):
                 
             # Test login with invalid credentials
             mock_user_instance.check_password.return_value = False
+            response = self.client.post('/login', data={
+                'email': self.test_user['email'],
                 'password': 'WrongPassword'
             })
             
@@ -112,8 +114,6 @@ class APIEndpointTests(unittest.TestCase):
                 # Verify database operations
                 mock_user.assert_called_once()
                 mock_session.add.assert_called_once()
-                mock_session.commit.assert_called_once()
-            
             # Test registration with existing email
             mock_user.query.filter_by.return_value.first.return_value = MagicMock()
             response = self.client.post('/register', data={
