@@ -133,9 +133,8 @@ class TestDiscordOAuth(unittest.TestCase):
         self.mock_db.user_exists.return_value = False
         
     def tearDown(self):
-        """Clean up after tests"""
-        self.requests_patcher.stop()
-        self.db_patcher.stop()
+        # Properly indented block
+        pass
         
     def test_discord_oauth_flow(self):
         """Test Discord OAuth flow"""

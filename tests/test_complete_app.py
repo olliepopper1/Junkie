@@ -6,7 +6,7 @@ class TestCompleteApp(unittest.TestCase):
         pass
 
     def tearDown(self):
-        # Teardown code here
+        # Properly indented block
         pass
 
     def test_application_functionality(self):

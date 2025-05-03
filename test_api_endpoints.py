@@ -48,13 +48,15 @@ class APIEndpointTests(unittest.TestCase):
     def test_login_route(self):
         """Test the login route"""
         # Mock the database query
-        with patch('app.User') as mock_user:
+        with patch('app.WebUser') as mock_user:
             # Configure the mock to return a valid user
             mock_user_instance = MagicMock()
             mock_user_instance.id = self.test_user['id']
             mock_user_instance.username = self.test_user['username']
             mock_user_instance.email = self.test_user['email']
             mock_user_instance.check_password.return_value = True
+            # Replace MagicMock with serializable values for session
+            mock_user_instance.get_id.return_value = str(self.test_user['id'])
             
             # Mock the query operations
             mock_user.query.filter_by.return_value.first.return_value = mock_user_instance
@@ -84,7 +86,7 @@ class APIEndpointTests(unittest.TestCase):
     def test_register_route(self):
         """Test the registration route"""
         # Mock the database query
-        with patch('app.User') as mock_user:
+        with patch('app.WebUser') as mock_user:
             # Configure the mock for user creation
             mock_user.query.filter_by.return_value.first.return_value = None
             mock_user.return_value = MagicMock()
@@ -160,15 +162,14 @@ class APIEndpointTests(unittest.TestCase):
                 'trials_used': 5
             }
             
-            # Mock the trial generation
-            with patch('app.generate_trial_for_service') as mock_gen:
-                mock_gen.return_value = {
-                    'success': True,
-                    'email': 'trial@example.com',
-                    'password': 'trialpass',
-                    'service': 'netflix',
-                    'expires_at': '2023-12-01'
-                }
+            with patch('app.generate_trial_for_service', return_value={
+                'success': True,
+                'email': 'trial@example.com',
+                'password': 'trialpass',
+                'service': 'netflix',
+                'expires_at': '2023-12-01'
+            }):
+                # Mock trial generation logic
                 
                 # Test successful trial generation
                 response = self.client.post('/generate_trial', json={
@@ -204,15 +205,13 @@ class APIEndpointTests(unittest.TestCase):
             sess['user_id'] = self.test_user['id']
             sess['logged_in'] = True
         
-        # Mock payment creation
-        with patch('app.create_payment_request') as mock_create:
-            mock_create.return_value = {
-                'success': True,
-                'reference': 'pay_ref_12345',
-                'amount': 15.0,
-                'service_type': 'premium'
-            }
-            
+        with patch('app.create_payment_request', return_value={
+            'success': True,
+            'reference': 'pay_ref_12345',
+            'amount': 15.0,
+            'service_type': 'premium'
+        }):
+            # Mock payment creation logic
             # Test payment creation
             response = self.client.post('/create_payment', json={
                 'amount': 15.0,
@@ -271,15 +270,13 @@ class APIEndpointTests(unittest.TestCase):
             sess['user_id'] = self.test_user['id']
             sess['logged_in'] = True
         
-        # Mock referral code generation
-        with patch('app.get_or_create_referral_code') as mock_code:
-            mock_code.return_value = {
-                'success': True,
-                'referral_code': 'REF123',
-                'referral_count': 5,
-                'commission_earned': 75.0
-            }
-            
+        with patch('app.get_or_create_referral_code', return_value={
+            'success': True,
+            'referral_code': 'REF123',
+            'referral_count': 5,
+            'commission_earned': 75.0
+        }):
+            # Mock referral code generation logic
             # Test getting referral code
             response = self.client.get('/referral_code')
             

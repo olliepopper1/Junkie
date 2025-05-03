@@ -5,6 +5,7 @@ class TestIntegration(unittest.TestCase):
         pass
 
     def tearDown(self):
+        # Properly indented block
         pass
 
     def test_integration(self):

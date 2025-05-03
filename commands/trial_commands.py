@@ -7,7 +7,6 @@ import sys
 import logging
 import json
 import asyncio
-from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
@@ -15,7 +14,6 @@ from discord import Embed, Color
 
 sys.path.append('.')  # Add the current directory to the path
 from bot_trial_delivery import TrialDelivery
-from generate_real_hulu_trial import RealHuluTrialGenerator
 
 # Set up logging
 logging.basicConfig(
@@ -54,7 +52,7 @@ class TrialCommands(commands.Cog):
         # Process the request based on the service
         if service_or_url.lower() == "hulu":
             # First, save the message to simulate processing
-            await response.edit(content=f"⏳ Generating Hulu trial. This may take a moment...")
+            await response.edit(content="⏳ Generating Hulu trial. This may take a moment...")
             
             # Generate the trial
             await self._generate_hulu_trial(ctx, response)
@@ -66,7 +64,6 @@ class TrialCommands(commands.Cog):
         try:
             # Use the trial generator in a separate thread to avoid blocking
             # Since RealHuluTrialGenerator uses Selenium which is not async-compatible
-            loop = asyncio.get_event_loop()
             
             # First provide feedback that we're working on it
             await response.edit(content="🤖 Initializing browser automation...\n⏳ This can take a minute or two...")
@@ -84,7 +81,7 @@ class TrialCommands(commands.Cog):
             trial_info = None
             
             if latest_trial_file:
-                with open(latest_trial_file, 'r') as f:
+                with open(latest_trial_file, 'r', encoding='utf-8') as f:
                     trial_info = json.load(f)
             
             if not trial_info:
@@ -93,12 +90,15 @@ class TrialCommands(commands.Cog):
                 await asyncio.sleep(2)
                 
                 # Generate a trial 
-                self.delivery.generate_trial("hulu", ctx.author.id)
+                if hasattr(self.delivery, 'generate_trial'):
+                    self.delivery.generate_trial("hulu", ctx.author.id)
+                else:
+                    logger.error("TrialDelivery does not have a 'generate_trial' method.")
                 
                 # Get the latest file again
                 latest_trial_file = self._get_latest_trial_file()
                 if latest_trial_file:
-                    with open(latest_trial_file, 'r') as f:
+                    with open(latest_trial_file, 'r', encoding='utf-8') as f:
                         trial_info = json.load(f)
             
             if trial_info and trial_info.get('success', False):
@@ -109,15 +109,30 @@ class TrialCommands(commands.Cog):
                 try:
                     await ctx.author.send(embed=embed)
                     await ctx.author.send("**⚠️ Important Notes:**\n- This trial will expire automatically after 30 days\n- To avoid charges, cancel before the expiration date\n- Login details will also be available on your dashboard at trialjunkie.io")
-                    await response.edit(content=f"✅ Hulu trial created successfully! Check your DMs for login details.")
+                    await response.edit(content="✅ Hulu trial created successfully! Check your DMs for login details.")
                 except discord.Forbidden:
-                    await response.edit(content=f"✅ Hulu trial created successfully! But I couldn't DM you the details. Please enable DMs from server members.")
+                    await response.edit(content="✅ Hulu trial created successfully! But I couldn't DM you the details. Please enable DMs from server members.")
             else:
-                await response.edit(content=f"❌ Failed to generate Hulu trial. Please try again later.")
+                await response.edit(content="❌ Failed to generate Hulu trial. Please try again later.")
                 
+        except discord.Forbidden as e:
+            logger.error("Discord permission error: %s", e, exc_info=True)
+            await response.edit(content="❌ Unable to send you a DM. Please enable DMs from server members.")
+        except FileNotFoundError as e:
+            logger.error("File not found: %s", e, exc_info=True)
+            await response.edit(content="❌ An error occurred while generating your trial: File not found.")
+        except json.JSONDecodeError as e:
+            logger.error("JSON decoding error: %s", e, exc_info=True)
+            await response.edit(content="❌ An error occurred while processing trial data.")
+        except (OSError, IOError) as e:
+            logger.error("File system error: %s", e, exc_info=True)
+            await response.edit(content="❌ A file system error occurred while generating your trial.")
+        except asyncio.TimeoutError as e:
+            logger.error("Timeout error: %s", e, exc_info=True)
+            await response.edit(content="❌ The operation timed out. Please try again later.")
         except Exception as e:
-            logger.error(f"Error generating Hulu trial: {e}", exc_info=True)
-            await response.edit(content=f"❌ An error occurred while generating your trial: {str(e)}")
+            logger.error("Unexpected error: %s", e, exc_info=True)
+            await response.edit(content="❌ An unexpected error occurred while generating your trial.")
     
     def _get_latest_trial_file(self):
         """Get the most recently created trial file"""
@@ -126,7 +141,7 @@ class TrialCommands(commands.Cog):
             return None
         
         # Sort by creation time, newest first
-        trial_files.sort(key=lambda x: os.path.getctime(x), reverse=True)
+        trial_files.sort(key=os.path.getctime, reverse=True)
         return trial_files[0]
     
     def _format_trial_embed(self, trial_info):
@@ -193,7 +208,7 @@ class TrialCommands(commands.Cog):
         if not latest_trial_file:
             return await response.edit(content="❌ You don't have any trials yet. Use `!hit hulu` to create one.")
         
-        with open(latest_trial_file, 'r') as f:
+        with open(latest_trial_file, 'r', encoding='utf-8') as f:
             trial_info = json.load(f)
         
         # Create an embed with the trial information

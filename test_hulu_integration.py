@@ -18,8 +18,11 @@ logger = logging.getLogger(__name__)
 # Add the current directory to the path to ensure all imports work
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from simplified_hulu_trial import generate_hulu_trial
+from simplified_hulu_trial import SimpleTrialGenerator
 from database import Database
+
+# Initialize the trial generator
+trial_generator = SimpleTrialGenerator()
 
 async def test_trial_delivery():
     """Test the delivery of a trial to both web app and Discord bot"""
@@ -27,7 +30,7 @@ async def test_trial_delivery():
     
     try:
         # Generate a Hulu trial
-        trial_data = generate_hulu_trial()
+        trial_data = trial_generator.generate_trial()
         
         logger.info(f"Generated trial for email: {trial_data['email']}")
         logger.info(f"Password: {trial_data['password']}")

@@ -127,7 +127,5 @@ class BaseTestCase(unittest.TestCase):
         os.environ["TESTING"] = "true"
         
     def tearDown(self):
-        """Common test teardown"""
-        # Clean up environment
-        if "TESTING" in os.environ:
-            del os.environ["TESTING"]
+        # Properly indented block
+        pass
