@@ -183,12 +183,9 @@ class APIEndpointTests(unittest.TestCase):
                 'expires_at': '2023-12-01'
             }):
                 # Mock trial generation logic
-                
-                # Test successful trial generation
                 response = self.client.post('/generate_trial', json={
                     'service': 'netflix'
                 })
-                
                 self.assertEqual(response.status_code, 200)
                 response_data = json.loads(response.data)
                 self.assertTrue(response_data['success'])
@@ -287,9 +284,7 @@ class APIEndpointTests(unittest.TestCase):
             'commission_earned': 75.0
         }):
             # Mock referral code generation logic
-            # Test getting referral code
             response = self.client.get('/referral_code')
-            
             self.assertEqual(response.status_code, 200)
             response_data = json.loads(response.data)
             self.assertTrue(response_data['success'])
