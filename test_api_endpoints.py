@@ -89,6 +89,10 @@ class APIEndpointTests(unittest.TestCase):
             # Should stay on login page with error
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Invalid email or password', response.data)
+            # Ensure proper error handling for invalid credentials
+            self.assertIn(b'Invalid email or password', response.data)
+            # Ensure proper redirection for invalid credentials
+            self.assertIn('/login', response.headers.get('Location', ''))
 
     def test_register_route(self):
         """Test the registration route"""
@@ -110,10 +114,14 @@ class APIEndpointTests(unittest.TestCase):
                 
                 # Check if redirected to login on success
                 self.assertEqual(response.status_code, 302)
+                # Mock redirection to login page
+                self.assertIn('/login', response.headers['Location'])
                 
                 # Verify database operations
                 mock_user.assert_called_once()
                 mock_session.add.assert_called_once()
+                mock_session.commit.assert_called_once()
+            
             # Test registration with existing email
             mock_user.query.filter_by.return_value.first.return_value = MagicMock()
             response = self.client.post('/register', data={
